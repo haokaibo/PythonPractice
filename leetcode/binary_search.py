@@ -16,3 +16,8 @@ class BinarySearch:
 
     def search(self, nums: List[int], target: int) -> int:
         return self.binary_search(nums, target, 0, len(nums)-1)
+
+
+if __name__ == '__main__':
+    bs = BinarySearch()
+    print(bs.search([1,2,3], 3))
