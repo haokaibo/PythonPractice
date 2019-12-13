@@ -11,21 +11,17 @@ class StringHelper:
         self.reverse_print(index + 1, str)
         print(str[index])
 
-    def reverse_chars(self, chars: List[str]) -> None:
-        self.reverse_chars_helper(chars, 0, len(chars)-1)
+    def reverseString(self, s):
+        def helper(left, right):
+            if left < right:
+                s[left], s[right] = s[right], s[left]
+                helper(left + 1, right - 1)
 
-    def reverse_chars_helper(self, chars, begin, end):
-        if begin >= end:
-            return
-        else:
-            self.reverse_chars_helper(chars, begin + 1, end - 1)
-            temp = chars[begin]
-            chars[begin] = chars[end]
-            chars[end] = temp
+        helper(0, len(s) - 1)
 
 
 if __name__ == '__main__':
     # StringHelper().print_reversed_string('abc')
     string = ['a', 'b', 'c']
-    StringHelper().reverse_chars(string)
+    StringHelper().reverseString(string)
     print(string)
