@@ -1,3 +1,6 @@
+from typing import List
+
+
 class StringHelper:
     def print_reversed_string(self, str):
         self.reverse_print(0, str)
@@ -8,9 +11,8 @@ class StringHelper:
         self.reverse_print(index + 1, str)
         print(str[index])
 
-    def reverse_chars(self, chars):
+    def reverse_chars(self, chars: List[str]) -> None:
         self.reverse_chars_helper(chars, 0, len(chars)-1)
-        return chars
 
     def reverse_chars_helper(self, chars, begin, end):
         if begin >= end:
@@ -24,5 +26,6 @@ class StringHelper:
 
 if __name__ == '__main__':
     # StringHelper().print_reversed_string('abc')
-    result = StringHelper().reverse_chars(['a', 'b', 'c'])
-    print(result)
+    string = ['a', 'b', 'c']
+    StringHelper().reverse_chars(string)
+    print(string)
