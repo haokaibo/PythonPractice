@@ -4,6 +4,7 @@ class ListNode:
         self.val = x
         self.next = None
 
+
 class MergeTwoSortedList:
     def mergeTwoLists(self, l1: ListNode, l2: ListNode) -> ListNode:
         if l1 is None and l2 is None:
