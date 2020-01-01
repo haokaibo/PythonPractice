@@ -1,3 +1,15 @@
+'''
+In the first step, we divide the list into two sublists.  (Divide)
+
+Then in the next step, we recursively sort the sublists in the previous step.  (Conquer)
+
+Finally we merge the sorted sublists in the above step repeatedly to obtain the final list of sorted elements.  (Combine)
+
+The recursion in step (2) would reach the base case where the input list is either empty or contains a single element (see the nodes in blue from the above figure).
+
+Now, we have reduced the problem down to a merge problem, which is much simpler to solve. Merging two sorted lists can be done in linear time complexity {O(N)}O(N), where {N}N is the total lengths of the two lists to merge.
+'''
+
 class MergeSort:
 
     def merge_sort(nums):
