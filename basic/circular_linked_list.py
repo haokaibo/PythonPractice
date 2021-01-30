@@ -29,14 +29,13 @@ class CircularLinkedList:
 
     def remove(self, val):
         node = self.root
-        while node.nxt is not None:
+        while node is not None:
             if node.val == val:
                 node.nxt.pre = node.pre
                 if node == self.root:
                     node.pre.nxt = node.nxt
                     node.nxt.pre = node.pre
                     self.root = node.nxt
-                    self.root.pre = self.root.nxt = None
                 else:
                     node.pre.nxt = node.nxt
                 self.size -= 1
@@ -55,4 +54,4 @@ class CircularLinkedList:
             node = node.nxt
             if node == self.root:
                 break
-        print('None')
+        print()

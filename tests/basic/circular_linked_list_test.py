@@ -15,4 +15,14 @@ class CircularLinkedListTest(TestCase):
         for i in range(8):
             my_node = my_node.nxt
             print(my_node, end='->')
-        print()
+        print(f'\n{"*" * 5} Testing remove {"*" * 5}')
+
+        cll.print_list()
+        print('removing 8 from list.')
+        cll.remove(8)
+        cll.print_list()
+        print(f"removing 15 from list. Result is {cll.remove(15)}")
+        print(f'size={cll.size}')
+        cll.print_list()
+        cll.remove(5)
+        cll.print_list()
