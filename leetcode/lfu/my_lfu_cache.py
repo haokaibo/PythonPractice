@@ -1,8 +1,8 @@
-from leetcode.lfu import CacheNode
-from leetcode.lfu import FreqNode
+from leetcode.lfu.cache_node import CacheNode
+from leetcode.lfu.freq_node import FreqNode
 
 
-class LFUCache(object):
+class MyLFUCache(object):
     def __init__(self, capacity):
         self.cache = {}
         self.capacity = capacity
@@ -14,11 +14,11 @@ class LFUCache(object):
             self.move_forward(cache_node)
             return cache_node.value
         else:
-            return None
+            return -1
 
     def set(self, key, value):
         if self.capacity <= 0:
-            return None
+            return -1
 
         if key not in self.cache:
             if len(self.cache) >= self.capacity:
@@ -57,3 +57,18 @@ class LFUCache(object):
         if head_freq_node.count_caches() == 0:
             self.freq_link_head = head_freq_node.nxt
             head_freq_node.remove()
+
+    def create_cache(self, key, value):
+        cache_node = CacheNode(key, value, None, None, None)
+        self.cache[key] = cache_node
+
+        if self.freq_link_head is None or self.freq_link_head.freq != 0:
+            new_freq_node = FreqNode(0, None, None)
+            new_freq_node.append_cache_to_tail(cache_node)
+
+            if self.freq_link_head is not None:
+                self.freq_link_head.insert_before_me(new_freq_node)
+
+            self.freq_link_head = new_freq_node
+        else:
+            self.freq_link_head.append_cache_to_tail(cache_node)

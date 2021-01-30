@@ -5,5 +5,8 @@
     <orderEntry type="jdk" jdkName="Python 3.7" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="AlgorithmInPython" />
+    <orderEntry type="module" module-name="att-bigdata-classtenureloader" />
+    <orderEntry type="module" module-name="att-bigdata-classtenurehandler" />
+    <orderEntry type="module" module-name="att-bigdata-glue" />
   </component>
 </module>

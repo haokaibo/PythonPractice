@@ -1,5 +1,5 @@
-from leetcode.lfu import CacheNode
-from leetcode.lfu import FreqNode
+from leetcode.lfu.cache_node import CacheNode
+from leetcode.lfu.freq_node import FreqNode
 
 
 class LFUCache(object):
@@ -36,7 +36,7 @@ class LFUCache(object):
 
             self.move_forward(cache_node, freq_node)
 
-    def move_forward(self, cache_node, freq_node):
+    def move_forward(self, cache_node:CacheNode, freq_node):
         if freq_node.nxt is None or freq_node.nxt.freq != freq_node.freq + 1:
             target_freq_node = FreqNode(freq_node.freq + 1, None, None)
             target_empty = True
