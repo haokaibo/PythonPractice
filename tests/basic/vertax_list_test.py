@@ -2,9 +2,11 @@ from unittest import TestCase
 
 from basic.vertex_list import Graph
 from basic.vertex_list import Vertex
+from codetiming import Timer
 
 
 class GraphTest(TestCase):
+    @Timer('test_graph')
     def test_graph(self):
         g = Graph()
         a = Vertex('A')
