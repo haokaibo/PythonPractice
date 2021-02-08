@@ -61,3 +61,9 @@ set_c={7,8}
 print(f"set_b is subset of set_a: {set_b.issubset(set_a)}")
 print(f"set_a is superset of seb_b: {set_a.issuperset(set_b)}")
 print(f"set_a is disjoint set of set_c: {set_a.isdisjoint(set_c)}")
+
+# frozenset
+f_set = frozenset([1,2,3,4])
+
+print(f'f_set={f_set}')
+print(f'set_a={set_a}')
