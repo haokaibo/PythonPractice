@@ -29,3 +29,5 @@ month_interval = -2
 end_datetime = datetime.now()
 begin_datetime =datetime.strptime(Common.add_months(end_datetime, month_interval).strftime('%Y-%m-01'),'%Y-%m-%d') 
 print(begin_datetime)
+
+%##

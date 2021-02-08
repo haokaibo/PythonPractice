@@ -51,3 +51,4 @@ my_string = "The variable is {:s}. The f is {:.2f}".format(var, f)
 print(my_string)
 my_string = f"The variable is {var}. The f is {f:.2f}"
 print(my_string)
+
