@@ -1,5 +1,4 @@
 # Strings: orderd, immutable, text representation
-
 str1 = "I'm a programmer"
 print(str1)
 print(str1[0])
