@@ -59,3 +59,6 @@ __pycache__
 # log files
 *.log.*
 *.log
+
+# test output files
+freecodecamp/notes*.txt
