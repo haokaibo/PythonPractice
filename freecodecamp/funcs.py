@@ -9,6 +9,7 @@
 """
 from typing import List
 
+
 # - Positional and keyword arguments
 # - Default arguments
 def foo(a, b, c=4):
@@ -16,6 +17,7 @@ def foo(a, b, c=4):
 
 
 foo(b=1, a=2)
+
 
 # - Variable-length arguments (*args and **kwargs)
 def foo2(a, b, *args, **kwargs):
@@ -27,6 +29,7 @@ def foo2(a, b, *args, **kwargs):
 
 
 foo2(1, 2, 3, four=4, five=5)
+
 
 # - Container unpacking into function arguments
 def foo3(a, b, *, c, d):
@@ -70,6 +73,7 @@ def foo7():
     number += 1
     print(f'number inside function: {number}.')
 
+
 foo7()
 
 
@@ -83,3 +87,21 @@ immutable_var = 10
 mutable_list: List[int] = [1, 2, 3]
 foo8(immutable_var, mutable_list)
 print(f'immutable_var={immutable_var}, mutable_list={mutable_list}')
+
+# unpacking parameters
+numbers = [1, 2, 3, 4, 5, 6]
+
+beginning, *middle, last = numbers
+print(f'beginning={beginning}')
+print(f'middle={middle}')
+print(f'last={last}')
+
+my_tuple = (1, 2, 3)
+my_list = [4, 5, 6]
+new_list = [*my_tuple, *my_list]
+print(f'new_list={new_list}')
+
+dict_a ={'a':1, 'b':2}
+dict_b={'c':3, 'b':4}
+unioned_dict={**dict_a, **dict_b}
+print(f'unioned_dict={unioned_dict}')
