@@ -37,6 +37,10 @@ class Pet:
     def name(self):
         del self._name
 
+    def __repr__(self):
+        '''For debugging'''
+        return f"Pet('{self.name}, {self.age}')"
+
     def __str__(self):
         return f'{self.name} who is {self.age} years old. I am from {Pet.species} species.'
 
@@ -79,8 +83,8 @@ class Dog(Pet):
 missy = Cat('Missy', 3, Color.BLACK)
 lucky = Dog('Lucky', 5)
 
-print(missy.species)
-print(Cat.species)
+print(f'missy.species={missy.species}')
+print(f'Cat.species={Cat.species}')
 print('\n'.join([missy.__str__(), lucky.__str__()]))
 
 
@@ -105,6 +109,7 @@ fish.name = 'abc'
 
 print(f"{fish} {fish.speak()}")
 
-
-
 print(f'There are {Pet.get_number_of_pets()} pets.')
+
+for p in [missy, lucky, starbuck, fish]:
+    print(repr(p))
