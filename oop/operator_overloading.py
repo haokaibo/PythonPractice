@@ -83,7 +83,7 @@ Operator	Method
 /	__truediv__(self, other)
 %	__mod__(self, other)
 <	__lt__(self, other)
-<=< code>	__le__(self, other)
+<=  __le__(self, other)
 ==	__eq__(self, other)
 !=	__ne__(self, other)
 >	__gt__(self, other)

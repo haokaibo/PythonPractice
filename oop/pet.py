@@ -44,6 +44,9 @@ class Pet:
     def __str__(self):
         return f'{self.name} who is {self.age} years old. I am from {Pet.species} species.'
 
+    def __hash__(self):
+        return hash(f"{self.name}{self.age}")
+
     def speak(self):
         return "I cannot speak."
 
@@ -112,4 +115,4 @@ print(f"{fish} {fish.speak()}")
 print(f'There are {Pet.get_number_of_pets()} pets.')
 
 for p in [missy, lucky, starbuck, fish]:
-    print(repr(p))
+    print(repr(p), issubclass(p.__class__, Pet), hash(p))
