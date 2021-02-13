@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class AbstractClassExample(ABC):
 
     def __init__(self, value):
