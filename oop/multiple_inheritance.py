@@ -1,4 +1,5 @@
 """
+https://www.python-course.eu/python3_multiple_inheritance.php
 The class Clock is used to simulate a clock.
 """
 
