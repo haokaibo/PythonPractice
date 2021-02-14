@@ -19,6 +19,11 @@ matrix = [[1, 1, 1, 0, 0, 0],
 
 
 def get_max_ones_matrix_num(matrix):
+    '''
+    Time complexity is O(n)
+    :param matrix:
+    :return:
+    '''
     max_num = 0
     rows = len(matrix)
     cols = len(matrix[0])

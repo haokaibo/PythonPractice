@@ -3,6 +3,11 @@ circular_array = [1, 2, 1, 4, 5, 6]
 
 
 def check_circular_array(arr):
+    '''
+    Time complexity is O(n).
+    :param arr:
+    :return:
+    '''
     if arr is None:
         return False
 
