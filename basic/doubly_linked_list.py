@@ -18,7 +18,7 @@ class DoublyLinkedList:
     def find(self, val):
         node = self.head
         while node is not None:
-            if node.val == val:
+            if node.name == val:
                 return node
             else:
                 node = node.nxt
@@ -27,7 +27,7 @@ class DoublyLinkedList:
     def remove(self, val):
         node = self.head
         while node is not None:
-            if node.val == val:
+            if node.name == val:
                 if self.head == self.tail:
                     self.head = self.tail = None
                 elif self.head == node:

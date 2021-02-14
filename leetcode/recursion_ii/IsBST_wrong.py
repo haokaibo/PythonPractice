@@ -14,16 +14,16 @@ class IsBST:
                 return True
 
             if root.left is not None:
-                if root.left.val >= root.val:
+                if root.left.name >= root.val:
                     return False
-                if root_value is not None and root.left.val >= root_value:
+                if root_value is not None and root.left.name >= root_value:
                     return False
                 if not check_left(root.left, root_value):
                     return False
             if root.right is not None:
-                if root.right.val <= root.val:
+                if root.right.name <= root.val:
                     return False
-                if root_value is not None and root.right.val >= root_value:
+                if root_value is not None and root.right.name >= root_value:
                     return False
                 if not check_right(root.right, root_value):
                     return False
@@ -34,16 +34,16 @@ class IsBST:
                 return True
 
             if root.left is not None:
-                if root.left.val >= root.val:
+                if root.left.name >= root.val:
                     return False
-                if root_value is not None and root.left.val <= root_value:
+                if root_value is not None and root.left.name <= root_value:
                     return False
                 if not check_left(root.left, root_value):
                     return False
             if root.right is not None:
-                if root.right.val <= root.val:
+                if root.right.name <= root.val:
                     return False
-                if root_value is not None and root.right.val <= root_value:
+                if root_value is not None and root.right.name <= root_value:
                     return False
                 if not check_right(root.right, root_value):
                     return False

@@ -72,7 +72,7 @@ class UniqueBinaryTreeII:
         return helper(range(1, n + 1))
 
     def iterate_tree_to_list(self, root):
-        list = [root.val]
+        list = [root.name]
 
         def helper(root):
             if root is None:
@@ -82,10 +82,10 @@ class UniqueBinaryTreeII:
                     return
                 if root.left is None:
                     list.append(None)
-                else: list.append(root.left.val)
+                else: list.append(root.left.name)
                 if root.right is None:
                     list.append(None)
-                else: list.append(root.right.val)
+                else: list.append(root.right.name)
                 helper(root.left)
                 helper(root.right)
 
