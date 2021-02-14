@@ -32,7 +32,7 @@ class PdfParserNew(FormalParserInterface):
         pass
 
 
-class EmailParserNew(FormalParserInterface):
+class EmlParserNew(FormalParserInterface):
     """Extract text from an email."""
 
     def load_data_source(self, path: str, file_name: str) -> str:
@@ -48,6 +48,6 @@ class EmailParserNew(FormalParserInterface):
 
 if __name__ == "__main__":
     print(f'issubclass(PdfParserNew, FormalParserInterface)={issubclass(PdfParserNew, FormalParserInterface)}')
-    print(f'issubclass(EmlParserNew, FormalParserInterface)={issubclass(EmailParserNew, FormalParserInterface)}')
+    print(f'issubclass(EmlParserNew, FormalParserInterface)={issubclass(EmlParserNew, FormalParserInterface)}')
     pdf_parser = PdfParserNew()
-    email_parse = EmailParserNew()
+    email_parse = EmlParserNew()
