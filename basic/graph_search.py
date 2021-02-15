@@ -32,6 +32,7 @@ def visit(v: str, g: Graph):
 
 
 def DFS(g: Graph):
+    print('DFS now..')
     if g is None or g.vertexes is None or len(g.vertexes) == 0:
         return
 
@@ -41,3 +42,26 @@ def DFS(g: Graph):
 
 
 DFS(g)
+
+to_be_visit = set()
+
+
+def visit2(v, g):
+    print(v)
+    for e in g.edges[v]:
+        to_be_visit.add(e)
+
+
+def BFS(g: Graph):
+    print('BFS now...')
+    if g is None or g.vertexes is None or len(g.vertexes) == 0:
+        return
+
+    for v in g.vertexes:
+        visit(v, g)
+
+    while len(to_be_visit) > 0:
+        for v in to_be_visit:
+            visit2(v)
+
+BFS(g)
