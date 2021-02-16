@@ -16,6 +16,10 @@ class AbstractClassExample(ABC):
 
 
 class SubClass(AbstractClassExample):
+    """
+    if the do_something is not defined in the subclass there will be error call out like this:
+TypeError: Can't instantiate abstract class SubClass with abstract methods do_something
+    """
 
     def do_something(self):
         super().do_something()
