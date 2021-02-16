@@ -34,6 +34,8 @@ def get_largest_area_in_histogram(arr):
 
     stack = Stack()
 
+    # iterate the items in the array, and calculate the max_area when one item is less than previous one
+
     for i, val in enumerate(arr):
         if stack.empty() or arr[stack.peek()] < val:
             stack.push(i)
@@ -45,6 +47,8 @@ def get_largest_area_in_histogram(arr):
                 max_area = max(width * height, max_area)
             stack.push(i)
 
+    # iterate the left items in the stack and calculate the max_area from end to the item
+    # or the next item in the stack depends on if there are gap between the two.
     while not stack.empty():
         curr_max_index = stack.pop()
         if stack.empty():
