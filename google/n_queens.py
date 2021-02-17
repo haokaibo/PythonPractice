@@ -51,7 +51,10 @@ class NQueens:
 
     def get_queens(self):
         self.place_queen(0)
-        return list(self.queens)
+        if len(self.queens) == 0:
+            return None
+        else:
+            return list(self.queens)
 
 
 for i in range(1, 6):
