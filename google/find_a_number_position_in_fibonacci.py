@@ -7,12 +7,9 @@ cache = {}
 
 
 def fibonacci_with_cache(pos):
-    if pos == 0:
-        cache[pos] = 0
-        return 0
-    elif pos == 1:
-        cache[pos] = 1
-        return 1
+    if pos == 0 or pos == 1:
+        cache[pos] = pos
+        return cache[pos]
     else:
         if pos not in cache:
             cache[pos] = fibonacci_with_cache(pos - 1) + fibonacci_with_cache(pos - 2)
@@ -23,10 +20,8 @@ print(fibonacci_with_cache(7))
 
 
 def fibonacci_with_constant_space(pos):
-    if pos == 0:
-        return 0
-    elif pos == 1:
-        return 1
+    if pos == 0 or pos == 1:
+        return pos
     else:
         sec_last = 0
         last = 1
