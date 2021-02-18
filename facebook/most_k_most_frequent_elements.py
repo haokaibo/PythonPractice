@@ -101,11 +101,12 @@ class FrequentCache:
         while i < k and curr_node is not None:
             result[curr_node.freq] = []
             v_node = curr_node.value_head
-            while v_node is not None:
+            while v_node is not None and i < k:
                 result[curr_node.freq].append(v_node.val)
                 v_node = v_node.nxt
+                i += 1
             curr_node = curr_node.pre
-            i += 1
+
         return result
 
 
@@ -115,4 +116,4 @@ for i in range(5):
 for i in range(3):
     fc.visit(i)
 
-print(fc.get_k_most_frequent_visit_items(3))
+print(fc.get_k_most_frequent_visit_items(4))
