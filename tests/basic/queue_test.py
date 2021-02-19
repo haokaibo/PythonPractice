@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from basic.my_queue import Queue
+from basic.queue_by_deque import Queue
 
 
 class QueueTest(TestCase):
