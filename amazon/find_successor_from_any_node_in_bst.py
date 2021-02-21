@@ -75,13 +75,11 @@ class Solution:
 
 
 """
-       40
+       4
      /    \
-    2      60
+    2      6
    / \    /  \
-  1   3  50   70
-             /
-            65
+  1   3  5    7
 """
 root = Node(4,
             Node(2,
@@ -97,5 +95,28 @@ print(f"{root.right} -> {Solution.find_successor(root, root.right)}") # 6 -> 7
 print(f"{root.right.right} -> {Solution.find_successor(root, root.right.right)}") # 7 -> None
 
 # test edge case there is no parent_node and there is no right node
+"""
+4
+"""
 root = Node(4)
 print(f"{root} -> {Solution.find_successor(root, root)}")
+
+
+"""
+       40
+     /    \
+    2      60
+   / \    /  \
+  1   3  50   70
+             /
+            65
+"""
+root = Node(40,
+            Node(2,
+                 Node(1),
+                 Node(3)),
+            Node(60,
+                 Node(50),
+                 Node(70, Node(65))))
+print(f"{root} -> {Solution.find_successor(root, root.right)}") # 60 -> 65
+print(f"{root} -> {Solution.find_successor(root, root.right.right)}") # 70 -> None
