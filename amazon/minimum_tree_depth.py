@@ -12,6 +12,9 @@ BFS iteration
 create a class Node with val, left, right and depth
 create a queue to cache each level's nodes
 iterate each level till find a node without child just return the node.depth
+
+time: O(log(n))
+space: 2 ^ (log(n)-1)
 """
 from queue import Queue
 
@@ -52,7 +55,12 @@ class Solution:
 root = Node(3,
             Node(9),
             Node(20,
-                 Node(15), Node(7)))
+                 Node(15),
+                 Node(7)))
 
 solution = Solution(root)
+print(solution.get_minimum_depth())
+
+# edge case root is None
+solution = Solution(None)
 print(solution.get_minimum_depth())
