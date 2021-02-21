@@ -17,15 +17,19 @@ successor:  5(The most left ascendant of right child or right node)            6
 input:      root, node
 output:     successor_node
 
-find the node by search_node(root, node)
+1. find the parent node by find_parent_node(root, node)
 
-if node.right is not None:
-    return node.right.val
-else:
-    temp = node.right
-    while temp.left is not None:
-        temp=temp.left
-    return temp
+2. find successor:
+    if node.right is not None:  # has right child node, find the left most descendant or self
+        temp = node.right
+        while temp.left is not None:
+            temp = temp.left
+        return temp
+    else:  # no right child node
+        if parent_node is None or node.val > parent_node.val:  # is the right child of parent
+            return None
+        else:  # is the left child of parent
+            return parent_node
 
 time: find parent node O(log(n)) -> O(d) d is the depth where the node exists
 space: O(log(n))
@@ -63,18 +67,21 @@ class Solution:
                 temp = temp.left
             return temp
         else:  # no right child node
-            if parent_node is None or node.val > parent_node.val:  # is the right child of parent
+            if parent_node is None or node.val > parent_node.val:  # parent node is none(the node is the root)
+                                                                   # is the right child of parent
                 return None
             else:  # is the left child of parent
                 return parent_node
 
 
 """
-       4
+       40
      /    \
-    2      6
-   / \    / \
-  1   3  5   7
+    2      60
+   / \    /  \
+  1   3  50   70
+             /
+            65
 """
 root = Node(4,
             Node(2,
