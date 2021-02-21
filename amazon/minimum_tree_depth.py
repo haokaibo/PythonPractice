@@ -13,7 +13,7 @@ create a class Node with val, left, right and depth
 create a queue to cache each level's nodes
 iterate each level till find a node without child just return the node.depth
 """
-from collections import deque
+from queue import Queue
 
 
 class Node:
@@ -30,22 +30,22 @@ class Node:
 class Solution:
     def __init__(self, root):
         self.root = root
-        self.queue = deque()
+        self.queue = Queue()
         if root is not None:
             root.depth = 1
-            self.queue.append(root)
+            self.queue.put(root)
 
     def get_minimum_depth(self):
-        while len(self.queue) > 0:
-            node = self.queue.pop()
+        while not self.queue.empty() > 0:
+            node = self.queue.get()
             if node.left is None and node.right is None:  # find the first the no child node
                 return node.depth
-            elif node.left is not None:
+            if node.left is not None:
                 node.left.depth = node.depth + 1
-                self.queue.append(node.left)
-            elif node.right is not None:
+                self.queue.put(node.left)
+            if node.right is not None:
                 node.right.depth = node.depth + 1
-                self.queue.append(node.right)
+                self.queue.put(node.right)
         return 0
 
 
