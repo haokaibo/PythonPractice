@@ -14,7 +14,7 @@ create a queue to cache each level's nodes
 iterate each level till find a node without child just return the node.depth
 
 time: O(log(n))
-space: 2 ^ (log(n)-1)
+space: 2 ^ (n-1)
 """
 from queue import Queue
 
