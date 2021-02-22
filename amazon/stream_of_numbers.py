@@ -4,8 +4,10 @@ given stream numbers
 get the highest product of 3 numbers() -> answer
 
 time: O(n)
-space: O(3)
+space: O(K) (K is the capacity of the heap)
 """
+
+import sys
 
 
 class Node:
@@ -52,18 +54,19 @@ class LinkedList:
 class MinHeap:
     def __init__(self, capacity):
         self.capacity = capacity
-        self.heap = [0] * capacity
+        self.heap = [0] * (capacity + 1)
         self.max_product = 0
 
     def add(self, val):
-        self.heap.append(val)
         current = self.capacity
         parent = current // 2
+        self.heap[current] = val
+        # set the first element to -(2^63 - 1) to ensure it will be moved to the end of the heap.
+        self.heap[0] = -1 * sys.maxsize
         while self.heap[current] < self.heap[parent]:
             self.heap[current], self.heap[parent] = self.heap[parent], self.heap[current]
             current = parent
             parent = current // 2
-        self.heap = self.heap[1:]
 
     def peek(self):
         return self.heap[0]
