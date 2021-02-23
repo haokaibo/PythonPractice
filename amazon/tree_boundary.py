@@ -62,7 +62,7 @@ class Solution:
                 # check if the level is the last level
                 if curr.left is None and curr.right is None:
                     last_level = curr.depth
-                    # clean the bottom list, since previous bottom elements are not bottom elements.
+                    # # clean the bottom list, since previous bottom elements are not bottom elements.
                     bottom = []
             elif len(d) > 0 and curr.depth + 1 == d[0].depth:  # right
                 right.insert(0, curr.val)
@@ -85,8 +85,9 @@ class Solution:
                               seq=2 * curr.seq + 2))
             pre = curr
         # debug
-        # print(f'left={left}, bottom={bottom}, right={right}')
+        print(f'left={left}, bottom={bottom}, right={right}')
         return left + bottom + right
+
 
 '''
        a
@@ -94,8 +95,8 @@ class Solution:
   d   e   f   g
  h i j k     n o
  
-      [a  b c d e f g    h]
-depth  0->1 1 2 2 2 2 -> 3
+      [a  b c->d e f g  h]
+depth  0->1 1->2 2 2 2->3
 '''
 root = Node('a',
             Node('b',
@@ -111,9 +112,9 @@ root = Node('a',
                       Node('n'),
                       Node('o')))
             )
-# s = Solution()
-# result = s.anti_clock_traverse_not_complete_tree(root)
-# print(result)
+s = Solution()
+result = s.anti_clock_traverse_not_complete_tree(root)
+print(result)
 
 '''
 input:
@@ -138,7 +139,34 @@ root = Node('a',
                       Node('n'),
                       Node('o')))
             )
+result = s.anti_clock_traverse_not_complete_tree(root)
+print(result)
+
+'''
+input:
+       a
+    b      c
+     e   f   g
+      k      
+output: [a b d j k n o g c] = [a b e] + [k] + [ c]
+
+      [a  b c d e f g    j]
+depth  0->1 1 2 2 2 2 -> 3
+'''
+root = Node('a',
+            Node('b',
+                 None,
+                 Node('e',
+                      Node('k',
+                           Node('j')),
+                      Node('l'))),
+            Node('c',
+                 Node('f'),
+                 Node('g'))
+            )
 s = Solution()
 result = s.anti_clock_traverse_not_complete_tree(root)
 print(result)
 
+result = s.anti_clock_traverse_not_complete_tree(Node('a')) # a
+print(result)
