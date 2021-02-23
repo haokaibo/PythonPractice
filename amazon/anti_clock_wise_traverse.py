@@ -8,6 +8,7 @@ h7 i j k l m n o for last level return all the node without child
 
 Output: [a b d h i j k l m n o g c]
 
+question to ask: is the tree is a balanced binary tree
 assumption: The input is balanced binary tree.
 Solution:
 Take top, left ,bottom, right lists to hold different nodes.
