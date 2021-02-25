@@ -12,6 +12,8 @@ solution:
 define a variable named "prices" in the initialization of the class to hold the prices.
  K: length, v: function get_price
 when try to get price by length call dict['length'] = get_price
+
+time complexity : O(n^2)
 '''
 
 import sys
