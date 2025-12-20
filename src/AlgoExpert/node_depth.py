@@ -3,6 +3,9 @@
 ## 2. Each each node, we can iterate its left and right Descendants, 
 # then sum its Descendants path depth, plus its own depth as the return
 ## 3. For each iteration, the parent depth should be provided.
+# Time complexity: O(n)
+# Space complexity: O(h). h is the height of the Binary Tree
+
 
 def countDepths(node, current_depth):
     if node is None: # 1
