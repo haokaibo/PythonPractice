@@ -1,5 +1,12 @@
 from collections import deque
 
+import os
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(__file__))  # project root
+SRC = os.path.join(ROOT, "src")
+if SRC not in sys.path:
+    sys.path.insert(0, SRC)
 
 class QueueByDeque:
     def __init__(self):
@@ -40,3 +47,9 @@ print(f"q.peek()={q.peek()}")
 print(f"q={q}")
 print(f"q.last()={q.last()}")
 print(f"q.empty()={q.empty()}")
+
+lastNode = 1
+a= 2 if lastNode == None else 3
+print(a)
+
+2 if 1==2 else 3

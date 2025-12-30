@@ -24,6 +24,26 @@ class Dog:
 Dog.max_life = 100
 dog = Dog()
 
+
+def add(a: int, b: int): 
+    return a + b
+ 
+add(3, 4)
+
+
+if __name__ == '__main__':
+    add(1,2)
+    add(a, c)
+
+
 ### The class attribute [max_life] cannot be set by instance
 
 # dog.max_life = 2  
+
+#%%
+
+a: int = 1
+b: int = 2
+# %%
+print(b)
+#%%
