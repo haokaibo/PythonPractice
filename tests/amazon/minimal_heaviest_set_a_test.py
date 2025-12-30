@@ -11,6 +11,6 @@ class MinimalHeaviestSetA(TestCase):
 
     def test1(self):
         a = [4,2,5,1,6]
-        m =MinimalHeaviestSetA()
-        assert([5,6], m.minimalHeaviestSetA(a))
+        m = MinimalHeaviestSetA()
+        assert m.minimalHeaviestSetA(a) == [5,6]
  

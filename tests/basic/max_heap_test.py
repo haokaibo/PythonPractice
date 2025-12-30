@@ -6,5 +6,5 @@ class MaxHeapTest(TestCase):
     def test_pop(self):
         h = MaxHeap(items=[1, 2, 3, 4, 5])
         print(h)
-        assert (h.pop(), 5)
+        assert h.pop() == 5
         print(h)

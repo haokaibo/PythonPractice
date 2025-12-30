@@ -19,7 +19,7 @@ class Search2dMatrixTest(TestCase):
             [[-1, 3]],
             3)
 
-    def test_searchMatrix3(self):
+    def test_searchMatrix3a(self):
         assert Search2DMatrix().searchMatrix(
             [[1], [2], [3], [4], [5]],
             2)
