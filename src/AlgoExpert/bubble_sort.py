@@ -12,16 +12,11 @@ def bubbleSort(array):
     # [10, 2, 30]
     
     for i in range(array_length):
-        current = 0
-        for j in range(array_length - i):
-            if array[current] > array[j]:
-                temp = array[j]
-                array[j] = array[current]
-                array[current] = temp
-
-            current = j
-            
+        for j in range(1, array_length-i):
+            if array[j-1] > array[j]:
+                array[j-1], array[j] = array[j], array[j-1]
 
     return array
+    
 if __name__ == "__main__":
-    print(bubbleSort([8,5,2,9,5,6,3]))
+    print(bubbleSort([2, 3, 5, 5, 6, 8, 9]))
