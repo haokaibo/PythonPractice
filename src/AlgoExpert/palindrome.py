@@ -4,6 +4,7 @@ def isPalindrome(string):
     # Iterate the string from the begin and end together. 
     # If all the begin and end are always the same, then it is a palindrome, else it is not.
     # Time complexity: O(n)
+    # Space complexity: O(1)
     begin = 0
     end = len(string) - 1
 
