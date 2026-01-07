@@ -28,6 +28,7 @@ def optimized_firstDuplicateValue(array):
     number in the array is already negative. just return it, due to we have already found a duplicate one below.
     """
 
+
     for i in range(len(array)):
         flagIndex = abs(array[i]) - 1
         if array[flagIndex] < 0:
