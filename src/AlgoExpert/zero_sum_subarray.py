@@ -1,11 +1,11 @@
 def zeroSumSubarray(nums):
     # Write your code here.
     """
-    Solution
-    1. Use a set to hold the sums in the list.
-    2. Added the 0 in the set in case there is 0 value elements in the array
-    2. Iterate the array, add the cumulative sum in the set.
-    3. If the sums appears twice in the set, then there is a true combinations, just return true.
+    Solution(Time: O(n), Space: O(n))
+    1. Use a set to hold the numbers in the list.
+    2. Iterate the array, if the iteration number is 0, just ignore.
+    3. else use a sum to calculate the cumulative sum.
+    4. If the iteration number is not 0, and cumulative sum is in the current set, return true
     """
     if nums is None or len(nums) == 0:
         return False
