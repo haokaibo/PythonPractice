@@ -9,7 +9,6 @@ def zeroSumSubarray(nums):
     """
     if nums is None or len(nums) == 0:
         return False
-    
     uniqueSums = set()
     uniqueSums.add(0)
     cumulativeSum = 0
