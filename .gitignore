@@ -62,3 +62,7 @@ venv
 
 # test output files
 freecodecamp/notes*.txt
+
+
+# temp files
+jupyter_notessrc/jupyter_notes/notebook1.ipynb
