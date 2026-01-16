@@ -28,7 +28,6 @@ def validateBst(tree):
     # Write your code here.
     return validateBstHelper(tree, float("-inf"), float("inf"))
 
-
 nodes = [
       {"id": "10", "left": "5", "right": "15", "value": 10},
       {"id": "15", "left": None, "right": "22", "value": 15},
@@ -50,4 +49,6 @@ for node in nodes[::-1]:
 
 print(node_dict["10"].value)
 
-print(validateBst(node_dict["10"]))
+print(f"validateBst = {validateBst(node_dict['10'])}")
+
+
