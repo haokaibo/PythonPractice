@@ -29,26 +29,47 @@ def reconstructBst(preOrderTraversalValues):
 
 def reconstructBstHelper(parent, preOrderTraversalValues, index, minValue, maxValue):
     """
-    
+    Reconstruct BST from pre-order traversal values.
+
+    Args:
+        parent (BST): Parent node.
+        preOrderTraversalValues (list): Pre-order traversal values.
+        index (int): Current index.
+        minValue (float): Minimum value of the range.
+        maxValue (float): Maximum value of the range.
+
+    Returns:
+        int: Updated index.
     """
+    # Base case: If index is out of range, return index
     if index >= len(preOrderTraversalValues):
         return index
     
+    # Get the current value
     currentValue = preOrderTraversalValues[index]
     currentNode = BST(currentValue)
-    # left node
+    
+    # If the current value is less than the parent value, it should be the left child
     if currentValue < parent.value:
         parent.left = currentNode
+        # Recursively update the index and reconstruct the left subtree
         index = reconstructBstHelper(currentNode, preOrderTraversalValues, index + 1, minValue, parent.value)
-
+    
+    # If index is out of range, return index
     if index >= len(preOrderTraversalValues):
         return index
-        
+    
+    # Get the current value
     currentValue = preOrderTraversalValues[index]
     currentNode = BST(currentValue)
+    
+    # If the current value is greater than or equal to the parent value and less than the maxValue of the range,
+    # it should be the right child of the parent node
     if currentValue < maxValue and currentValue >= parent.value:
         parent.right = currentNode
+        # Recursively update the index and reconstruct the right subtree
         index = reconstructBstHelper(currentNode, preOrderTraversalValues, index + 1, parent.value, maxValue)
-
+    
+    # Return the updated index
     return index
     
