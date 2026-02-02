@@ -15,7 +15,7 @@ If the node is the top node
 | 1       | 3         | root -> right child / None       |
 | 2       | 5         | left branch has right child  -> right child  |
 | 4       | 2         | left branch has no right child but parent -> parent|
-| 6       | 4         | left leaf node -> partent|
+| 6       | 4         | left leaf node -> parent|
 | 5       | 1         | right leaf node has no child -> parent.parent |
 
 
