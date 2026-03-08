@@ -15,4 +15,8 @@ def optimizedNumberOfWaysToMakeChange(n, denoms):
         for i in range(denom, n + 1):
             nums[i] += nums[i - denom]
 
+        print(f"denom: {denom}, nums: {nums}")
     return nums[n]
+
+print(optimizedNumberOfWaysToMakeChange(3, [2, 1]))
+print(optimizedNumberOfWaysToMakeChange(3, [1, 2]))
