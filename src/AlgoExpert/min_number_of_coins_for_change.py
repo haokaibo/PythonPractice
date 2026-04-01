@@ -19,11 +19,15 @@ class Solution:
         num_of_coins[0] = 0 # 0 coins needed to make amount 0
         
         for denom in denoms:
+            
             for amount in range(denom, n + 1):
                 # We update the current amount if using the current coin is better
+                # print(f"denom: {denom}, amount: {amount}, num_of_coins[{amount}]: {num_of_coins[amount]}, num_of_coins[{amount - denom}] + 1: {num_of_coins[amount - denom] + 1}")
                 num_of_coins[amount] = min(num_of_coins[amount], num_of_coins[amount - denom] + 1)
-                # [0, 1, 2, 3]
-                # denoms = [1, 2]
-                # [0,]
-                
+                # print(f"num_of_coins[{amount}]: {num_of_coins[amount]}, num_of_coins: {num_of_coins}")
+
         return num_of_coins[n] if num_of_coins[n] != float('inf') else -1
+
+
+print(f"{Solution.minNumberOfCoinsForChange(7, [1, 2, 5])}")
+
