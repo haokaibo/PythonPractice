@@ -30,4 +30,3 @@ class Solution:
 
 
 print(f"{Solution.minNumberOfCoinsForChange(7, [1, 2, 5])}")
-
