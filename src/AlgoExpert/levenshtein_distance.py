@@ -18,6 +18,7 @@ b   2   2   2   1   2
 c   3   3   3   2   2
 """
 class Solution:
+    @staticmethod
     def levenshteinDistance(str1, str2):
         rows = len(str1) + 1
         cols = len(str2) + 1
