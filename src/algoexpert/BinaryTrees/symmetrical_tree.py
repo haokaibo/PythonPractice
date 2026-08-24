@@ -1,3 +1,13 @@
+"""
+Symmetrical Tree
+
+You're given a Binary Tree. Write a function that checks whether the binary
+tree is symmetrical.
+
+A symmetrical tree is a binary tree where the left side is a mirror
+reflection of the right side.
+"""
+
 # This is an input class. Do not edit.
 class BinaryTree:
     def __init__(self, value, left=None, right=None):

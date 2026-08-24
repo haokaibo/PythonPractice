@@ -1,3 +1,14 @@
+"""
+Find Successor
+
+You're given a binary search tree (BST) with unique nodes and a node that
+exists in the BST. Write a function that finds the in-order successor of
+that node.
+
+In-order successor is the next node that gets visited after the given node
+in an in-order traversal.
+"""
+
 # This is an input class. Do not edit.
 class BinaryTree:
     def __init__(self, value, left=None, right=None, parent=None):

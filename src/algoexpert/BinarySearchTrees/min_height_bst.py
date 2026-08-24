@@ -1,4 +1,15 @@
 """
+Min Height BST
+
+You're given an array of unique integers sorted in ascending order. Write a
+function that finds the "Min Height BST" that can be generated from the
+array. The function should return the root of the BST.
+
+A BST is said to be balanced if the number of nodes in its left subtrees and
+right subtrees never differ by a factor greater than 2.
+"""
+
+"""
 Solution(Time: O(n), Space: O(n))
 The min height means the BST is a well balanced tree. 
 The medium item in the sorted array should be the root.

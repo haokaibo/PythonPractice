@@ -1,3 +1,16 @@
+"""
+Palindrome Check
+
+Write a function that takes in a string and determines whether it's a
+palindrome or not.
+
+A palindrome is defined as a string that reads the same forwards and
+backwards. The input string might contain special characters, spaces, and
+capital letters. In other words, "A man, a plan, a canal: Panama" is a
+palindrome. It shouldn't be case-sensitive, and it shouldn't consider
+special characters or spaces.
+"""
+
 def isPalindrome(string):
     # Write your code here.
     # Solution

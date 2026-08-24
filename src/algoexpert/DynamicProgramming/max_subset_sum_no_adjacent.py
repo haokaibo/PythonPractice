@@ -1,4 +1,14 @@
 """
+Max Subset Sum No Adjacent
+
+You're given an array of positive integers. Write a function that calculates
+the maximum sum of non-adjacent elements in the array.
+
+For example, given an array [3, 7, 4, 6, 5], the maximum sum of
+non-adjacent elements is 13 (7 + 6).
+"""
+
+"""
 Solution(Time: O(nLog(n), Space: O(1))
 Use the first variable to hold the max sum we got for the previous iteration.
 Use the second variable to hold the max sum we got for the iteration before the previous one.

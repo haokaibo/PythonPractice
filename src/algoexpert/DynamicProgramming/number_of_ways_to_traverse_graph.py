@@ -1,3 +1,12 @@
+"""
+Number Of Ways To Traverse Graph
+
+You're given the dimensions (width and height) of a rectangular grid. Write
+a function that returns the number of different paths you can take to
+traverse the grid from the top-left corner to the bottom-right corner,
+assuming you can only move right or down at each step.
+"""
+
 """_summary_
 Solution(Time:O(w * h), Space: O(w * h) )
 target: find the ways for left top -> right bottom

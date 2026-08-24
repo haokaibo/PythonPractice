@@ -1,3 +1,15 @@
+"""
+Find Three Largest Numbers
+
+Write a function that takes in a non-empty array of arbitrary length and
+returns the three largest numbers in the array.
+
+The three largest numbers in the array do not need to be unique nor in any
+particular order.
+
+You can assume that the input array always contains at least three numbers.
+"""
+
 def findThreeLargestNumbers(array):
     # Write your code here.
     # Solution

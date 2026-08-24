@@ -1,3 +1,15 @@
+"""
+Smallest Difference
+
+You're given two non-empty arrays of integers. Write a function that finds
+the smallest difference between the values of an integer in the first array
+and an integer in the second array.
+
+Note that this smallest difference can't be negative (take the absolute
+value of the difference to make it positive because the difference can't be
+negative).
+"""
+
 def smallestDifference(arrayOne, arrayTwo):
     # Write your code here.
     smallest_gap = float('inf')

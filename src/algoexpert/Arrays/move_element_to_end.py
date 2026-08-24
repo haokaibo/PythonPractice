@@ -1,3 +1,13 @@
+"""
+Move Element To End
+
+You're given an array of integers and another integer called toMove. Write a
+function that moves all instances of toMove in the array to the end while
+maintaining the relative order of the other elements.
+
+The function should modify the input array in place and return it.
+"""
+
 def moveElementToEnd(array, toMove):
     # Write your code here.
     """

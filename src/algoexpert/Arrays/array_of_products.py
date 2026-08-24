@@ -1,3 +1,17 @@
+"""
+Array of Products
+
+Write a function that takes in a non-empty array of integers and returns an
+array of the same length, where each element in the output array is equal to
+the product of every other element in the input array.
+
+In other words, the value of the output at index i is the product of every
+element in the input array other than the element at i.
+
+You can assume that the product of any or all of the integers in the array
+will fit inside a 32-bit integer.
+"""
+
 def arrayOfProducts(array):
     # Write your code here.
     """

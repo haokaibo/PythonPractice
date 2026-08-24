@@ -1,3 +1,19 @@
+"""
+Longest Peak
+
+You're given an array of integers where the integers are in an arbitrary
+order. Write a function that returns the length of the longest peak in the
+array.
+
+A peak is defined as a sequence of adjacent ints in the array that strictly
+increment until they reach a tip and then strictly decrement. The length of
+a peak is the difference between its last index and its first index + 1. For
+a sequence of one or two integers, it's impossible to have a peak sequence,
+so the length of the longest peak would be 0.
+
+Note that a peak won't be possible at the first or last index.
+"""
+
 def longestPeak(array):
     # Write your code here.
     """

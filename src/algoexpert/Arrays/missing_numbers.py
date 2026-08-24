@@ -1,3 +1,13 @@
+"""
+Missing Numbers
+
+You're given an array containing n - 2 distinct positive integers, which
+should originally contain all the integers from 1 to n (n being the length
+of the array plus 2), but two numbers are missing.
+
+Write a function that returns the two missing numbers in any order.
+"""
+
 def missingNumbers(nums):
     # Write your code here.
     """

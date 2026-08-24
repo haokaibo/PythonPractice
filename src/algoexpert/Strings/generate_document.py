@@ -1,3 +1,14 @@
+"""
+Generate Document
+
+You're given an array of characters and a string. Write a function that
+checks whether you can make a document out of the given characters.
+
+The function returns a boolean representing whether you can create the
+document out of the characters. You can only use each character in the array
+once.
+"""
+
 def generateDocument(characters, document):
     # Write your code here.
     # Solution

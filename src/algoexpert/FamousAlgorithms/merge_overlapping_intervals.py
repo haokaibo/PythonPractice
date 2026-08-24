@@ -1,3 +1,11 @@
+"""
+Merge Overlapping Intervals
+
+You're given an array of intervals where each interval is a pair of start
+and end times. Write a function that merges all overlapping intervals and
+returns them in sorted order.
+"""
+
 def mergeOverlappingIntervals(intervals):
     # Write your code here.
     """

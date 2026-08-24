@@ -1,3 +1,10 @@
+"""
+Nth Fibonacci
+
+Write a function that takes in an integer "n" and returns the "nth"
+Fibonacci number.
+"""
+
 # Solution
 # Use the mem dict object as the cache of the fib(n), then optimize the time complexity from O(2^n) to O(n)
 # The space complexity is still O(n)

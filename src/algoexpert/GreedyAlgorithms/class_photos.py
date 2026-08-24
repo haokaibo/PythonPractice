@@ -1,3 +1,20 @@
+"""
+Class Photos
+
+You're organizing a school event, so you could line up all the students
+along the front of the stage. They will be standing in two perfect rows:
+the front row will be wearing blue shirts and the back row will be wearing
+red shirts.
+
+Each student has a different height, and all of the students in the back row
+must be strictly taller than the students standing in front of them.
+
+You're given two arrays of integers representing the heights of the students
+wearing blue and red shirts. Write a function that returns whether or not
+it's possible to line up the students so that all of the aforementioned
+constraints are satisfied.
+"""
+
 
 def classPhotos(redShirtHeights, blueShirtHeights):
     # Write your code here.

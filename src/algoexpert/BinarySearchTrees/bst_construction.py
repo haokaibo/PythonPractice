@@ -1,3 +1,24 @@
+"""
+BST Construction
+
+Implement a Binary Search Tree class. The class should have a "value"
+property, which should be initialized to a passed-in integer. The class
+should also have a "left" property and a "right" property, which should
+initially be set to None — no left child or right child.
+
+The class should have an "insert" method which can be used to insert values
+into the BST. It should take in an integer, insert it into the BST, and not
+return anything.
+
+The class should have a "contains" method which can be used to search for
+values in the BST. It should take in an integer, search for it in the BST,
+and return a boolean representing whether or not the value was found.
+
+The class should also have a "remove" method which can be used to remove
+values from the BST. It should take in an integer, remove the value from the
+BST if it is indeed in the BST, and not return anything.
+"""
+
 # Do not edit the class below except for
 # the insert, contains, and remove methods.
 # Feel free to add new properties and methods

@@ -1,3 +1,17 @@
+"""
+Spiral Traverse
+
+Write a function that takes in a non-empty two-dimensional array and returns
+a one-dimensional array of all the integers in the input array in spiral
+order.
+
+A spiral path starts at the top-left corner, goes to the far right, and
+proceeds in a clockwise direction until it makes it to the bottom-left
+corner. By continuing to follow this spiral path, the algorithm then
+proceeds to the top, far left, down, far right, and so on until every
+integer has been visited.
+"""
+
 def optimized_spiralTraverse(array):
     result=[]
     startRow, endRow = 0, len (array) - 1

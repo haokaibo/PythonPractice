@@ -1,3 +1,15 @@
+"""
+Optimal Freelancing
+
+You're given an array of freelance jobs. Each job is represented by an object
+with a "deadline" (the day by which the job must be completed) and a
+"payment" (the amount earned for completing the job). You can work on only
+one job per day, and each job takes one full day to complete.
+
+Write a function that returns the maximum total payment you can earn by
+choosing which jobs to work on.
+"""
+
 def optimalFreelancing(jobs):
     # Write your code here.
     # Solution

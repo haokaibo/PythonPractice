@@ -1,3 +1,11 @@
+"""
+Numbers Of Ways To Make Change
+
+You're given an integer "amount" and an array of distinct coins. Write a
+function that calculates the number of ways to make change for that amount
+using the given coins.
+"""
+
 def optimizedNumberOfWaysToMakeChange(n, denoms):
     # Write your code here.
     """Solution (Time: O(nd), Space: O(n))

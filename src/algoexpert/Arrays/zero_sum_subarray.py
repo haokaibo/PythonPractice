@@ -1,3 +1,10 @@
+"""
+Zero Sum Subarray
+
+Write a function that takes in an array of integers and returns a boolean
+representing whether any subarray of the input array sums to zero.
+"""
+
 def zeroSumSubarray(nums):
     # Write your code here.
     """

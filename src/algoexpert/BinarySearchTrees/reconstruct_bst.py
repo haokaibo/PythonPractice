@@ -1,3 +1,16 @@
+"""
+Reconstruct BST
+
+You're given an array of nodes representing a BST that was serialized in
+pre-order. Write a function that reconstructs the BST in O(n) time, where n
+is the number of nodes in the BST.
+
+To achieve the time complexity above, you have to leverage the fact that
+every node in the input array has a value greater than or equal to all of
+the values in the left subtree of that node and a value strictly less than
+all of the values in the right subtree of that node.
+"""
+
 # This is an input class. Do not edit.
 class BST:
     def __init__(self, value, left=None, right=None):

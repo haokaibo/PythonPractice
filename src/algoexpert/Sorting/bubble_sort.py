@@ -1,3 +1,20 @@
+"""
+Bubble Sort
+
+Write a function that takes in an array of integers and sorts the array in
+place using the Bubble Sort algorithm, and then returns it.
+
+If the input array is empty, the function should simply return it.
+
+The Bubble Sort algorithm works by first iterating through the array from
+left to right, comparing each element to its right neighbor. If the element
+is greater than its right neighbor, the two elements are swapped. This
+process continues until the end of the array, where the biggest element
+"bubbles" to the end of the array. This process repeats, with each pass
+"bubbling" the next biggest element to its proper position, until the array
+is sorted.
+"""
+
 def bubbleSort(array):
     # Write your code here.
     # Solution

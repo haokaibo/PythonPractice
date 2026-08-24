@@ -1,3 +1,13 @@
+"""
+Height Balanced Binary Tree
+
+You're given a Binary Tree. Write a function that returns whether or not the
+binary tree is height balanced.
+
+A height-balanced binary tree is a binary tree where the difference in
+heights between the left and right subtrees of any node is no more than 1.
+"""
+
 # This is an input class. Do not edit.
 class BinaryTree:
     def __init__(self, value, left=None, right=None):

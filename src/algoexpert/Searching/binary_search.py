@@ -1,3 +1,12 @@
+"""
+Binary Search
+
+You're given a sorted (in ascending order) non-empty array of integers and a
+target integer. Write a function that uses binary search to find the index
+of the target integer in the array. If the target is not present in the
+array, the function should return -1.
+"""
+
 # Time complexity O(log(n))
 # Space complexity O(1)
 def binary_search(array, target):

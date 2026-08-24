@@ -1,4 +1,16 @@
 """
+Min Number Of Coins For Change
+
+You're given an integer "targetAmount" and an array of distinct coins. Write
+a function that calculates the minimum number of coins needed to make a
+total amount of "targetAmount". If it's impossible to make the target amount,
+the function should return -1.
+
+You can assume that all coin values are positive integers, and that there is
+at least one coin.
+"""
+
+"""
 Solution(Time: O(n * d),Space: O(n))
 Target: Use lease amount of coins for the change
 1. impossible, return -1

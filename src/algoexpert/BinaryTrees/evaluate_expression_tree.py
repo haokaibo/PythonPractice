@@ -1,3 +1,19 @@
+"""
+Evaluate Expression Tree
+
+You're given a binary tree representing a mathematical expression. Every
+leaf node holds an operand (a positive integer), and every internal node
+holds an operator encoded as a negative integer:
+
+- -1 represents addition (+)
+- -2 represents subtraction (-)
+- -3 represents division (/), with the result truncated
+- -4 represents multiplication (*)
+
+Each operator node has both a left and a right child. Write a function that
+evaluates the expression tree and returns the resulting value.
+"""
+
 import math
 # This is an input class. Do not edit.
 class BinaryTree:

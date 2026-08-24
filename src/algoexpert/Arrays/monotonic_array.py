@@ -1,4 +1,18 @@
 
+"""
+Monotonic Array
+
+Write a function that takes in an array of integers and returns a boolean
+representing whether the array is monotonic or not.
+
+An array is said to be monotonic if its values don't decrease as you move
+through it from left to right, or if its values don't increase as you move
+through it from left to right.
+
+Put another way, an array is monotonic if its values only ever increase or
+only ever decrease. Note that single-valued arrays are monotonic.
+"""
+
 def isMonotonic(array):
     # Write your code here.
     """

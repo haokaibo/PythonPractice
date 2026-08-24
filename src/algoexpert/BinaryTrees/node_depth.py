@@ -1,3 +1,14 @@
+"""
+Node Depth
+
+You're given a binary tree. Write a function that calculates the sum of all
+the node depths in the binary tree.
+
+The depth of a node is defined as the number of edges between the node and
+the root. For example, the root node has a depth of 0, and its direct
+children have a depth of 1.
+"""
+
 # Solution
 ## 1. Iterate the tree from the root
 ## 2. Each each node, we can iterate its left and right Descendants, 

@@ -1,3 +1,13 @@
+"""
+Find Kth Largest Value In BST
+
+You're given a Binary Search Tree (BST) and an integer "k". Write a function
+that finds the kth largest value in the BST.
+
+Assume that the BST has at least k nodes, such that the kth largest value
+always exists.
+"""
+
 # This is an input class. Do not edit.
 """
 Solution(Time: O(h + k), Space: O(h)) h is the height of the tree. k is the kth value

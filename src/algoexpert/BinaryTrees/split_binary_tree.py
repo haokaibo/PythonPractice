@@ -1,3 +1,15 @@
+"""
+Split Binary Tree
+
+You're given a binary tree. Write a function that determines whether the
+binary tree can be split into two subtrees with equal sums by removing a
+single edge.
+
+The function should return the sum of the two equal subtrees if such a split
+exists, or 0 if it is impossible to split the tree into two subtrees with
+equal sums.
+"""
+
 # This is an input class. Do not edit.
 class BinaryTree:
     def __init__(self, value, left=None, right=None):

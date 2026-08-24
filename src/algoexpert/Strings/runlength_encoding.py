@@ -1,3 +1,22 @@
+"""
+Run Length Encoding
+
+You're given a non-empty string that contains only alphanumeric characters
+(characters between 0-9 and a-z). The characters in the string are arranged
+in runs where each run consists of a character repeated one or more times.
+For example, the characters "x", "x", and "d" in the string "xxdd" form a
+run of "x" and a run of "d". Write a function that returns the run-length
+encoded string.
+
+For example, the string "xxddd" would be run-length encoded as "x2d3".
+
+This function should return the run-length encoded string only if it's
+shorter than the original string. If it doesn't make the string shorter, the
+function should return the original input instead. If a run of length 10 or
+more occurs in the input string, the string should never be run-length
+encoded.
+"""
+
 def runLengthEncoding(string):
     # Write your code here.
     # Solution

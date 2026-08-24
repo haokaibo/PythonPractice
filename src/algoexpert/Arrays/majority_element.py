@@ -1,3 +1,14 @@
+"""
+Majority Element
+
+You've been given an array of integers where all of the integers appear an
+even number of times, except for one integer which appears an odd number of
+times.
+
+Write a function that finds and returns the integer that appears an odd
+number of times.
+"""
+
 def majorityElement(array):
     # Write your code here.
     """

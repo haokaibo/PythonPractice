@@ -1,4 +1,17 @@
 """
+Levenshtein Distance
+
+You're given two strings. Write a function that returns the edit distance
+between the two strings.
+
+The edit distance between two strings can be calculated by determining the
+minimum number of edits required to transform one string into the other.
+The allowed edits are: inserting a character into a string, deleting a
+character from a string, or replacing a character in a string with another
+character.
+"""
+
+"""
 Solution
 1. Build a matrix to holder the chars from the horizontal and vertical respectively.
 2. Calculate the operations for each combination for each cell in the matrix.

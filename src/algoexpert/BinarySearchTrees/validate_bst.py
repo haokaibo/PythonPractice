@@ -1,3 +1,13 @@
+"""
+Validate BST
+
+You're given a Binary Search Tree. Write a function that checks if the BST
+is valid. The BST is valid if and only if all of its nodes have a value
+strictly greater than or equal to their left-side subtree's nodes' values
+and a value strictly less than or equal to their right-side subtree's
+nodes' values.
+"""
+
 # This is an input class. Do not edit.
 """
 Solution(Time: O(n), Space: O(d), the depth of the tree)

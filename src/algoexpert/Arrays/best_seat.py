@@ -1,3 +1,15 @@
+"""
+Best Seat
+
+You're given a row of seats represented by a non-empty array of 0s and 1s,
+where 1 indicates an occupied seat and 0 indicates a vacant seat.
+
+Write a function that returns the 0-based index of the best vacant seat —
+the vacant seat that is farthest from the nearest occupied seat. If
+multiple vacant seats tie for the maximum distance, return the smallest
+index of them.
+"""
+
 def bestSeat(seats):
     # Write your code here.
     """

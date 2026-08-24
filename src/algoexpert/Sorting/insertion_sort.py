@@ -1,3 +1,14 @@
+"""
+Insertion Sort
+
+Write a function that takes in an array of integers and sorts the array in
+place using the Insertion Sort algorithm, and then returns it.
+
+The Insertion Sort algorithm works by iterating through the array from left
+to right, saving the current element and inserting it into its correct
+position in the sorted portion of the array.
+"""
+
 def insertionSort(array):
     # Write your code here.
     # Solution

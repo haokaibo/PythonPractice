@@ -1,3 +1,14 @@
+"""
+First Non-Repeating Character
+
+You're given a non-empty string containing only lowercase alphabetical
+characters. Write a function that returns the first non-repeating character
+in this string.
+
+If the input string doesn't contain any non-repeating characters, the
+function should return the empty string ("").
+"""
+
 
 def firstNonRepeatingCharacter(string):
     # Write your code here.

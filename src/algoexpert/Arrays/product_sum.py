@@ -1,3 +1,20 @@
+"""
+Product Sum
+
+Write a function that takes in a "special" array and returns its product sum.
+
+A "special" array is defined as an array that contains either integers or
+other "special" arrays.
+
+The product sum of a "special" array is the sum of its elements, where each
+element in the array is multiplied by a depth factor. At the top-level, the
+depth factor is 1. The depth factor of a subarray's elements is equal to the
+subarray's depth + 1. For instance, the array [1, 2, [3, 4], 5] is a
+"special" array of depth 1. It contains a subarray in the form of [3, 4],
+whose product sum is (3 * 2) + (4 * 2). Therefore, the product sum of
+[1, 2, [3, 4], 5] is 1 + 2 + (3 * 2) + (4 * 2) + 5 = 21.
+"""
+
 # Tip: You can use the type(element) function to check whether an item
 # is a list or an integer.
 

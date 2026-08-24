@@ -1,3 +1,13 @@
+"""
+Common Characters
+
+You're given a non-empty array of strings. Write a function that returns all
+the characters that appear in every string in the array.
+
+Note that the characters in the returned array should only appear once,
+regardless of how many times they appear in the input strings.
+"""
+
 # Time Complexity
 
 # O(N * M) where N is the number of strings and M is the average string length, due to set construction (O(M) per string) and intersection (O(min set sizes)). Optimal for this task.

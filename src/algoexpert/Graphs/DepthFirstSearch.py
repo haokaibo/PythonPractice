@@ -1,3 +1,21 @@
+"""
+Depth First Search
+
+You're given a Node class that has a "name" property and an array of
+pointers to child nodes. The DFS traversal of a graph produces a value by
+visiting nodes in a depth-first manner.
+
+Starting at the root node of a graph, the main principle behind depth-first
+search traversal is to keep on going deep into the graph until you hit a
+node that has no more children. By then, you backtrack and continue down the
+most recently found path. You keep doing this until you've visited all of
+the nodes.
+
+To do this, of course, you have to keep track of every node you've visited.
+The order in which you visit the nodes will eventually be returned as an
+array of node values in the order in which they were visited.
+"""
+
 # Do not edit the class below except
 # for the depthFirstSearch method.
 # Feel free to add new properties

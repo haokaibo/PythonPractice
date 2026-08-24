@@ -1,3 +1,15 @@
+"""
+Selection Sort
+
+Write a function that takes in an array of integers and sorts the array in
+place using the Selection Sort algorithm, and then returns it.
+
+The Selection Sort algorithm works by finding the smallest integer in the
+unsorted portion of the array, swapping it with the first unsorted integer,
+and then moving the pointer one position to the right, repeating until the
+array is sorted.
+"""
+
 def selectionSort(array):
     # Write your code here.
     # Solution

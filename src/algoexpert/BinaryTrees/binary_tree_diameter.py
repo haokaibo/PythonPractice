@@ -1,3 +1,16 @@
+"""
+Binary Tree Diameter
+
+You're given a binary tree. Write a function that returns the diameter of
+the binary tree.
+
+The diameter of a binary tree is the length of the longest path between any
+two nodes in the tree. A path is a sequence of nodes where each pair of
+consecutive nodes in the sequence must be connected by an edge. The length
+of a path is the number of edges in the path (equivalently, the number of
+nodes in the path minus one).
+"""
+
 # This is an input class. Do not edit.
 class BinaryTree:
     def __init__(self, value, left=None, right=None):

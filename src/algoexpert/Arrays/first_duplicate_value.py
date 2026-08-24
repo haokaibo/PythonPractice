@@ -1,3 +1,14 @@
+"""
+First Duplicate Value
+
+You've been given an array for which every number is between 1 and the
+length of the array (inclusive). Some numbers appear once and others appear
+twice.
+
+Write a function that returns the first number in the array that appears
+twice. If no number appears twice, the function should return -1.
+"""
+
 def firstDuplicateValue(array):
     # Write your code here.
     """

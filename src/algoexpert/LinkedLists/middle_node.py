@@ -1,3 +1,13 @@
+"""
+Middle Node
+
+You're given the head of a non-empty linked list. Write a function that
+returns the middle node of the linked list.
+
+If the linked list has an even number of nodes, the function should return
+the second of the two middle nodes.
+"""
+
 # This is an input class. Do not edit.
 class LinkedList:
     def __init__(self, value):
