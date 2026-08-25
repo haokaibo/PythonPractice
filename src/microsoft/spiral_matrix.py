@@ -33,14 +33,14 @@ class Solution(object):
         iterated = []
         
         left_border = -1
-        upper_border = - 1
+        top_border = - 1
         m = len(matrix[0])
         n = len(matrix)
         right_border = m
         bottom_border = n
         x, y = 0, 0
         
-        while len(iterated) < m * n:
+        while top_border <= bottom_border and left_border <= right_border:
             # move right
             while y < right_border:
                 iterated.append(matrix[x][y])
@@ -49,12 +49,10 @@ class Solution(object):
             if self.is_complete(iterated, matrix):
                 break
 
-            upper_border += 1
+            top_border += 1
             y -= 1
             x += 1
             
-            
-
             # move down
             while x < bottom_border:
                 iterated.append(matrix[x][y])
@@ -66,8 +64,6 @@ class Solution(object):
             right_border -= 1
             x -= 1
             y -= 1
-            
-
             
             # move left
             
@@ -83,7 +79,7 @@ class Solution(object):
             
             # move up
             
-            while x > upper_border:
+            while x > top_border:
                 iterated.append(matrix[x][y])
                 x -= 1
                 
