@@ -50,7 +50,7 @@ class Solution(object):
         head = current = previous = None
 
             
-        while len(lists) > 0:
+        while True:
             minimal_head = self.check_minimal_item_list(lists)
             if minimal_head is None:
                 break
