@@ -2,8 +2,15 @@
 LeetCode 17. Letter Combinations of a Phone Number
 
 Given a string containing digits from 2-9 only, return all possible letter
-combinations that the number could represent based on how they are mapped on
-a telephone keypad. In case a digit maps to more than two letters.
+combinations that the number could represent. Return the answer in any order.
+
+A mapping of digit to letters (just like on a telephone keypad) is given below:
+
+    2: abc    3: def    4: ghi
+    5: jkl    6: mno    7: pqrs
+    8: tuv    9: wxyz
+
+Note: 1 has no letters mapped to it.
 
 Example 1:
 Input: digits = "23"
@@ -16,6 +23,10 @@ Output: []
 Example 3:
 Input: digits = "2"
 Output: ["a","b","c"]
+
+Constraints:
+- 0 <= digits.length <= 4
+- digits[i] is a digit in the range ['2', '9']
 """
 
 """
