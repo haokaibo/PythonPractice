@@ -89,6 +89,19 @@ class Solution(object):
             board[r][c] = char
 
             # 剪枝优化（防止多余计算）
+            #
+            # 关键：它什么时候会"变空"？一个节点的 children 变空只有两种情况：
+            # 1. 它本来就是叶子（单词终点，如 "oath" 的 h 节点）——单词被找到后 word 被置为 None，
+            #    这个节点再也匹配不出任何东西；
+            # 2. 它的孩子被递归 DFS 一层层剪掉了——比如 e→a→t 这条链，t 剪掉后 a 变空，
+            #    a 被剪，e 又变空，e 再被剪。剪枝是自底向上级联的。
+            #
+            # 为什么剪掉是安全的：剪枝发生在回溯之后（board[r][c] 已恢复），
+            # 经过 (r, c) 的所有路径都已探索完。此时 current.children 若为空，
+            # 说明它下面能匹配的单词要么已找到、要么根本不存在，
+            # 以后任何 DFS 再走进这个节点都是白走，直接摘掉可省掉未来的无谓探索。
+            # 同时剪枝让 root.children 逐渐缩小，外层循环的
+            # `if board[r][c] in root.children` 会直接跳过已榨干的节点，连 DFS 都不发起。
             if not curr_node.children:
                 parent.children.pop(char)
 
