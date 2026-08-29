@@ -1,0 +1,303 @@
+:root {
+  --bg: #1f1f1f;
+  --panel: #2a2a2a;
+  --border: #3a3a3a;
+  --text: #e6e6e6;
+  --muted: #9aa0a6;
+  --accent: #8ab4f8;
+  --hover: #3c4043;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.brand { font-weight: 600; letter-spacing: 0.3px; }
+.tabs { display: flex; gap: 6px; }
+.tab {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.tab:hover { background: var(--hover); color: var(--text); }
+.tab.active {
+  background: var(--hover);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.page {
+  /* let the 80% viewer breathe; no artificial max-width */
+  margin: 0 auto;
+  padding: 16px 16px 32px;
+}
+
+/* Google-style search box */
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 8px auto 18px;
+  max-width: 720px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 16px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.15);
+}
+.search-icon { margin-right: 10px; opacity: 0.7; }
+.search input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+  font-size: 15px;
+}
+.count { color: var(--muted); font-size: 12px; margin-left: 10px; }
+
+/* Filters */
+.filters {
+  max-width: 720px;
+  margin: 0 auto 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.filter-label {
+  color: var(--muted);
+  font-size: 12px;
+}
+#category {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 13px;
+  outline: 0;
+}
+#category:focus { border-color: var(--accent); }
+.ghost-btn {
+  margin-left: auto;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ghost-btn:hover { color: var(--text); border-color: var(--border); }
+
+.tag-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 64px;
+  overflow-y: auto;
+  padding: 2px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.chip .count { color: var(--muted); font-size: 11px; }
+.chip:hover { border-color: var(--accent); }
+.chip.active {
+  background: var(--accent);
+  color: #1f1f1f;
+  border-color: var(--accent);
+}
+.chip.active .count { color: rgba(0,0,0,0.6); }
+
+/* Group headers inside the result list (collapsible) */
+.list .group {
+  padding: 6px 12px 4px;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.list .group::-webkit-details-marker { display: none; }
+.list .group .arrow { transition: transform 0.15s; }
+.list details:not([open]) .group .arrow { transform: rotate(-90deg); }
+.list .group-count { color: var(--muted); margin-left: auto; }
+
+/* Two-pane layout: 20% list / 80% viewer */
+.layout {
+  display: grid;
+  grid-template-columns: 20% 80%;
+  gap: 12px;
+  min-height: 60vh;
+}
+@media (max-width: 800px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.list li {
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 1fr auto;   /* title | star */
+  align-items: center;
+  column-gap: 6px;
+  row-gap: 2px;
+}
+.list li:hover, .list li.active { background: var(--hover); }
+.list .title { font-size: 13px; grid-column: 1; }
+.list .path  { font-size: 10px; color: var(--muted); font-family: ui-monospace, monospace; grid-column: 1; }
+.list .empty { color: var(--muted); padding: 14px; text-align: center; grid-column: 1 / -1; }
+
+/* favorite star */
+.star {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  align-self: start;
+}
+.star:hover { background: var(--border); color: var(--text); }
+.star.fav {
+  color: #f5c518;            /* gold */
+  text-shadow: 0 0 1px rgba(0,0,0,0.4);
+}
+
+.viewer,
+.viewer[class*="language-"] {
+  margin: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  max-height: 75vh;
+  overflow: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 14px !important; /* MUST be set on <pre> too: line-numbers
+                                 plugin reads getComputedStyle(pre).fontSize.
+                                 !important beats prism-tomorrow's 1em rule
+                                 that targets pre[class*=language-]. */
+  line-height: 21px !important;          /* beat prism's 1.5; 14 * 1.5 = 21 */
+  --gutter-pad: 3.4em;        /* shared by code padding-left and gutter width */
+  --row-h: 21px;              /* must equal line-height above */
+}
+.viewer code,
+.viewer code[class*="language-"] {
+  font-family: inherit;
+  font-size: 14px !important;            /* beat prism's 1em */
+  line-height: 21px !important;         /* beat prism's 1.5 */
+  /* Margin-left inside the code block so the first character doesn't
+     touch the gutter divider. */
+  margin-left: 4px;
+}
+/* Prism wraps tokens in <span class="token ...">. Make sure none of
+   them changes vertical rhythm. */
+.viewer .token {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  display: inline;            /* undo any inline-block defaults */
+  vertical-align: baseline;
+}
+
+/* line-numbers plugin tweaks
+   Layout contract:
+     - <pre> is the positioning context (position: relative).
+     - .line-numbers-rows is absolutely positioned inside the pre's
+       PADDING area (not the content area), so we keep padding-left on
+       <pre> as the gutter width and let the gutter span sit at left: 0.
+     - <code> is shifted right by the gutter width via padding-left, so
+       its first character starts AFTER the gutter.
+   The plugin measures code's line-height to place each row; we pin that
+   to --row-h to keep baselines aligned.
+*/
+.viewer.line-numbers {
+  position: relative;          /* containing block for the gutter */
+  padding-left: 0;             /* <code> provides the left space instead */
+  white-space: pre;
+}
+.viewer.line-numbers > code {
+  display: block;
+  white-space: pre;
+  padding-left: var(--gutter-pad);   /* push code text past the gutter */
+}
+.viewer.line-numbers .line-numbers-rows {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-right: 1px solid var(--border);
+  padding: 0 0.4em 0 0;        /* right-side breathing room */
+  font-size: 14px !important;
+  line-height: 21px !important;
+  text-align: right;
+  user-select: none;
+  pointer-events: none;        /* don't steal clicks from the code */
+  overflow: hidden;
+  width: var(--gutter-pad);
+  box-sizing: border-box;
+}
+.viewer.line-numbers .line-numbers-rows > span {
+  display: block;
+  line-height: 21px !important;
+}

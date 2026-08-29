@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Python Practice Browser</title>
+
+  <!-- Prism.js for syntax highlighting (CDN, lazy-loaded) -->
+  <link id="prism-theme" rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">Python Practice</div>
+    <div class="tabs">
+      <button class="tab"        data-tab="favorites">★ Favorites</button>
+      <button class="tab active" data-tab="all">All files</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <!-- Google-style search box -->
+    <div class="search">
+      <span class="search-icon" aria-hidden="true">🔍</span>
+      <input id="q" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Fuzzy match: chars in order…   (press / to focus)" />
+      <span id="count" class="count" aria-live="polite"></span>
+    </div>
+
+    <!-- Filters: category + tag chips -->
+    <div class="filters">
+      <div class="filter-row">
+        <label class="filter-label" for="category">Category:</label>
+        <select id="category">
+          <option value="">All</option>
+        </select>
+        <button id="clear-tags" class="ghost-btn" type="button" title="Clear all tag filters">× clear tags</button>
+      </div>
+      <div id="tag-bar" class="tag-bar" role="group" aria-label="Tag filters">
+        <!-- chips injected by JS -->
+      </div>
+    </div>
+
+    <div class="layout">
+      <ul id="list" class="list" role="listbox" aria-label="results"></ul>
+      <pre id="viewer" class="viewer line-numbers"><code id="code" class="language-python"># Pick a file on the left to view it here.</code></pre>
+    </div>
+  </main>
+
+  <!-- Prism core + Python component, loaded on demand -->
+  <script>
+    window.__loadPrism = () => new Promise((resolve) => {
+      if (window.Prism && window.Prism.plugins.lineNumbers) return resolve(window.Prism);
+      const head = document.head;
+      const add = (src) => new Promise(r => {
+        const s = document.createElement('script');
+        s.src = src; s.onload = r; head.appendChild(s);
+      });
+      (async () => {
+        if (!window.Prism) await add('https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js');
+        await add('https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js');
+        await add('https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js');
+        // Drop any cached sizing computed from the placeholder text so the
+        // first real highlight builds a fresh gutter.
+        try {
+          const ln = window.Prism.plugins.lineNumbers;
+          if (ln && 'knownSize' in ln) ln.knownSize = false;
+        } catch {}
+        resolve(window.Prism);
+      })();
+    });
+  </script>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

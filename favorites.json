@@ -1,0 +1,48 @@
+{
+  "items": [
+    {
+      "path": "src/microsoft/wildcard_matching.py",
+      "title": "Wildcard Matching",
+      "tags": [
+        "string",
+        "greedy",
+        "two-pointers"
+      ],
+      "note": "Classic LeetCode 44. Tries regex first; switch to greedy O(m+n) for adversarial inputs.",
+      "category": "microsoft"
+    },
+    {
+      "path": "src/amazon/merge_k_sorted_lists.py",
+      "title": "Merge K Sorted Lists",
+      "tags": [
+        "linked-list",
+        "heap"
+      ],
+      "note": "",
+      "category": "amazon"
+    },
+    {
+      "path": "src/amazon/sort_colors.py",
+      "title": "Sort Colors (Dutch National Flag)",
+      "tags": [
+        "array",
+        "two-pointers"
+      ],
+      "note": "",
+      "category": "amazon"
+    },
+    {
+      "path": "src/google/circular_array.py",
+      "title": "Circular Array",
+      "tags": [],
+      "note": "",
+      "category": "google"
+    },
+    {
+      "path": "src/HeadFirstPython/chapter3/sketch.py",
+      "title": "Sketch",
+      "tags": [],
+      "note": ""
+    }
+  ]
+}
