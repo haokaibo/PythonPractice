@@ -1,53 +1,39 @@
-"""
-LeetCode 98. Validate Binary Search Tree
-
-Given the root of a binary tree, determine if it is a valid binary search
-tree (BST).
-
-A valid BST is defined as follows:
-- The left subtree of a node contains only nodes with keys less than the
-  node's key.
-- The right subtree of a node contains only nodes with keys greater than the
-  node's key.
-- Both the left and right subtrees must also be binary search trees.
-
-Example 1:
-Input: root = [2,1,3]
-Output: true
-
-Example 2:
-Input: root = [5,1,4,null,null,3,6]
-Output: false
-Explanation: The root node's value is 5 but its right child's value is 4.
 
 # Definition for a binary tree node.
-class TreeNode:
-    def __init__(self, x, left=None, right=None):
-        self.val = x
-        self.left = left
-        self.right = right
-"""
-
+# class TreeNode(object):
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
 """
 Solution:
-1. Recursively validate each subtree within an (open, close) value bound
-2. Left child must be within (-inf, node.val), right child within (node.val, +inf)
-Time: O(n), Space: O(h) where h is the tree height (recursion stack)
+1. Iterate the tree recursively to ensure the left node is less than current and the right is greater than current
+2. Both the left and right sub tree is valid bst
+Time: O(n), Space: O(1)
 """
-import math
-
 class Solution(object):
+    
+    def validateBstHelper(self, tree, minValue=float('-inf'), maxValue=float('inf')):
+        """
+        For each tree node it should greater than a value (e.g. left node , the minValue is float("-inf"), the max value is the parent value)
+        """
+        # Child of leaf node or the single node tree
+        if tree is None:
+            return True
+
+        if tree.val <= minValue or tree.val >= maxValue:
+            return False
+
+        isLeftValid = self.validateBstHelper(tree.left, minValue, tree.val)
+        isRightValid = self.validateBstHelper(tree.right, tree.val, maxValue)
+
+        return isLeftValid and isRightValid
+        
     def isValidBST(self, root):
         """
-        :type root: TreeNode
+        :type root: Optional[TreeNode]
         :rtype: bool
         """
-        def validate(node, low, high):
-            if node is None:
-                return True
-            if node.val <= low or node.val >= high:
-                return False
-            return (validate(node.left, low, node.val) and
-                    validate(node.right, node.val, high))
-
-        return validate(root, -math.inf, math.inf)
+        return self.validateBstHelper(root)
+        
+        
