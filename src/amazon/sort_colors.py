@@ -1,99 +1,90 @@
 """
-Given an array with n objects colored red, white or blue,
-sort them in-place so that objects of the same color are adjacent,
-with the colors in the order red, white and blue
+LeetCode 75. Sort Colors [Medium]
 
-Here we use the integers 0, 1, 2 to represent the color red, white and blue respectively.
+Given an array nums with n objects colored red, white, or blue, sort them
+in-place so that objects of the same color are adjacent, with the colors in
+the order red, white, and blue. We use the integers 0, 1, and 2 to represent
+the color red, white, and blue, respectively.
 
-Note: You are not suppose to use the library's sort function for this program
+You must solve this problem without using the library's sort function.
 
-Example:
+Example 1:
+Input:  nums = [2, 0, 2, 1, 1, 0]
+Output: [0, 0, 1, 1, 2, 2]
 
-input : [2,0,2,1,1,0]
-output: [0,0,1,1,2,2]
+Example 2:
+Input:  nums = [2, 0, 1]
+Output: [0, 1, 2]
 
-solution1 :
-Convert this problem to sorting problem.
-Using Merge sort to sort the array.
+Constraints:
+- n == nums.length
+- 1 <= n <= 300
+- nums[i] is either 0, 1, or 2.
 
-Time: O(nLog(n))
-space: O(n)
+Follow up: Could you come up with a one-pass algorithm using only constant
+extra space?
 
-solutions2:
-iterate the array,
-count the red, white ,blue count,
-return the array [0]*red + [1]*white + [2]* blue
+Solution 1 (counting sort, two-pass, in-place):
+    Count occurrences of 0, 1, 2, then overwrite the array.
+    Time : O(n)
+    Space: O(1) extra
 
-Time: O(n)
-space: O(n)
+Solution 2 (Dutch National Flag / three-way partition, one-pass, in-place):
+    Single pass with three pointers (low, mid, high). This is the
+    one-pass / O(1) extra space solution requested in the follow-up.
+    Time : O(n)
+    Space: O(1) extra
+
+Both satisfy the "in-place" requirement of the problem.
 """
 
 
-class ColorObject:
-    colors = {
-        0: 'red',
-        1: 'white',
-        2: 'blue'
-    }
+def sort_colors_counting(arr):
+    """Two-pass in-place solution using counts."""
+    if not arr:
+        return arr
 
-    def __init__(self, color):
-        self.color = color
-
-    def __str__(self):
-        return ColorObject.colors[self.color]
-
-
-def simple_sort(arr):
-    reds = 0
-    whites = 0
-    blues = 0
+    counts = [0, 0, 0]
     for c in arr:
-        if c == 0:
-            reds += 1
-        elif c == 1:
-            whites += 1
-        elif c == 2:
-            blues += 1
-    return [0] * reds + [1] * whites + [2] * blues
+        counts[c] += 1
 
-
-def merge_sort(arr):
-    if arr is None or len(arr) <= 1:
-        return
-
-    mid = len(arr) // 2
-
-    left = arr[:mid]
-    right = arr[mid:]
-    merge_sort(left)
-    merge_sort(right)
-
-    i = j = k = 0
-    while i < len(left) and j < len(right):
-        if left[i] <= right[j]:
-            arr[k] = left[i]
-            i += 1
-        else:
-            arr[k] = right[j]
-            j += 1
-        k += 1
-
-    while i < len(left):
-        arr[k] = left[i]
-        i += 1
-        k += 1
-
-    while j < len(right):
-        arr[k] = right[j]
-        j += 1
-        k += 1
+    idx = 0
+    for color, cnt in enumerate(counts):
+        for _ in range(cnt):
+            arr[idx] = color
+            idx += 1
     return arr
 
 
-def sort_colors(colors):
-    return simple_sort(colors)
+def sort_colors_dutch_flag(arr):
+    """One-pass in-place solution using the Dutch National Flag algorithm."""
+    low = mid = 0
+    high = len(arr) - 1
+
+    while mid <= high:
+        if arr[mid] == 0:
+            arr[low], arr[mid] = arr[mid], arr[low]
+            low += 1
+            mid += 1
+        elif arr[mid] == 1:
+            mid += 1
+        else:  # arr[mid] == 2
+            arr[mid], arr[high] = arr[high], arr[mid]
+            high -= 1
+    return arr
 
 
-colors = [2, 0, 2, 1, 1, 0]
-print(sort_colors(colors))
-print(sort_colors([]))
+if __name__ == "__main__":
+    # Demo: both functions are in-place, so the original list is mutated.
+    colors = [2, 0, 2, 1, 1, 0]
+    sort_colors_counting(colors)
+    print(colors)  # [0, 0, 1, 1, 2, 2]
+
+    colors = [2, 0, 2, 1, 1, 0]
+    sort_colors_dutch_flag(colors)
+    print(colors)  # [0, 0, 1, 1, 2, 2]
+
+    # Edge cases
+    print(sort_colors_counting([]))        # []
+    print(sort_colors_dutch_flag([2, 2]))  # [2, 2]
+    print(sort_colors_dutch_flag([0]))     # [0]

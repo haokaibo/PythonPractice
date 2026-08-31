@@ -1,19 +1,38 @@
-r"""
-Wildcard Matching.
+"""
+LeetCode 44. Wildcard Matching [Hard]
 
-Rules:
-  '?' matches any single character.
-  '*' matches any sequence of characters (including the empty sequence).
+Given an input string s and a pattern p, implement wildcard pattern matching
+with support for '?' and '*' where:
+  - '?' matches any single character.
+  - '*' matches any sequence of characters (including the empty sequence).
 
-Examples:
-  case 1: s = "abcd"  p = "a*d" -> True
-  case 2: s = "abcd"  p = "a*e" -> False
-  case 3: s = "abc"   p = "a?c" -> True
-  case 4: s = "abcde" p = "a*d" -> False
-  case 5: s = "abcded" p = "a*d" -> True
-  case 6: s = "abcded" p = "a**d" -> True (consecutive '*' collapses to one '*')
+The matching should cover the entire input string (not partial).
 
-Approach: greedy two-pointer with backtracking, O(m + n) worst case.
+Example 1:
+Input:  s = "aa",   p = "*"
+Output: True
+Explanation: '*' matches any sequence.
+
+Example 2:
+Input:  s = "cb",   p = "?a"
+Output: False
+Explanation: '?' matches 'c', but the second letter is 'a', which does not match 'b'.
+
+Example 3:
+Input:  s = "abcd", p = "a*d"
+Output: True
+
+Example 4:
+Input:  s = "abcded", p = "a**d"
+Output: True
+Explanation: consecutive '*' collapses to a single '*'.
+
+Constraints:
+- 0 <= s.length, p.length <= 2000
+- s contains only lowercase English letters.
+- p contains only lowercase English letters, '?' or '*'.
+
+Solution (greedy two-pointer with backtracking, O(m + n) worst case):
 
   - i walks s, j walks p.
   - On a normal char, advance both when matched.
@@ -22,15 +41,14 @@ Approach: greedy two-pointer with backtracking, O(m + n) worst case.
     (i = ++i_star, j = star + 1) and retry.
   - At the end, the remaining pattern must be all '*' to be matchable.
 
-The previous regex-based solution re.fullmatch(re.escape(p).replace(...))
-looks elegant but is NOT safe: Python's `re` engine is backtracking and
-explodes (exponential time) on patterns with many '*' over long strings.
-The LeetCode test "aaaabaaaabbbbaabbbaabbaababbabbaaaababaaabbbbbbaabbbabababbaaabaabaaaaaabbaabbbbaababbababaabbbaababbbba" /
-"*****b*aba***babaa*bbaba***a*aaba*b*aa**a*b**ba***a*a*" is the canonical
-example that hangs the regex version.
-"""
-import re
+The regex-based solution re.fullmatch(re.escape(p).replace(...)) looks
+elegant but is NOT safe: Python's `re` engine is backtracking and explodes
+(exponential time) on patterns with many '*' over long strings. The LeetCode
+test below is the canonical adversarial case that hangs the regex version.
 
+Time : O(m + n)
+Space: O(1)
+"""
 
 class Solution(object):
     def isMatch(self, s, p):
@@ -75,20 +93,6 @@ class Solution(object):
         while j < n and p[j] == '*':
             j += 1
         return j == n
-
-    # Kept for reference / comparison. DO NOT use on adversarial inputs.
-    def isMatchRegex(self, s, p):
-        """
-        Regex-based version. Elegant, but NOT safe for this problem.
-
-        Complexity:
-          Time:  Exponential worst case (backtracking NFA). On patterns with
-                 many '*' over long strings (e.g. the LeetCode adversarial
-                 test) it can take minutes and trigger TLE.
-          Space: O(m + n) for the compiled/internal regex state.
-        """
-        regex = re.escape(p).replace(r'\*', '.*').replace(r'\?', '.')
-        return re.fullmatch(regex, s) is not None
 
 
 if __name__ == "__main__":
