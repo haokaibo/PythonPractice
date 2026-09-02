@@ -75,7 +75,7 @@
   // ---------- data fetch ----------
 
   async function refresh() {
-    const endpoint = currentTab === 'favorites' ? '/api/favorites' : '/api/all';
+    const endpoint = currentTab === 'favorites' ? './api/favorites' : './api/all';
     const qs = buildQS();
     const items = await fetchJSON(`${endpoint}${qs ? '?' + qs : ''}`);
     // Mirror server truth for the favorite set.
@@ -92,7 +92,7 @@
     updateStars();
 
     try {
-      const r = await fetch('/api/favorites/toggle', {
+      const r = await fetch('./api/favorites/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path, title, tags: [], note: '' }),
@@ -126,7 +126,7 @@
 
   async function loadFilterCatalog() {
     // categories
-    const cats = await fetchJSON(`/api/categories?scope=${currentTab}`);
+    const cats = await fetchJSON(`./api/categories?scope=${currentTab}`);
     const prev = $category.value;
     $category.innerHTML = '<option value="">All</option>'
       + Object.entries(cats).map(([name, n]) =>
@@ -135,7 +135,7 @@
     if ([...$category.options].some(o => o.value === prev)) $category.value = prev;
 
     // tags
-    const tagMap = await fetchJSON('/api/tags');
+    const tagMap = await fetchJSON('./api/tags');
     const tags = tagMap[currentTab] || {};
     const entries = Object.entries(tags);
     if (!entries.length) {
@@ -247,7 +247,7 @@
   async function openFile(path, idx) {
     let text;
     try {
-      const r = await fetch(`/api/file?path=${encodeURIComponent(path)}`);
+      const r = await fetch(`./api/file?path=${encodeURIComponent(path)}`);
       if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
       text = await r.text();
     } catch (e) {
