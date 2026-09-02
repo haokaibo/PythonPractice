@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Median of Two Sorted Arrays — Visualization</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --good: #22c55e;
+    --bad: #ef4444;
+    --left: rgba(34,197,94,0.25);
+    --left-border: #22c55e;
+    --right: rgba(59,130,246,0.18);
+    --right-border: #3b82f6;
+    --pointer: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+
+  .panel {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+  }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+
+  .array-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .array-label { font-size: 13px; color: var(--muted); }
+  .array {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .cell {
+    min-width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.35s ease;
+    position: relative;
+  }
+  .cell.left  { background: var(--left);  border-color: var(--left-border); }
+  .cell.right { background: var(--right); border-color: var(--right-border); }
+  .cell.l1 { box-shadow: 0 0 0 3px rgba(34,197,94,0.8); }
+  .cell.r1 { box-shadow: 0 0 0 3px rgba(59,130,246,0.8); }
+  .cell.l2 { box-shadow: 0 0 0 3px rgba(34,197,94,0.8); }
+  .cell.r2 { box-shadow: 0 0 0 3px rgba(59,130,246,0.8); }
+
+  .pointer {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--pointer);
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .pointer.visible { opacity: 1; }
+  .pointer.bad { color: var(--bad); }
+
+  .divider {
+    width: 3px;
+    height: 44px;
+    background: var(--pointer);
+    border-radius: 2px;
+    margin: 0 2px;
+    align-self: flex-end;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .divider.visible { opacity: 1; }
+
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .meta-item {
+    background: var(--panel-2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    transition: border-color 0.3s;
+  }
+  .meta-item .k { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .meta-item .v { font-size: 15px; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .meta-item.bad  { border-color: var(--bad); }
+  .meta-item.good { border-color: var(--good); }
+
+  .status {
+    font-size: 14px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    border-left: 4px solid var(--accent);
+    transition: all 0.3s;
+    min-height: 42px;
+  }
+  .status.bad  { border-color: var(--bad);  background: rgba(239,68,68,0.10); }
+  .status.good { border-color: var(--good); background: rgba(34,197,94,0.10); }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  button, select {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid #475569;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  button:hover:not(:disabled) { background: #334155; border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #0ea5e9; }
+
+  input[type="range"] { accent-color: var(--accent); }
+  label.small { font-size: 13px; color: var(--muted); }
+
+  .result {
+    text-align: center;
+    padding: 18px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(56,189,248,0.15));
+    border: 1px solid rgba(34,197,94,0.4);
+    font-size: 18px;
+    margin-top: 12px;
+  }
+  .result .big { font-size: 36px; font-weight: 700; color: var(--good); margin-left: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+</style>
+</head>
+<body>
+
+<h1>Median of Two Sorted Arrays — Visual Walkthrough</h1>
+<div class="subtitle">
+  Binary search on the shorter array to find a partition <code>i</code> such that every element on the left ≤ every element on the right.
+  Time complexity <code>O(log&nbsp;min(m,&nbsp;n))</code>.
+</div>
+
+<div class="panel">
+  <div class="row">
+    <div>
+      <label class="small">nums1</label>
+      <input id="nums1Input" value="0,2,3,5,6,7,8" style="margin-left:6px;padding:6px 10px;border-radius:6px;border:1px solid #475569;background:var(--panel-2);color:var(--text);width:200px;">
+    </div>
+    <div>
+      <label class="small">nums2</label>
+      <input id="nums2Input" value="1,4,9" style="margin-left:6px;padding:6px 10px;border-radius:6px;border:1px solid #475569;background:var(--panel-2);color:var(--text);width:160px;">
+    </div>
+    <button class="primary" id="loadBtn">Load</button>
+    <button id="playBtn" class="primary" disabled>▶ Play</button>
+    <button id="backBtn" disabled>◂ Back</button>
+    <button id="stepBtn" disabled>Forward ▸</button>
+    <button id="resetBtn">↺ Reset</button>
+    <div>
+      <label class="small">Speed</label>
+      <input id="speed" type="range" min="2000" max="15000" step="1000" value="3000" style="vertical-align:middle;">
+    </div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--left);border:2px solid var(--left-border);"></span>Left part</span>
+    <span><span class="swatch" style="background:var(--right);border:2px solid var(--right-border);"></span>Right part</span>
+    <span><span class="swatch" style="background:#22c55e;"></span>L = max left boundary</span>
+    <span><span class="swatch" style="background:#3b82f6;"></span>R = min right boundary</span>
+    <span><span class="swatch" style="background:var(--pointer);"></span>cut i / j</span>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="array-row">
+    <div class="array-label">nums1</div>
+    <div class="array" id="nums1"></div>
+  </div>
+  <div class="array-row">
+    <div class="array-label">nums2</div>
+    <div class="array" id="nums2"></div>
+  </div>
+
+  <div class="meta">
+    <div class="meta-item" id="m-mn"><div class="k">m, n, total</div><div class="v">—</div></div>
+    <div class="meta-item" id="m-half"><div class="k">half = ⌊(m+n+1)/2⌋</div><div class="v">—</div></div>
+    <div class="meta-item" id="m-i"><div class="k">cut i (nums1)</div><div class="v">—</div></div>
+    <div class="meta-item" id="m-j"><div class="k">cut j (nums2)</div><div class="v">—</div></div>
+    <div class="meta-item" id="m-range"><div class="k">search range</div><div class="v">—</div></div>
+    <div class="meta-item" id="m-bounds"><div class="k">L1, R1, L2, R2</div><div class="v">—</div></div>
+  </div>
+
+  <div class="status" id="status">Click <strong>Load</strong>, then <strong>Step</strong> or <strong>Play</strong> to begin.</div>
+</div>
+
+<div class="panel">
+  <div class="result">
+    Median
+    <span class="big" id="result">—</span>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const nums1El = $('nums1');
+  const nums2El = $('nums2');
+  const statusEl = $('status');
+  const resultEl = $('result');
+  const speedEl = $('speed');
+
+  let nums1 = [], nums2 = [];
+  let steps = [];
+  let stepIdx = 0;
+  let timer = null;
+
+  function parseList(s) {
+    return s.split(',').map(x => x.trim()).filter(x => x.length).map(Number);
+  }
+
+  function buildCells(parent, arr) {
+    parent.innerHTML = '';
+    for (let i = 0; i < arr.length; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.idx = i;
+      cell.textContent = arr[i];
+      const ptr = document.createElement('div');
+      ptr.className = 'pointer';
+      ptr.textContent = '▼';
+      cell.appendChild(ptr);
+      parent.appendChild(cell);
+    }
+  }
+
+  // Core algorithm — also produces a list of frames for the animation.
+  function computeSteps(a, b) {
+    const frames = [];
+    let nums1 = a.slice(), nums2 = b.slice();
+    if (nums1.length > nums2.length) { [nums1, nums2] = [nums2, nums1]; }
+    const m = nums1.length, n = nums2.length;
+    const half = Math.floor((m + n + 1) / 2);
+
+    frames.push({
+      type: 'init', nums1, nums2, m, n, half,
+      lo: 0, hi: m, i: null, j: null,
+      L1: null, R1: null, L2: null, R2: null,
+      verdict: 'search',
+      message: `Binary search i in [0, ${m}]. For each i, set j = ${half} - i.`
+    });
+
+    let lo = 0, hi = m, found = null;
+    while (lo <= hi) {
+      const i = Math.floor((lo + hi) / 2);
+      const j = half - i;
+      const L1 = i > 0   ? nums1[i-1] : -Infinity;
+      const R1 = i < m   ? nums1[i]   :  Infinity;
+      const L2 = j > 0   ? nums2[j-1] : -Infinity;
+      const R2 = j < n   ? nums2[j]   :  Infinity;
+
+      let verdict, message, nextLo = lo, nextHi = hi;
+      if (L1 > R2) {
+        verdict = 'bad';
+        message = `L1 (${fmt(L1)}) > R2 (${fmt(R2)}) → cut i is too far right. Move hi = ${i - 1}.`;
+        nextHi = i - 1;
+      } else if (L2 > R1) {
+        verdict = 'bad';
+        message = `L2 (${fmt(L2)}) > R1 (${fmt(R1)}) → cut i is too far left. Move lo = ${i + 1}.`;
+        nextLo = i + 1;
+      } else {
+        verdict = 'good';
+        const leftMax  = Math.max(L1, L2);
+        const rightMin = Math.min(R1, R2);
+        const total = m + n;
+        const median = (total % 2 === 1)
+          ? leftMax
+          : (leftMax + rightMin) / 2;
+        message = `Partition valid!  L1≤R2 and L2≤R1.  ` +
+                  (total % 2 === 1
+                    ? `Odd total → median = max(L1,L2) = ${leftMax}.`
+                    : `Even total → median = (max(L1,L2) + min(R1,R2)) / 2 = (${leftMax}+${rightMin})/2 = ${median}.`);
+        found = { median, leftMax, rightMin };
+      }
+
+      frames.push({
+        type: 'step', nums1, nums2, m, n, half,
+        lo, hi, i, j, L1, R1, L2, R2,
+        verdict, message,
+        nextLo, nextHi,
+      });
+
+      if (verdict === 'good') break;
+      lo = nextLo; hi = nextHi;
+    }
+
+    if (!found) {
+      // Should not happen for sorted inputs.
+      frames.push({ type: 'final', verdict: 'bad', message: 'No valid partition found.' });
+    } else {
+      frames.push({ type: 'final', verdict: 'good', median: found.median,
+                    message: `Done — median = ${found.median}.` });
+    }
+    return frames;
+  }
+
+  function fmt(v) {
+    if (v === Infinity)  return '+∞';
+    if (v === -Infinity) return '-∞';
+    return String(v);
+  }
+
+  function applyFrame(f) {
+    // reset cells
+    [...nums1El.children].forEach(c => {
+      c.classList.remove('left','right','l1','r1');
+      const p = c.querySelector('.pointer'); if (p) p.classList.remove('visible','bad');
+    });
+    [...nums2El.children].forEach(c => {
+      c.classList.remove('left','right','l2','r2');
+      const p = c.querySelector('.pointer'); if (p) p.classList.remove('visible','bad');
+    });
+
+    if (f.i !== null && f.i !== undefined) {
+      // nums1: cells [0..i-1] left, [i..m-1] right
+      for (let k = 0; k < f.m; k++) {
+        const c = nums1El.children[k];
+        c.classList.add(k < f.i ? 'left' : 'right');
+      }
+      // nums2: cells [0..j-1] left, [j..n-1] right
+      for (let k = 0; k < f.n; k++) {
+        const c = nums2El.children[k];
+        c.classList.add(k < f.j ? 'left' : 'right');
+      }
+      // pointers
+      const p1 = i => {
+        if (i < 0 || i > f.m) return null;
+        const node = i === f.m ? null : nums1El.children[i];
+        return node ? node.querySelector('.pointer') : null;
+      };
+      const p2 = j => {
+        if (j < 0 || j > f.n) return null;
+        const node = j === f.n ? null : nums2El.children[j];
+        return node ? node.querySelector('.pointer') : null;
+      };
+      const cut1 = p1(f.i); if (cut1) { cut1.classList.add('visible'); if (f.verdict === 'bad') cut1.classList.add('bad'); }
+      const cut2 = p2(f.j); if (cut2) { cut2.classList.add('visible'); if (f.verdict === 'bad') cut2.classList.add('bad'); }
+      // boundary highlights
+      if (f.i > 0)    nums1El.children[f.i-1].classList.add('l1');
+      if (f.i < f.m)  nums1El.children[f.i].classList.add('r1');
+      if (f.j > 0)    nums2El.children[f.j-1].classList.add('l2');
+      if (f.j < f.n)  nums2El.children[f.j].classList.add('r2');
+    }
+
+    $('m-i').querySelector('.v').textContent = f.i !== null && f.i !== undefined ? `i = ${f.i}` : '—';
+    $('m-j').querySelector('.v').textContent = f.j !== null && f.j !== undefined ? `j = ${f.j}` : '—';
+    if (f.half !== undefined) {
+      const total = f.m + f.n;
+      const ceil  = Math.ceil(total / 2);
+      $('m-half').querySelector('.v').textContent =
+        `half = ⌊(${total}+1)/2⌋ = ⌈${total}/2⌉ = ${f.half}   (j = half - i)`;
+    }
+    if (f.m !== undefined && f.n !== undefined) {
+      const total = f.m + f.n;
+      const parity = total % 2 === 0 ? 'even' : 'odd';
+      $('m-mn').querySelector('.v').textContent = `m = ${f.m},  n = ${f.n},  total = ${total} (${parity})`;
+    }
+    $('m-range').querySelector('.v').textContent = (f.type === 'init')
+      ? `lo=0, hi=${f.m}`
+      : `lo=${f.lo}, hi=${f.hi}, i=${f.i}`;
+    $('m-bounds').querySelector('.v').textContent = (f.L1 === null)
+      ? '—'
+      : `L1=${fmt(f.L1)}  R1=${fmt(f.R1)}  L2=${fmt(f.L2)}  R2=${fmt(f.R2)}`;
+
+    statusEl.classList.remove('good','bad');
+    if (f.verdict === 'good') statusEl.classList.add('good');
+    else if (f.verdict === 'bad') statusEl.classList.add('bad');
+    statusEl.innerHTML = f.message;
+
+    if (f.type === 'final' && typeof f.median === 'number') {
+      resultEl.textContent = f.median;
+    } else if (f.type === 'init') {
+      resultEl.textContent = '—';
+    }
+  }
+
+  function load() {
+    stop();
+    nums1 = parseList($('nums1Input').value);
+    nums2 = parseList($('nums2Input').value);
+    if (nums1.length === 0 && nums2.length === 0) {
+      statusEl.textContent = 'Both arrays are empty.';
+      return;
+    }
+    // visualise in the (possibly swapped) order the algorithm sees them
+    let a = nums1.slice(), b = nums2.slice();
+    if (a.length > b.length) [a, b] = [b, a];
+    buildCells(nums1El, a);
+    buildCells(nums2El, b);
+
+    steps = computeSteps(a, b);
+    stepIdx = 0;
+    applyFrame(steps[0]);
+
+    updateButtons();
+    resultEl.textContent = '—';
+  }
+
+  function updateButtons() {
+    const atStart = stepIdx <= 0;
+    const atEnd   = stepIdx >= steps.length - 1;
+    $('backBtn').disabled  = atStart;
+    $('stepBtn').disabled  = atEnd;
+    $('playBtn').disabled  = atEnd;
+  }
+
+  function gotoStep(idx) {
+    stepIdx = Math.max(0, Math.min(steps.length - 1, idx));
+    applyFrame(steps[stepIdx]);
+    updateButtons();
+  }
+
+  function nextStep() {
+    if (stepIdx >= steps.length - 1) { stop(); updateButtons(); return; }
+    stepIdx++;
+    applyFrame(steps[stepIdx]);
+    if (stepIdx >= steps.length - 1) stop();
+    updateButtons();
+  }
+
+  function prevStep() {
+    stop();
+    if (stepIdx <= 0) return;
+    stepIdx--;
+    applyFrame(steps[stepIdx]);
+    updateButtons();
+  }
+
+  function play() {
+    if (timer) return;
+    if (stepIdx >= steps.length - 1) return;
+    timer = setInterval(() => {
+      nextStep();
+      if (stepIdx >= steps.length - 1) stop();
+    }, +speedEl.value);
+  }
+  function stop() {
+    if (timer) { clearInterval(timer); timer = null; }
+  }
+  function reset() {
+    stop();
+    if (!steps.length) return;
+    gotoStep(0);
+    resultEl.textContent = '—';
+  }
+
+  $('loadBtn').addEventListener('click', load);
+  $('stepBtn').addEventListener('click', nextStep);
+  $('backBtn').addEventListener('click', prevStep);
+  $('playBtn').addEventListener('click', play);
+  $('resetBtn').addEventListener('click', reset);
+  speedEl.addEventListener('change', () => { if (timer) { stop(); play(); } });
+
+  // initial demo
+  load();
+})();
+</script>
+
+</body>
+</html>
