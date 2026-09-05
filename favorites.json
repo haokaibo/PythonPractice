@@ -49,6 +49,13 @@
       "path": "src/algoexpert/BinarySearchTrees/validate_bst.py",
       "title": "Validate Bst",
       "tags": [],
+      "note": "",
+      "category": "algoexpert"
+    },
+    {
+      "path": "src/microsoft/meidian_of_two_sorted_arrays.py",
+      "title": "Meidian Of Two Sorted Arrays",
+      "tags": [],
       "note": ""
     }
   ]
