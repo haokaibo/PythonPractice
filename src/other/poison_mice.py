@@ -1,11 +1,21 @@
 def solve_poison_wine():
     """
-    毒酒问题：1000 瓶酒中有 1 瓶毒酒，用 10 只老鼠找出毒酒
+    毒酒问题：30 瓶酒中有 1 瓶毒酒，用 5 只老鼠找出毒酒
     核心思想：二进制编码 + 过滤法
+
+    数学基础：
+    - 5 只老鼠 → 5 bit 信息 → 最多表示 2^5 = 32 种结果
+    - 30 瓶酒 < 32，所以 5 只老鼠足够
+    - 每只老鼠代表一个二进制位的"探针"，权重分别为 1, 2, 4, 8, 16
     """
-    # 假设第 73 号酒是毒酒
-    actual_poison_bottle = 73
-    print(f"【系统设定】实际的毒酒是第 {actual_poison_bottle} 号 (二进制: {actual_poison_bottle:010b})\n")
+    TOTAL_BOTTLES = 30
+    TOTAL_MICE = 5
+
+    # 假设第 18 号酒是毒酒
+    actual_poison_bottle = 18
+    print(f"【系统设定】{TOTAL_BOTTLES} 瓶酒中有 1 瓶毒酒，编号 = {actual_poison_bottle}")
+    print(f"   二进制: {actual_poison_bottle:0{TOTAL_MICE}b}")
+    print(f"   因为 {TOTAL_BOTTLES} ≤ 2^{TOTAL_MICE} = {2 ** TOTAL_MICE}，所以 {TOTAL_MICE} 只老鼠足够\n")
 
     # ============================================================
     # 第一阶段：分配试酒方案 —— 每只老鼠喝哪些瓶酒
@@ -14,32 +24,26 @@ def solve_poison_wine():
     print("【第一阶段】分配试酒方案")
     print("=" * 60)
     print(f"原理：编号第 i 位为 1 的酒 → 由第 (i+1) 只老鼠喝")
-    print(f"本质：10 只老鼠 = 10 个二进制位的'探针'，权重分别为 1, 2, 4, 8, ..., 512")
-    print(f"位权表: 鼠1=2^0=1, 鼠2=2^1=2, 鼠3=2^2=4, ..., 鼠10=2^9=512\n")
+    print(f"本质：{TOTAL_MICE} 只老鼠 = {TOTAL_MICE} 个二进制位的'探针'")
+    bit_weights = [f"鼠{i+1}=2^{i}={2**i}" for i in range(TOTAL_MICE)]
+    print(f"位权表: {', '.join(bit_weights)}\n")
 
     # mouse_drinks[i] 存储第 i 只老鼠需要喝的所有酒瓶编号
-    mouse_drinks = [[] for _ in range(10)]
+    mouse_drinks = [[] for _ in range(TOTAL_MICE)]
 
-    for bottle in range(1, 1001):
-        for mouse_idx in range(10):
+    for bottle in range(1, TOTAL_BOTTLES + 1):
+        for mouse_idx in range(TOTAL_MICE):
             # 如果瓶子编号的第 mouse_idx 位是 1，则该老鼠喝这瓶酒
             if (bottle >> mouse_idx) & 1:
                 mouse_drinks[mouse_idx].append(bottle)
 
-    # 输出每只老鼠喝的酒瓶范围
-    for mouse_idx in range(10):
+    # 输出每只老鼠喝的酒瓶列表
+    for mouse_idx in range(TOTAL_MICE):
         drinks = mouse_drinks[mouse_idx]
-        # 显示该老鼠喝的酒瓶编号范围（只显示前几个和后几个）
-        if len(drinks) <= 12:
-            drink_list = ", ".join(str(x) for x in drinks)
-        else:
-            drink_list = (
-                ", ".join(str(x) for x in drinks[:5])
-                + f", ..., {drinks[-1]}"
-            )
+        drink_list = ", ".join(str(x) for x in drinks)
         print(
-            f"🐭 老鼠 {mouse_idx + 1:2d} (二进制第 {mouse_idx} 位, 权重 2^{mouse_idx}={2 ** mouse_idx}): "
-            f"共喝 {len(drinks):3d} 瓶 → [{drink_list}]"
+            f"🐭 老鼠 {mouse_idx + 1} (第 {mouse_idx} 位, 权重 2^{mouse_idx}={2 ** mouse_idx}): "
+            f"共喝 {len(drinks):2d} 瓶 → [{drink_list}]"
         )
 
     # ============================================================
@@ -51,7 +55,7 @@ def solve_poison_wine():
 
     # 找出实际死亡的老鼠
     dead_mice = []
-    for mouse_idx in range(10):
+    for mouse_idx in range(TOTAL_MICE):
         if (actual_poison_bottle >> mouse_idx) & 1:
             dead_mice.append(mouse_idx)
 
@@ -64,10 +68,10 @@ def solve_poison_wine():
     print("=" * 60)
     print("【第三阶段】根据死亡情况过滤嫌疑酒")
     print("=" * 60)
-    print(f"初始嫌疑范围: 1 ~ 1000 共 1000 瓶酒\n")
+    print(f"初始嫌疑范围: 1 ~ {TOTAL_BOTTLES} 共 {TOTAL_BOTTLES} 瓶酒\n")
 
     # 嫌疑酒瓶集合（每死一只老鼠就过滤一次）
-    suspects = set(range(1, 1001))
+    suspects = set(range(1, TOTAL_BOTTLES + 1))
 
     # 逐只处理死亡的老鼠
     for step, mouse_idx in enumerate(dead_mice, 1):
@@ -99,7 +103,7 @@ def solve_poison_wine():
         calculated_poison_bottle += (1 << mouse_idx)
         print(f"  累加 2^{mouse_idx} = {2 ** mouse_idx:3d} (来自老鼠 {mouse_idx + 1})")
 
-    print(f"\n  二进制结果: {calculated_poison_bottle:010b}")
+    print(f"\n  二进制结果: {calculated_poison_bottle:0{TOTAL_MICE}b}")
     print(f"  十进制结果: 第 {calculated_poison_bottle} 号酒")
 
     # ============================================================
