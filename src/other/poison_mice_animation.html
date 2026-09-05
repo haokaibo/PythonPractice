@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>毒酒问题 - 二进制过滤法动画演示</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        color: #fff;
+        min-height: 100vh;
+        padding: 20px;
+        overflow-x: hidden;
+    }
+
+    .container { max-width: 1600px; margin: 0 auto; }
+
+    h1 {
+        text-align: center;
+        font-size: 2.5em;
+        margin-bottom: 8px;
+        background: linear-gradient(45deg, #ff6b6b, #feca57, #4ecdc4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #a0a0a0;
+        margin-bottom: 20px;
+        font-size: 1.05em;
+    }
+
+    .explanation {
+        background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(254, 202, 87, 0.1));
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 18px;
+        border-left: 4px solid #4ecdc4;
+        font-size: 0.95em;
+        line-height: 1.7;
+    }
+    .explanation strong { color: #feca57; }
+    .explanation code {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #4ecdc4;
+        font-family: "Courier New", monospace;
+    }
+
+    .stage-selector {
+        text-align: center;
+        margin-bottom: 18px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .stage-selector label { font-size: 1.05em; margin-right: 15px; }
+    .stage-selector input {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid #4ecdc4;
+        color: #4ecdc4;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 1em;
+        width: 100px;
+        text-align: center;
+    }
+    .stage-selector button {
+        background: linear-gradient(45deg, #4ecdc4, #44a08d);
+        color: #fff;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1em;
+        margin-left: 8px;
+        transition: transform 0.2s;
+    }
+    .stage-selector button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4); }
+
+    .controls { text-align: center; margin-bottom: 18px; }
+    .controls button {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+        color: #fff;
+        border: none;
+        padding: 11px 26px;
+        margin: 0 5px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 0.95em;
+        transition: all 0.3s;
+    }
+    .controls button:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+    }
+
+    .phase-indicator {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 18px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
+    .phase {
+        text-align: center;
+        flex: 1;
+        padding: 6px;
+        border-radius: 8px;
+        transition: all 0.5s;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .phase.active {
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ecdc4;
+        font-weight: bold;
+    }
+    .phase.done { color: #2ecc71; }
+    .phase-num {
+        display: inline-block;
+        width: 22px; height: 22px;
+        line-height: 22px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        margin-right: 6px;
+        font-size: 0.9em;
+    }
+    .phase.active .phase-num { background: #4ecdc4; color: #000; }
+    .phase.done .phase-num { background: #2ecc71; color: #000; }
+
+    /* 分配方案表 */
+    .assignment-panel {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 18px;
+        margin-bottom: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .panel-title {
+        font-size: 1.25em;
+        margin-bottom: 12px;
+        color: #4ecdc4;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .panel-title::before {
+        content: "";
+        width: 4px; height: 18px;
+        background: #4ecdc4;
+        border-radius: 2px;
+    }
+
+    .mouse-drink-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+    }
+
+    .mouse-card {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        padding: 12px;
+        border: 2px solid transparent;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    .mouse-card:hover {
+        background: rgba(78, 205, 196, 0.1);
+        border-color: #4ecdc4;
+        transform: translateY(-2px);
+    }
+    .mouse-card.dead {
+        background: rgba(255, 107, 107, 0.2);
+        border-color: #ff6b6b;
+        animation: shake 0.6s;
+    }
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-4px); }
+        40%, 80% { transform: translateX(4px); }
+    }
+
+    .mouse-card-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+    .mouse-icon { font-size: 1.8em; }
+    .mouse-info { flex: 1; }
+    .mouse-name { font-weight: bold; color: #4ecdc4; font-size: 1.05em; }
+    .mouse-card.dead .mouse-name { color: #ff6b6b; }
+    .mouse-bit-text { font-size: 0.8em; color: #a0a0a0; }
+
+    .mouse-drink-range {
+        font-family: "Courier New", monospace;
+        font-size: 0.85em;
+        color: #feca57;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 6px 8px;
+        border-radius: 5px;
+        margin-top: 6px;
+    }
+
+    .mouse-card.dead .mouse-drink-range {
+        background: rgba(255, 107, 107, 0.2);
+        color: #ff6b6b;
+    }
+
+    .drink-count-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: rgba(254, 202, 87, 0.2);
+        color: #feca57;
+        font-size: 0.8em;
+        margin-left: 6px;
+    }
+
+    /* 主场景 */
+    .main-scene {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 18px;
+        margin-bottom: 18px;
+    }
+
+    .panel {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .wines-area {
+        max-height: 480px;
+        overflow-y: auto;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+    }
+
+    .wines-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 3px;
+    }
+
+    .wine {
+        aspect-ratio: 1;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.5em;
+        color: rgba(255, 255, 255, 0.3);
+        transition: all 0.3s;
+    }
+
+    /* 嫌疑状态 */
+    .wine.suspect {
+        background: rgba(254, 202, 87, 0.25);
+        border-color: rgba(254, 202, 87, 0.5);
+        color: #feca57;
+    }
+
+    .wine.eliminated {
+        background: rgba(100, 100, 100, 0.1) !important;
+        border-color: rgba(100, 100, 100, 0.2) !important;
+        color: rgba(255, 255, 255, 0.15) !important;
+        text-decoration: line-through;
+    }
+
+    .wine.poison {
+        background: linear-gradient(135deg, #c0392b, #e74c3c) !important;
+        border-color: #ff6b6b !important;
+        box-shadow: 0 0 20px rgba(231, 76, 60, 0.9);
+        color: #fff !important;
+        animation: poisonPulse 1.5s infinite;
+    }
+    @keyframes poisonPulse {
+        0%, 100% { transform: scale(1.2); }
+        50% { transform: scale(1.5); }
+    }
+
+    /* 过滤日志 */
+    .filter-log {
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 10px;
+        padding: 12px;
+        max-height: 480px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 0.88em;
+    }
+
+    .filter-step {
+        padding: 12px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-left: 3px solid #888;
+        animation: slideIn 0.5s;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-15px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    .filter-step.active {
+        background: rgba(255, 107, 107, 0.15);
+        border-left-color: #ff6b6b;
+    }
+
+    .filter-step.completed {
+        background: rgba(46, 204, 113, 0.1);
+        border-left-color: #2ecc71;
+    }
+
+    .step-title {
+        font-weight: bold;
+        color: #4ecdc4;
+        margin-bottom: 6px;
+    }
+    .filter-step.active .step-title { color: #ff6b6b; }
+
+    .step-detail { color: #d0d0d0; line-height: 1.6; }
+    .step-detail strong { color: #feca57; }
+
+    .step-stats {
+        display: flex;
+        gap: 12px;
+        margin-top: 6px;
+        font-size: 0.9em;
+    }
+
+    .stat-before, .stat-after {
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.3);
+    }
+    .stat-before { color: #a0a0a0; }
+    .stat-after { color: #4ecdc4; }
+
+    /* 最终结果 */
+    .final-result {
+        margin-top: 12px;
+        padding: 15px;
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(254, 202, 87, 0.15));
+        border-radius: 12px;
+        border: 1px solid rgba(46, 204, 113, 0.3);
+        text-align: center;
+        opacity: 0;
+        transition: opacity 0.5s;
+    }
+    .final-result.show { opacity: 1; }
+    .final-result-title { font-size: 1em; color: #a0a0a0; margin-bottom: 6px; }
+    .final-result-number {
+        font-size: 2.5em;
+        font-weight: bold;
+        background: linear-gradient(45deg, #2ecc71, #feca57);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* 日志面板 */
+    .log-panel {
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 12px;
+        padding: 14px;
+        font-family: "Courier New", monospace;
+        max-height: 240px;
+        overflow-y: auto;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 0.85em;
+    }
+    .log-line {
+        padding: 5px 10px;
+        margin-bottom: 3px;
+        border-radius: 4px;
+        animation: slideIn 0.3s;
+    }
+    .log-system { background: rgba(78, 205, 196, 0.15); color: #4ecdc4; border-left: 3px solid #4ecdc4; }
+    .log-experiment { background: rgba(254, 202, 87, 0.15); color: #feca57; border-left: 3px solid #feca57; }
+    .log-success { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border-left: 3px solid #2ecc71; font-weight: bold; }
+    .log-error { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; border-left: 3px solid #ff6b6b; }
+    .log-info { background: rgba(255, 255, 255, 0.05); color: #d0d0d0; border-left: 3px solid #888; }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(78, 205, 196, 0.5); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(78, 205, 196, 0.8); }
+
+    .legend {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 10px;
+        font-size: 0.85em;
+        flex-wrap: wrap;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .legend-color {
+        width: 14px; height: 14px;
+        border-radius: 3px;
+    }
+    .legend-suspect { background: rgba(254, 202, 87, 0.25); border: 1px solid #feca57; }
+    .legend-eliminated { background: rgba(100, 100, 100, 0.1); border: 1px solid #666; }
+    .legend-poison { background: linear-gradient(135deg, #c0392b, #e74c3c); border: 1px solid #ff6b6b; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>🐭 毒酒问题 · 二进制过滤法</h1>
+    <p class="subtitle">用 10 只老鼠通过"过滤法"逐步缩小嫌疑范围，找出 1000 瓶酒中的 1 瓶毒酒</p>
+
+    <div class="explanation">
+        <strong>🎯 实验原理（二进制过滤法）：</strong><br>
+        ① <strong>位权概念</strong>：10 只老鼠 = 10 个<strong>二进制位的探针</strong>（权重 1, 2, 4, 8, ..., 512）<br>
+        ② <strong>分配方案</strong>：每只老鼠按对应位喝酒（位 i 为 1 的酒 → 鼠 i+1 喝）<br>
+        ③ <strong>实验观察</strong>：24小时后哪只老鼠死了 → 该位为 1（死=1, 活=0）<br>
+        ④ <strong>解码公式</strong>：毒酒编号 = Σ(2<sup>i</sup> × 死亡位i) = 累加死亡老鼠的权重<br>
+        💡 <strong>关键洞察</strong>：10 bit 信息能编码 2<sup>10</sup>=1024 种结果，足够 1000 瓶酒
+    </div>
+
+    <div class="stage-selector">
+        <label>🎲 指定毒酒编号 (1-1000)：</label>
+        <input type="number" id="poisonInput" min="1" max="1000" value="73">
+        <button onclick="randomPoison()">🎲 随机</button>
+        <button onclick="startExperiment()">🚀 开始实验</button>
+    </div>
+
+    <div class="controls">
+        <button onclick="stepForward()" id="stepBtn">⏭ 单步过滤</button>
+        <button onclick="autoPlay()" id="autoBtn">▶ 自动播放</button>
+        <button onclick="resetExperiment()" id="resetBtn">🔄 重置</button>
+    </div>
+
+    <div class="phase-indicator">
+        <div class="phase" id="phase1"><span class="phase-num">1</span>分配方案</div>
+        <div class="phase" id="phase2"><span class="phase-num">2</span>观察死亡</div>
+        <div class="phase" id="phase3"><span class="phase-num">3</span>逐步过滤</div>
+        <div class="phase" id="phase4"><span class="phase-num">4</span>锁定答案</div>
+    </div>
+
+    <!-- 分配方案表 -->
+    <div class="assignment-panel">
+        <div class="panel-title">📋 第一阶段：每只老鼠的试酒分配方案</div>
+        <div class="mouse-drink-grid" id="mouseDrinkGrid"></div>
+    </div>
+
+    <!-- 主场景：酒瓶 + 过滤日志 -->
+    <div class="main-scene">
+        <div class="panel">
+            <div class="panel-title">🍷 1000 瓶酒（嫌疑状态实时更新）</div>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color legend-suspect"></div>嫌疑酒</div>
+                <div class="legend-item"><div class="legend-color legend-eliminated"></div>已排除</div>
+                <div class="legend-item"><div class="legend-color legend-poison"></div>毒酒</div>
+            </div>
+            <div class="wines-area">
+                <div class="wines-grid" id="winesGrid"></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">🔍 过滤法反推过程</div>
+            <div class="filter-log" id="filterLog">
+                <div style="text-align: center; color: #888; padding: 30px;">
+                    点击 "🚀 开始实验" 开始演示...
+                </div>
+            </div>
+            <div class="final-result" id="finalResult">
+                <div class="final-result-title">🎯 最终毒酒编号</div>
+                <div class="final-result-number" id="finalNumber">-</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 程序日志 -->
+    <div class="panel">
+        <div class="panel-title">📋 程序运行日志</div>
+        <div class="log-panel" id="logPanel"></div>
+    </div>
+</div>
+
+<script>
+    const TOTAL_WINES = 1000;
+    const TOTAL_MICE = 10;
+
+    // 老鼠颜色配置
+    const MOUSE_COLORS = [
+        { name: '鼠1', bit: 0, weight: 1, color: '#ff6b6b' },
+        { name: '鼠2', bit: 1, weight: 2, color: '#ff9f43' },
+        { name: '鼠3', bit: 2, weight: 4, color: '#feca57' },
+        { name: '鼠4', bit: 3, weight: 8, color: '#82d65f' },
+        { name: '鼠5', bit: 4, weight: 16, color: '#4ecdc4' },
+        { name: '鼠6', bit: 5, weight: 32, color: '#48a9f0' },
+        { name: '鼠7', bit: 6, weight: 64, color: '#7367f0' },
+        { name: '鼠8', bit: 7, weight: 128, color: '#be64dc' },
+        { name: '鼠9', bit: 8, weight: 256, color: '#ff64b4' },
+        { name: '鼠10', bit: 9, weight: 512, color: '#c8c864' }
+    ];
+
+    let state = {
+        poisonBottle: 73,
+        mouseDrinkMap: {},
+        deadMice: [],
+        suspects: new Set(),
+        currentPhase: 0,
+        currentFilterStep: 0,
+        isAutoPlaying: false,
+        autoTimer: null
+    };
+
+    // 计算每只老鼠喝哪些酒
+    function computeAssignments() {
+        state.mouseDrinkMap = {};
+        for (let m = 0; m < TOTAL_MICE; m++) {
+            state.mouseDrinkMap[m] = [];
+        }
+        for (let bottle = 1; bottle <= TOTAL_WINES; bottle++) {
+            for (let m = 0; m < TOTAL_MICE; m++) {
+                if ((bottle >> m) & 1) {
+                    state.mouseDrinkMap[m].push(bottle);
+                }
+            }
+        }
+    }
+
+    // 初始化老鼠分配卡片
+    function initMouseCards() {
+        const grid = document.getElementById('mouseDrinkGrid');
+        grid.innerHTML = '';
+        MOUSE_COLORS.forEach((m, idx) => {
+            const drinks = state.mouseDrinkMap[idx];
+            // 显示该老鼠喝的酒的范围
+            let rangeText;
+            if (drinks.length <= 8) {
+                rangeText = drinks.join(', ');
+            } else {
+                rangeText = `${drinks[0]}, ${drinks[1]}, ${drinks[2]}, ..., ${drinks[drinks.length-2]}, ${drinks[drinks.length-1]}`;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'mouse-card';
+            card.id = `mouse-card-${idx}`;
+            card.innerHTML = `
+                <div class="mouse-card-header">
+                    <div class="mouse-icon">🐭</div>
+                    <div class="mouse-info">
+                        <div class="mouse-name">${m.name}</div>
+                        <div class="mouse-bit-text">第 ${idx} 位 · 2^${idx}=${m.weight}</div>
+                    </div>
+                </div>
+                <div class="mouse-drink-range">
+                    <span class="drink-count-badge">${drinks.length} 瓶</span>
+                    ${rangeText}
+                </div>
+            `;
+            card.addEventListener('mouseenter', () => highlightMouseDrinks(idx, true));
+            card.addEventListener('mouseleave', () => highlightMouseDrinks(idx, false));
+            grid.appendChild(card);
+        });
+    }
+
+    // 初始化酒瓶
+    function initWines() {
+        const grid = document.getElementById('winesGrid');
+        grid.innerHTML = '';
+        for (let i = 1; i <= TOTAL_WINES; i++) {
+            const wine = document.createElement('div');
+            wine.className = 'wine';
+            wine.id = `wine-${i}`;
+            wine.textContent = i;
+            wine.dataset.bottle = i;
+            grid.appendChild(wine);
+        }
+    }
+
+    // 高亮某只老鼠喝的所有酒
+    function highlightMouseDrinks(mouseIdx, on) {
+        state.mouseDrinkMap[mouseIdx].forEach(bottleNum => {
+            const wine = document.getElementById(`wine-${bottleNum}`);
+            if (wine && !wine.classList.contains('poison') && !wine.classList.contains('eliminated')) {
+                if (on) {
+                    wine.style.transform = 'scale(1.15)';
+                    wine.style.zIndex = '5';
+                    wine.style.borderColor = MOUSE_COLORS[mouseIdx].color;
+                } else {
+                    wine.style.transform = '';
+                    wine.style.zIndex = '';
+                    wine.style.borderColor = '';
+                }
+            }
+        });
+    }
+
+    // 添加日志
+    function addLog(message, type = 'system') {
+        const log = document.getElementById('logPanel');
+        const line = document.createElement('div');
+        line.className = `log-line log-${type}`;
+        line.innerHTML = message;
+        log.appendChild(line);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    // 更新阶段
+    function updatePhase(phaseNum) {
+        for (let i = 1; i <= 4; i++) {
+            const phase = document.getElementById(`phase${i}`);
+            phase.classList.remove('active', 'done');
+            if (i < phaseNum) phase.classList.add('done');
+            else if (i === phaseNum) phase.classList.add('active');
+        }
+    }
+
+    // 随机毒酒
+    function randomPoison() {
+        document.getElementById('poisonInput').value = Math.floor(Math.random() * 1000) + 1;
+    }
+
+    // 开始实验
+    function startExperiment() {
+        resetExperiment();
+        const input = document.getElementById('poisonInput');
+        let val = parseInt(input.value);
+        if (isNaN(val) || val < 1) val = 1;
+        if (val > 1000) val = 1000;
+        input.value = val;
+        state.poisonBottle = val;
+
+        updatePhase(1);
+        addLog(`【系统设定】放置了 1 瓶毒酒在 1000 瓶酒中（编号 = ${val}）`, 'system');
+        addLog(`【二进制】${val.toString(2).padStart(10, '0')} (从鼠1到鼠10)`, 'info');
+        addLog(`--- 阶段 1：分配方案 --- 每只老鼠喝对应的酒`, 'system');
+
+        MOUSE_COLORS.forEach((m, idx) => {
+            const drinks = state.mouseDrinkMap[idx];
+            addLog(`  🐭 ${m.name}: 喝第 ${idx} 位为 1 的酒，共 ${drinks.length} 瓶`, 'info');
+        });
+
+        addLog(`--- 阶段 2：实验观察 --- 24小时后`, 'system');
+
+        // 计算哪些老鼠死亡
+        state.deadMice = [];
+        for (let m = 0; m < TOTAL_MICE; m++) {
+            if ((state.poisonBottle >> m) & 1) {
+                state.deadMice.push(m);
+            }
+        }
+
+        // 标记死亡的老鼠
+        state.deadMice.forEach((m, i) => {
+            setTimeout(() => {
+                const card = document.getElementById(`mouse-card-${m}`);
+                card.classList.add('dead');
+                addLog(`  ☠️ ${MOUSE_COLORS[m].name} 死亡！它喝的酒中包含第 ${state.poisonBottle} 号毒酒`, 'error');
+            }, 500 + i * 600);
+        });
+
+        // 进入第三阶段
+        setTimeout(() => {
+            state.currentPhase = 3;
+            state.currentFilterStep = 0;
+            state.suspects = new Set(Array.from({length: 1000}, (_, i) => i + 1));
+            updatePhase(3);
+            addLog(`--- 阶段 3：过滤法反推 --- 初始嫌疑 = 1000 瓶`, 'system');
+            addLog(`点击 "⏭ 单步过滤" 或 "▶ 自动播放" 查看每死一只老鼠如何缩小范围`, 'system');
+        }, 500 + state.deadMice.length * 600 + 500);
+    }
+
+    // 单步过滤
+    function stepForward() {
+        if (state.currentPhase === 0) {
+            startExperiment();
+            return;
+        }
+
+        if (state.currentPhase < 3) {
+            addLog(`⏳ 等待阶段 2 完成...`, 'info');
+            return;
+        }
+
+        if (state.currentFilterStep >= state.deadMice.length) {
+            // 已完成所有过滤，进入第4阶段
+            if (state.currentPhase === 3) {
+                state.currentPhase = 4;
+                updatePhase(4);
+                addLog(`--- 阶段 4：锁定答案 ---`, 'success');
+                addLog(`🎯 最终嫌疑范围: ${Array.from(state.suspects).join(', ')}`, 'success');
+                addLog(`🎯 唯一答案: 第 ${state.poisonBottle} 号酒是毒酒！`, 'success');
+                document.getElementById('finalNumber').textContent = state.poisonBottle;
+                document.getElementById('finalResult').classList.add('show');
+
+                // 高亮毒酒
+                const poisonWine = document.getElementById(`wine-${state.poisonBottle}`);
+                if (poisonWine) poisonWine.classList.add('poison');
+
+                // 标记最后一步为完成
+                const steps = document.querySelectorAll('.filter-step');
+                if (steps.length > 0) steps[steps.length - 1].classList.add('completed');
+            }
+            return;
+        }
+
+        // 执行一次过滤
+        const mouseIdx = state.deadMice[state.currentFilterStep];
+        performFilter(mouseIdx);
+        state.currentFilterStep++;
+
+        // 如果是自动播放，继续
+        if (state.isAutoPlaying) {
+            state.autoTimer = setTimeout(stepForward, 1500);
+        }
+    }
+
+    // 执行过滤
+    function performFilter(mouseIdx) {
+        const beforeCount = state.suspects.size;
+        const beforeSuspects = new Set(state.suspects);
+
+        // 过滤：毒酒必须在死亡老鼠喝过的酒中（取交集）
+        const mouseDrinksSet = new Set(state.mouseDrinkMap[mouseIdx]);
+        const newSuspects = new Set();
+        beforeSuspects.forEach(b => {
+            if (mouseDrinksSet.has(b)) newSuspects.add(b);
+        });
+        state.suspects = newSuspects;
+
+        const afterCount = state.suspects.size;
+        const eliminated = beforeCount - afterCount;
+
+        // 更新酒瓶显示
+        beforeSuspects.forEach(b => {
+            if (!mouseDrinksSet.has(b)) {
+                const wine = document.getElementById(`wine-${b}`);
+                if (wine && !wine.classList.contains('poison')) {
+                    wine.classList.remove('suspect');
+                    wine.classList.add('eliminated');
+                }
+            }
+        });
+
+        // 标记新的嫌疑酒
+        state.suspects.forEach(b => {
+            const wine = document.getElementById(`wine-${b}`);
+            if (wine && !wine.classList.contains('poison')) {
+                wine.classList.add('suspect');
+            }
+        });
+
+        // 添加过滤步骤日志
+        const filterLog = document.getElementById('filterLog');
+        const stepDiv = document.createElement('div');
+        stepDiv.className = 'filter-step active';
+        stepDiv.innerHTML = `
+            <div class="step-title">第 ${state.currentFilterStep + 1} 步：${MOUSE_COLORS[mouseIdx].name} 死亡</div>
+            <div class="step-detail">
+                含义: <strong>毒酒一定在 ${MOUSE_COLORS[mouseIdx].name} 喝过的 ${state.mouseDrinkMap[mouseIdx].length} 瓶酒中</strong><br>
+                推理: 因为其他老鼠没死，所以毒酒不可能在它们单独喝的酒中
+            </div>
+            <div class="step-stats">
+                <span class="stat-before">嫌疑 ${beforeCount} 瓶</span>
+                →
+                <span class="stat-after">嫌疑 ${afterCount} 瓶</span>
+                <span style="color:#ff6b6b">排除 ${eliminated} 瓶 (-${(eliminated/beforeCount*100).toFixed(1)}%)</span>
+            </div>
+        `;
+        filterLog.appendChild(stepDiv);
+        filterLog.scrollTop = filterLog.scrollHeight;
+
+        // 标记之前的步骤为完成
+        const steps = document.querySelectorAll('.filter-step');
+        for (let i = 0; i < steps.length - 1; i++) {
+            steps[i].classList.remove('active');
+            steps[i].classList.add('completed');
+        }
+
+        addLog(`🔍 过滤步骤 ${state.currentFilterStep + 1}: ${MOUSE_COLORS[mouseIdx].name} 死亡 → 嫌疑 ${beforeCount} → ${afterCount} 瓶`, 'experiment');
+
+        // 如果只剩 1 瓶，直接进入第 4 阶段
+        if (afterCount === 1) {
+            setTimeout(() => stepForward(), 800);
+        }
+    }
+
+    // 自动播放
+    function autoPlay() {
+        if (state.isAutoPlaying) {
+            clearTimeout(state.autoTimer);
+            state.isAutoPlaying = false;
+            document.getElementById('autoBtn').textContent = '▶ 自动播放';
+            return;
+        }
+        if (state.currentPhase === 0) {
+            startExperiment();
+            setTimeout(autoPlay, 100);
+            return;
+        }
+        state.isAutoPlaying = true;
+        document.getElementById('autoBtn').textContent = '⏸ 暂停';
+        stepForward();
+    }
+
+    // 重置
+    function resetExperiment() {
+        if (state.autoTimer) {
+            clearTimeout(state.autoTimer);
+        }
+        state.deadMice = [];
+        state.suspects = new Set();
+        state.currentPhase = 0;
+        state.currentFilterStep = 0;
+        state.isAutoPlaying = false;
+        document.getElementById('autoBtn').textContent = '▶ 自动播放';
+        updatePhase(0);
+        computeAssignments();
+        initWines();
+        initMouseCards();
+        document.getElementById('filterLog').innerHTML = `
+            <div style="text-align: center; color: #888; padding: 30px;">
+                点击 "🚀 开始实验" 开始演示...
+            </div>
+        `;
+        document.getElementById('logPanel').innerHTML = '';
+        document.getElementById('finalResult').classList.remove('show');
+    }
+
+    // 初始化
+    computeAssignments();
+    initWines();
+    initMouseCards();
+</script>
+</body>
+</html>
