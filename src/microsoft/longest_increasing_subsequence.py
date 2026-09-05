@@ -18,7 +18,6 @@ e.g.
 
 
 """
-import bisect
 
 class Solution(object):
     """
@@ -65,7 +64,7 @@ class Solution(object):
             else:
                 tails[left] = num
                     
-            return len(tails)
+        return len(tails)
 
     def lengthOfLIS(self, nums):
         """
