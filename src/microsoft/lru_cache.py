@@ -22,6 +22,8 @@ class Item:
 
 class LRUCache:
     def __init__(self, capacity: int):
+        if capacity <= 0:
+            raise ValueError(f"The capcity({capacity}) should be greater than 0.")
         self.capacity = capacity
         self.cache: dict[int, Item] = {}
         # Sentinel nodes simplify edge cases (head/tail never None).
