@@ -48,7 +48,7 @@ class Trie:
     def __init__(self):
         self.root = TrieNode()
 
-    def _walk(self, s: str):
+    def _walk(self, s: str) -> TrieNode | None:
         """Return the node reached by traversing `s` from the root, or None
         if any character in `s` is missing along the path."""
         node = self.root
