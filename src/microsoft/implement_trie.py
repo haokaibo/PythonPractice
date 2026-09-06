@@ -33,93 +33,45 @@ Constraints:
 Solution:
     Each Trie node holds:
         - children: dict mapping a single character to its child Trie node.
-        - word:     the word stored at this node (only set at the terminal
-                    node of an inserted word; None for non-terminal nodes).
+        - is_end:   True iff this node terminates a previously inserted word.
     insert / search / startsWith all walk down one node per character of the
-    input string.
+    input string via the shared `_walk` helper.
 """
 
 
-class Trie(object):
-    """
-    use a dict - children to hold characters of words
-    The key is the character of the word, the value is another Trie
-    """
-
-    # Time:  O(1)            - constant work to create an empty node.
-    # Space: O(1)            - one dict + one attribute per node.
+class TrieNode:
     def __init__(self):
-        self.children = {}
-        self.word = None
-        
+        self.children = {}  # 映射字符 -> TrieNode
+        self.is_end = False # 标识是否为一个完整单词的结尾
 
-    # Time:  O(L)  - one step per character of `word`, where L = len(word).
-    # Space: O(L)  - in the worst case we allocate a new node for every
-    #                character of `word` (when none of the prefix existed
-    #                before). On already-inserted words the extra cost is O(1).
-    def insert(self, word, index=0):
-        """
-        :type word: str
-        :rtype: None
-        """
-        if not word:
-            return None
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
 
-        c = word[index]
-        if c not in self.children:
-            self.children[c] = Trie()
+    def _walk(self, s: str):
+        """Return the node reached by traversing `s` from the root, or None
+        if any character in `s` is missing along the path."""
+        node = self.root
+        for ch in s:
+            if ch not in node.children:
+                return None
+            node = node.children[ch]
+        return node
 
-        if len(word) == index + 1:
-            # word ends at character c, which lives in self.children[c]
-            self.children[c].word = word
-        else:
-            self.children[c].insert(word, index + 1)     
-            
-        
-    # Time:  O(L)  - one step per character of `word`, L = len(word).
-    # Space: O(L)  - recursive call stack depth equals the number of
-    #                characters traversed (can be rewritten iteratively as O(1)).
-    def search(self, word, index=0):
-        """
-        :type word: str
-        :rtype: bool
-        """
-        if not word:
-            return True
+    def insert(self, word: str) -> None:
+        node = self.root
+        for ch in word:
+            if ch not in node.children:
+                node.children[ch] = TrieNode()
+            node = node.children[ch]
+        node.is_end = True
 
-        c = word[index]
+    def search(self, word: str) -> bool:
+        node = self._walk(word)
+        return node is not None and node.is_end
 
-        if c not in self.children:
-            return False
-
-        if len(word) == index + 1:
-            return self.children[c].word == word
-
-        else:
-            return self.children[c].search(word, index + 1)
-        
-        
-
-    # Time:  O(L)  - one step per character of `prefix`, L = len(prefix).
-    # Space: O(L)  - recursive call stack depth equals L (iterative: O(1)).
-    def startsWith(self, prefix, index = 0):
-        """
-        :type prefix: str
-        :rtype: bool
-        """
-        if not prefix:
-            return True
-
-        c = prefix[index]
-
-        if c not in self.children:
-            return False
-
-        if len(prefix) == index + 1:
-            return True
-
-        else:
-            return self.children[c].startsWith(prefix, index+1)
+    def startsWith(self, prefix: str) -> bool:
+        return self._walk(prefix) is not None
         
 
 
@@ -142,8 +94,8 @@ Let N be the total number of characters stored across all inserted words,
 and L be the length of the word/prefix passed to a single call.
 
     insert:        Time O(L)         Space O(L) worst case (new nodes per char)
-    search:        Time O(L)         Space O(L) call stack (iterative: O(1))
-    startsWith:    Time O(L)         Space O(L) call stack (iterative: O(1))
+    search:        Time O(L)         Space O(1) iterative
+    startsWith:    Time O(L)         Space O(1) iterative
     Trie overall:  Space O(N) total nodes across all inserted words.
 
 Notes:
@@ -152,8 +104,8 @@ Notes:
   once.
 - The dict-based children gives expected O(1) character lookup (amortized),
   so the time bound is tight rather than O(L * alphabet).
-- The recursive implementations here use O(L) extra space for the call stack;
-  converting each method to a simple `while` loop reduces that to O(1).
+- All methods are implemented iteratively, so the extra space beyond the
+  output is O(1).
 """
 
 """
