@@ -2,7 +2,7 @@
 # @param a, person a
 # @param b, person b
 # @return a boolean, whether a knows b
-# def knows(a, b):
+# def knows(a, b):\n\n# LeetCode 279 - Find the Celebrity\n# Given n people and a knows(a, b) function, find the celebrity\n# who is known by everyone but knows no one. Return -1 if none exists.
 
 """
 Solution:
