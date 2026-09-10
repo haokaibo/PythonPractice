@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heapify — 自底向上建堆可视化</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --good: #22c55e;
+    --bad: #ef4444;
+    --amber: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+
+  .panel {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+  }
+  .controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  label.small { font-size: 13px; color: var(--muted); }
+  input[type="text"] {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid #475569;
+    padding: 8px 10px;
+    border-radius: 8px;
+    width: 260px;
+    font-size: 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  button {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid #475569;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  button:hover:not(:disabled) { background: #334155; border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #0ea5e9; }
+
+  .status {
+    font-size: 14px;
+    margin-top: 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    border-left: 4px solid var(--accent);
+    min-height: 20px;
+  }
+  .progress {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .error { font-size: 13px; color: var(--bad); margin-top: 8px; display: none; }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+  svg { display: block; }
+  .node-gray  { fill: var(--panel-2); stroke: #475569; }
+  .node-amber { fill: rgba(245,158,11,0.25); stroke: var(--amber); }
+  .node-blue  { fill: rgba(56,189,248,0.25); stroke: var(--accent); }
+  .node-green { fill: rgba(34,197,94,0.25); stroke: var(--good); }
+  .node-text  { fill: var(--text); font-size: 15px; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-anchor: middle; dominant-baseline: central; }
+  .edge { stroke: #475569; stroke-width: 1.5; }
+
+  .code-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .code-tab {
+    background: var(--panel-2);
+    color: var(--muted);
+    border: 1px solid #475569;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .code-tab.active { color: var(--text); border-color: var(--accent); background: #1e2a3f; }
+  pre {
+    background: #0b1120;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0;
+  }
+  pre code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .kw { color: #c084fc; }
+  .fn { color: #38bdf8; }
+  .cmt { color: #64748b; font-style: italic; }
+  .num { color: #fbbf24; }
+</style>
+</head>
+<body>
+
+<h1>Heapify — 自底向上建堆（下沉 / sift-down）可视化</h1>
+<div class="subtitle">
+  从最后一个非叶子节点（下标 <code>n/2 - 1</code>）开始，逐个向前处理到根节点，对每个节点做下沉操作。
+  整体时间复杂度 <code>O(n)</code>，比逐个 push 建堆的 <code>O(n log n)</code> 更快。
+</div>
+
+<div class="panel">
+  <div class="controls">
+    <div>
+      <label class="small">初始数组（逗号分隔）</label><br>
+      <input id="arrIn" type="text" value="4,10,3,5,1,15,20,17,8">
+    </div>
+    <button class="primary" id="buildBtn">建堆 (Heapify)</button>
+    <button id="nextBtn" disabled>下一步 ▸</button>
+    <button id="resetBtn">↺ 重置</button>
+  </div>
+  <div class="error" id="err"></div>
+  <div class="legend">
+    <span><span class="swatch" style="background:rgba(245,158,11,0.5);border:2px solid var(--amber);"></span>当前下沉节点</span>
+    <span><span class="swatch" style="background:rgba(56,189,248,0.5);border:2px solid var(--accent);"></span>参与比较的子节点</span>
+    <span><span class="swatch" style="background:rgba(34,197,94,0.5);border:2px solid var(--good);"></span>已完成下沉，堆性质满足</span>
+  </div>
+</div>
+
+<div class="panel">
+  <svg id="svgRoot" width="100%" viewBox="0 0 680 420">
+    <g id="tree"></g>
+  </svg>
+  <div class="status" id="msg">输入数组后点击"建堆"，逐步观察自底向上的下沉过程。</div>
+  <div class="progress" id="progress"></div>
+</div>
+
+<div class="panel">
+  <div class="code-tabs">
+    <button class="code-tab active" data-tab="heapify">Heapify 实现</button>
+    <button class="code-tab" data-tab="heapq">标准库 heapq</button>
+  </div>
+
+  <pre id="code-heapify"><code><span class="kw">def</span> <span class="fn">heapify</span>(arr):
+    n = len(arr)
+    <span class="cmt"># 从最后一个非叶子节点开始，往前处理到根节点</span>
+    <span class="kw">for</span> i <span class="kw">in</span> range(n // <span class="num">2</span> - <span class="num">1</span>, -<span class="num">1</span>, -<span class="num">1</span>):
+        _sift_down(arr, i, n)
+
+<span class="kw">def</span> <span class="fn">_sift_down</span>(arr, i, n):
+    <span class="kw">while</span> <span class="kw">True</span>:
+        largest = i
+        left, right = <span class="num">2</span>*i + <span class="num">1</span>, <span class="num">2</span>*i + <span class="num">2</span>
+        <span class="kw">if</span> left < n <span class="kw">and</span> arr[left] > arr[largest]:
+            largest = left
+        <span class="kw">if</span> right < n <span class="kw">and</span> arr[right] > arr[largest]:
+            largest = right
+        <span class="kw">if</span> largest == i:
+            <span class="kw">break</span>
+        arr[i], arr[largest] = arr[largest], arr[i]
+        i = largest
+
+
+<span class="cmt"># 使用示例</span>
+arr = [<span class="num">4</span>, <span class="num">10</span>, <span class="num">3</span>, <span class="num">5</span>, <span class="num">1</span>, <span class="num">15</span>, <span class="num">20</span>, <span class="num">17</span>, <span class="num">8</span>]
+heapify(arr)
+<span class="fn">print</span>(arr)</code></pre>
+
+  <pre id="code-heapq" style="display:none"><code><span class="kw">import</span> heapq
+
+arr = [<span class="num">4</span>, <span class="num">10</span>, <span class="num">3</span>, <span class="num">5</span>, <span class="num">1</span>, <span class="num">15</span>, <span class="num">20</span>, <span class="num">17</span>, <span class="num">8</span>]
+heapq.heapify(arr)  <span class="cmt"># O(n)，内部就是自底向上的下沉法</span>
+<span class="cmt"># 注意 heapq 默认是最小堆，如需最大堆效果可将元素取负存入</span></code></pre>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  let baseArr = [4, 10, 3, 5, 1, 15, 20, 17, 8];
+  let frames = [];
+  let idx = 0;
+
+  function pos(i) {
+    const level = Math.floor(Math.log2(i + 1));
+    const num = Math.pow(2, level);
+    const posIn = i - (num - 1);
+    const x = (posIn + 0.5) * (680 / num);
+    const y = 60 + level * 100;
+    return [x, y];
+  }
+
+  function render(arr, focus, children, doneIdx) {
+    let s = '';
+    for (let i = 1; i < arr.length; i++) {
+      const p = Math.floor((i - 1) / 2);
+      const [x1, y1] = pos(p), [x2, y2] = pos(i);
+      s += `<line class="edge" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+    }
+    for (let i = 0; i < arr.length; i++) {
+      const [x, y] = pos(i);
+      let cls = 'node-gray';
+      if (children && children.includes(i)) cls = 'node-blue';
+      if (i === focus) cls = 'node-amber';
+      if (doneIdx !== undefined && i === doneIdx) cls = 'node-green';
+      s += `<circle class="${cls}" cx="${x}" cy="${y}" r="20" stroke-width="2"/>`;
+      s += `<text class="node-text" x="${x}" y="${y}">${arr[i]}</text>`;
+    }
+    $('tree').innerHTML = s;
+  }
+
+  function simulateHeapify(arr) {
+    const a = arr.slice();
+    const n = a.length;
+    const fs = [];
+    fs.push({ arr: a.slice(), focus: null, msg: `原始数组，尚未满足堆性质，从最后一个非叶子节点 index=${Math.floor(n/2)-1} 开始处理` });
+
+    for (let start = Math.floor(n / 2) - 1; start >= 0; start--) {
+      let i = start;
+      fs.push({ arr: a.slice(), focus: i, msg: `处理非叶子节点 index=${i}（值=${a[i]}），开始下沉` });
+      while (true) {
+        let largest = i;
+        const left = 2 * i + 1, right = 2 * i + 2;
+        if (left < n && a[left] > a[largest]) largest = left;
+        if (right < n && a[right] > a[largest]) largest = right;
+        const childDesc = [];
+        if (left < n) childDesc.push(`左=${a[left]}`);
+        if (right < n) childDesc.push(`右=${a[right]}`);
+        fs.push({ arr: a.slice(), focus: i, children: [left < n ? left : null, right < n ? right : null].filter(x => x !== null), msg: `比较节点(${a[i]}) 与子节点（${childDesc.join('，')}） → 最大值在 index=${largest}` });
+        if (largest === i) {
+          fs.push({ arr: a.slice(), focus: null, doneIdx: i, msg: `index=${i} 已满足堆性质，停止下沉` });
+          break;
+        }
+        [a[i], a[largest]] = [a[largest], a[i]];
+        fs.push({ arr: a.slice(), focus: largest, msg: `交换后，节点下沉到 index=${largest}，继续比较` });
+        i = largest;
+      }
+    }
+    fs.push({ arr: a.slice(), focus: null, msg: `建堆完成 ✓，整棵树已满足最大堆性质` });
+    return fs;
+  }
+
+  function doBuild() {
+    const raw = $('arrIn').value.trim();
+    const parts = raw.split(',').map(s => s.trim()).filter(s => s !== '');
+    const nums = parts.map(Number);
+    if (parts.length === 0 || nums.some(isNaN)) {
+      $('err').textContent = '请输入合法的、以逗号分隔的数字，例如 4,10,3,5,1';
+      $('err').style.display = 'block';
+      return;
+    }
+    $('err').style.display = 'none';
+    baseArr = nums;
+    frames = simulateHeapify(baseArr);
+    idx = 0;
+    const f = frames[0];
+    render(f.arr, f.focus, f.children, f.doneIdx);
+    $('msg').textContent = f.msg;
+    $('progress').textContent = `步骤 1 / ${frames.length}`;
+    $('buildBtn').disabled = true;
+    $('nextBtn').disabled = frames.length <= 1;
+  }
+
+  function doNext() {
+    if (idx >= frames.length - 1) return;
+    idx++;
+    const f = frames[idx];
+    render(f.arr, f.focus, f.children, f.doneIdx);
+    $('msg').textContent = f.msg;
+    $('progress').textContent = `步骤 ${idx + 1} / ${frames.length}`;
+    if (idx === frames.length - 1) {
+      $('nextBtn').disabled = true;
+      $('buildBtn').disabled = false;
+    }
+  }
+
+  function doReset() {
+    frames = [];
+    idx = 0;
+    render(baseArr, null, null);
+    $('msg').textContent = '输入数组后点击"建堆"，逐步观察自底向上的下沉过程。';
+    $('progress').textContent = '';
+    $('buildBtn').disabled = false;
+    $('nextBtn').disabled = true;
+    $('err').style.display = 'none';
+  }
+
+  $('buildBtn').addEventListener('click', doBuild);
+  $('nextBtn').addEventListener('click', doNext);
+  $('resetBtn').addEventListener('click', doReset);
+
+  document.querySelectorAll('.code-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      $('code-heapify').style.display = tab.dataset.tab === 'heapify' ? 'block' : 'none';
+      $('code-heapq').style.display = tab.dataset.tab === 'heapq' ? 'block' : 'none';
+    });
+  });
+
+  render(baseArr, null, null);
+</script>
+
+</body>
+</html>
