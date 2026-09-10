@@ -297,7 +297,6 @@
       <text class="t-note" x="640" y="565">消费消息流 → 触发通知</text>
 
       <!-- 外部 -->
-      <!-- 外部 -->
       <rect class="box" x="340" y="708" width="560" height="40" fill="#0f172a" stroke="#475569" stroke-dasharray="4 3"/>
       <text class="t-sub" x="620" y="732" text-anchor="middle">移动端 OS 推送通道（iOS Push / Android FCM）→ 唤醒离线用户上线拉取</text>
       <line x1="895" y1="635" x2="895" y2="708" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow-zh)"/>
@@ -305,12 +304,10 @@
       <!-- 写扩散 vs 读扩散 备选方案标注 -->
       <rect x="120" y="762" width="880" height="108" fill="rgba(245,158,11,0.06)" stroke="#f59e0b" stroke-dasharray="6 3" rx="10"/>
       <text class="t-title" x="140" y="782" fill="#f59e0b">群组消息扇出策略对比（面试加分点）</text>
-      <!-- 写扩散（当前方案） -->
       <text class="t-sub" x="140" y="802" fill="#22c55e">✓ 写扩散 Fan-out on Write（当前方案，适合 ≤100 人群组）：</text>
       <text class="t-sub" x="155" y="818">消息到达 → 立刻写入每个成员的"收件箱"（Cosmos DB 按 user_id 分片）→ 读取 O(1)，写入放大 ×N</text>
-      <!-- 读扩散（备选） -->
       <text class="t-sub" x="140" y="838" fill="#94a3b8">✗ 读扩散 Fan-out on Read（备选，适合超大群/频道）：</text>
-      <text class="t-sub" x="155" y="854">消息只存一份在会话 → 用户拉取时实时查 membership 列表 → 读取需多查一次，写入无放大</text>
+      <text class="t-sub" x="165" y="854">消息只存一份在会话 → 用户拉取时实时查 membership 列表 → 读取需多查一次，写入无放大</text>
       <text class="t-note" x="140" y="868">Teams 场景群组上限 100 人 → 写扩散合理；若上万人的 workspace 广播 → 需读扩散或混合方案</text>
     </svg>
   </div>
@@ -461,7 +458,7 @@
       <text class="t-sub" x="140" y="802" fill="#22c55e">✓ Fan-out on Write (chosen, fits ≤100-member groups):</text>
       <text class="t-sub" x="155" y="818">msg arrives → write to each member's inbox (Cosmos DB sharded by user_id) → O(1) read, write amplification ×N</text>
       <text class="t-sub" x="140" y="838" fill="#94a3b8">✗ Fan-out on Read (alternative, fits very large channels):</text>
-      <text class="t-sub" x="155" y="854">msg stored once in conversation → user pulls → query membership list in real-time → extra read, no write amplification</text>
+      <text class="t-sub" x="165" y="854">msg stored once in conversation → user pulls → query membership list in real-time → extra read, no write amplification</text>
       <text class="t-note" x="140" y="868">Teams: 100-member cap → write-fanout; 10k+ workspace broadcast → read-fanout or hybrid</text>
     </svg>
   </div>
@@ -649,19 +646,19 @@
       <text class="t-edge" x="558" y="308">1 : {0..*}  (ordered by message_id)</text>
 
       <!-- GroupConversation :|: Conversation (inheritance) -->
-      <line x1="550" y1="600" x2="550" y2="280" stroke="#94a3b8" stroke-width="0"/>
+      <line x1="550" y1="280" x2="550" y2="555" stroke="#94a3b8" stroke-width="1.5"/>
       <path d="M 550 600 L 550 580" stroke="#94a3b8" stroke-width="1.5"/>
       <path d="M 535 580 L 550 555 L 565 580 Z" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
       <text class="t-edge" x="558" y="575">«inherits» (kind = GROUP)</text>
 
       <!-- Message --> PushPayload (dependency, dashed) -->
-      <line x1="700" y1="400" x2="890" y2="170" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-cls-open)"/>
-      <text class="t-edge" x="770" y="280">toPushPayload()</text>
+      <path d="M 700 400 L 730 400 L 730 150 L 760 150" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-cls-open)"/>
+      <text class="t-edge" x="715" y="285" transform="rotate(-90 715 285)">toPushPayload()</text>
 
       <!-- ApnsChannel ..|> INotificationChannel -->
-      <line x1="890" y1="370" x2="890" y2="330" stroke="#94a3b8" stroke-width="1.5"/>
-      <path d="M 875 330 L 890 305 L 905 330 Z" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
-      <text class="t-edge" x="898" y="355">«implements»</text>
+      <line x1="890" y1="370" x2="890" y2="350" stroke="#94a3b8" stroke-width="1.5"/>
+      <path d="M 875 350 L 890 330 L 905 350 Z" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+      <text class="t-edge" x="898" y="362">«implements»</text>
 
       <!-- FcmChannel ..|> INotificationChannel -->
       <path d="M 1020 510 L 1040 330" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
@@ -669,13 +666,13 @@
       <text class="t-edge" x="1030" y="420">«implements»</text>
 
       <!-- IChatService .. Conversation (dependency) -->
-      <line x1="1050" y1="130" x2="700" y2="130" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-cls-open)"/>
-      <text class="t-edge" x="850" y="122">«uses»</text>
+      <line x1="1050" y1="185" x2="700" y2="185" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-cls-open)"/>
+      <text class="t-edge" x="850" y="178">«uses»</text>
 
       <!-- IChatService .. Message -->
-      <line x1="1120" y1="220" x2="1120" y2="440" stroke="#94a3b8" stroke-width="0"/>
-      <path d="M 1120 220 L 1120 440 Q 1120 450 1110 450 L 700 450" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 3" fill="none" marker-end="url(#arrow-cls-open)"/>
-      <text class="t-edge" x="900" y="445">«send / history»</text>
+      <line x1="1120" y1="220" x2="1120" y2="490" stroke="#94a3b8" stroke-width="0"/>
+      <path d="M 1120 220 L 1120 490 Q 1120 500 1110 500 L 700 500" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 3" fill="none" marker-end="url(#arrow-cls-open)"/>
+      <text class="t-edge" x="900" y="495">«send / history»</text>
     </svg>
   </div>
   <div class="legend">
