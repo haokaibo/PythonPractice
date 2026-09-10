@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>寻找有向图中的汇点 · 交互演示</title>
+<style>
+  :root{
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel2: #273449;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --good: #22c55e;
+    --bad: #ef4444;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --teal: #22c55e;
+    --red: #ef4444;
+    --pointer: #f59e0b;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    padding:24px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  header{margin-bottom:20px;}
+  header h1{
+    margin:0 0 8px;
+    font-size:22px;
+  }
+  header p{
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.6;
+    max-width:680px;
+    margin:0;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1.35fr 1fr;
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width:920px){.grid{grid-template-columns:1fr;}}
+
+  /* cards (match reference .panel) */
+  .card{
+    background:var(--panel);
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:16px;
+    box-shadow:0 4px 18px rgba(0,0,0,0.25);
+  }
+  .card-title{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--muted);
+    margin:0 0 14px;
+    font-weight:600;
+  }
+
+  /* controls */
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  label.inline{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+  .spacer{flex:1;}
+
+  /* buttons + selects (match reference) */
+  button, select{
+    font-size:14px;
+    border-radius:8px;
+    border:1px solid #475569;
+    background:var(--panel2);
+    color:var(--text);
+    padding:8px 14px;
+    cursor:pointer;
+    transition:all 0.15s;
+  }
+  button:hover:not(:disabled), select:hover{
+    background:#334155;
+    border-color:var(--accent);
+  }
+  button:disabled{opacity:0.5;cursor:not-allowed;}
+  button.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#0f172a;
+    font-weight:600;
+  }
+  button.primary:hover:not(:disabled){background:#0ea5e9;}
+  button.icon{padding:8px 11px;font-size:12px;}
+
+  /* svg graph */
+  svg{width:100%;height:340px;display:block;}
+  .node-label{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:600;
+    fill:var(--text);
+    text-anchor:middle;
+    dominant-baseline:central;
+    pointer-events:none;
+  }
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-top:8px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+
+  /* matrix */
+  table.matrix{
+    border-collapse:collapse;
+    font-family:var(--mono);
+    font-size:13px;
+    margin:0 auto;
+  }
+  table.matrix th{
+    color:var(--muted);
+    font-weight:500;
+    padding:4px 8px;
+    font-size:12px;
+  }
+  table.matrix td{
+    width:30px;height:30px;
+    text-align:center;
+    border:1px solid var(--border);
+    cursor:pointer;
+    user-select:none;
+    color:var(--text);
+    transition:background .15s, box-shadow .15s;
+  }
+  table.matrix td.diag{background:#0d0f17;color:var(--muted);cursor:default;}
+  table.matrix td.one{color:var(--accent);}
+  table.matrix td.highlight{
+    box-shadow:inset 0 0 0 2px var(--amber);
+    background:rgba(245,158,11,0.12);
+  }
+  .matrix-hint{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-top:10px;
+  }
+
+  /* pseudocode */
+  pre.pseudo{
+    font-family:var(--mono);
+    font-size:13px;
+    line-height:1.9;
+    margin:0;
+    white-space:pre-wrap;
+  }
+  pre.pseudo .line{
+    display:block;
+    padding:1px 8px;
+    border-radius:5px;
+    color:var(--muted);
+  }
+  pre.pseudo .line.active{
+    background:rgba(56,189,248,0.08);
+    color:var(--text);
+    border-left:3px solid var(--accent);
+  }
+
+  pre.code{
+    font-family:var(--mono);
+    font-size:12.5px;
+    line-height:1.7;
+    margin:0;
+    padding:14px 16px;
+    background:var(--panel2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow-x:auto;
+    color:#c7cce0;
+  }
+  pre.code code{white-space:pre;}
+
+  /* status + log (match reference) */
+  .status{
+    font-size:14px;
+    padding:10px 14px;
+    border-radius:8px;
+    background:var(--panel2);
+    border-left:4px solid var(--accent);
+    transition:all 0.3s;
+    min-height:42px;
+  }
+  .log{
+    height:150px;
+    overflow-y:auto;
+    font-family:var(--mono);
+    font-size:12.5px;
+    line-height:1.7;
+    padding-right:4px;
+  }
+  .log div{
+    padding:5px 0;
+    border-bottom:1px dashed var(--border);
+    color:var(--text);
+  }
+  .log div:last-child{color:var(--amber);}
+  .result-banner{
+    margin-top:14px;
+    padding:10px 14px;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:600;
+    display:none;
+    border-left:4px solid var(--accent);
+  }
+  .result-banner.show{display:block;}
+  .result-banner.found{
+    background:rgba(34,197,94,0.10);
+    color:var(--good);
+    border-color:var(--good);
+  }
+  .result-banner.none{
+    background:rgba(239,68,68,0.10);
+    color:var(--bad);
+    border-color:var(--bad);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>寻找有向图中的汇点</h1>
+    <p>汇点：出度为 0、入度为 n−1 的顶点（所有其他顶点都指向它，它不指向任何人）。下面用邻接矩阵上的候选消除法，在 O(n) 时间内定位唯一可能的汇点，再用一次遍历验证。点击矩阵格子可以自定义图，或直接生成随机图观察算法执行过程。</p>
+  </header>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="card-title">有向图</div>
+        <svg id="graphSvg" viewBox="0 0 480 340"></svg>
+        <div class="legend">
+          <span><i class="dot" style="background:var(--panel2);border:1.5px solid var(--muted)"></i>未确定</span>
+          <span><i class="dot" style="background:var(--amber)"></i>当前候选</span>
+          <span><i class="dot" style="background:var(--blue)"></i>正在比较</span>
+          <span><i class="dot" style="background:var(--grey)"></i>已排除</span>
+          <span><i class="dot" style="background:var(--teal)"></i>确认为汇点</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">算法步骤（候选消除 + 验证）</div>
+        <pre class="pseudo" id="pseudoBox"></pre>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Python 完整实现</span>
+          <button id="copyCodeBtn" class="icon" style="font-size:12px;padding:5px 10px;">复制代码</button>
+        </div>
+        <pre class="code" id="codeBox"><code>def find_sink(adj: list[list[int]]) -> int | None:
+    """
+    在邻接矩阵表示的有向图中寻找汇点。
+    汇点定义：出度为 0、入度为 n-1（被其余所有顶点指向）。
+    adj[i][j] == 1 表示存在边 i -> j。
+    时间复杂度 O(n)，空间复杂度 O(1)。
+    找到则返回顶点下标，否则返回 None。
+    """
+    n = len(adj)
+    if n == 0:
+        return None
+
+    # 第一阶段：候选消除
+    # 若 candidate -> i 存在边，candidate 有出边，不可能是汇点，候选变为 i
+    # 否则 i 没有被 candidate 指向，i 不可能是汇点，候选保持不变
+    candidate = 0
+    for i in range(1, n):
+        if adj[candidate][i] == 1:
+            candidate = i
+
+    # 第二阶段：验证唯一候选
+    # 候选的出度必须为 0，入度必须为 n-1
+    for k in range(n):
+        if k == candidate:
+            continue
+        if adj[candidate][k] != 0:      # 候选存在出边
+            return None
+        if adj[k][candidate] != 1:      # 有顶点未指向候选
+            return None
+
+    return candidate
+
+
+if __name__ == "__main__":
+    # 示例：0 号顶点是汇点
+    example = [
+        [0, 0, 0, 0],
+        [1, 0, 0, 1],
+        [1, 1, 0, 1],
+        [1, 0, 0, 0],
+    ]
+    result = find_sink(example)
+    print("汇点下标:", result)  # 输出: 汇点下标: 0
+</code></pre>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">控制</div>
+        <div class="controls">
+          <label class="inline">节点数
+            <select id="nSelect">
+              <option>5</option><option>6</option><option selected>7</option><option>8</option>
+            </select>
+          </label>
+          <button id="randomBtn">生成随机图</button>
+          <button id="resetBtn">重置矩阵</button>
+        </div>
+        <div class="controls">
+          <button id="prevBtn" class="icon">◀ 上一步</button>
+          <button id="nextBtn" class="icon">下一步 ▶</button>
+          <button id="playBtn" class="primary">▶ 自动播放</button>
+          <div class="spacer"></div>
+          <label class="inline">速度
+            <select id="speedSelect">
+              <option value="1200">慢</option>
+              <option value="700" selected>中</option>
+              <option value="350">快</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">邻接矩阵（行 → 列 表示存在边；点击可编辑）</div>
+        <div id="matrixHost"></div>
+        <div class="matrix-hint">修改矩阵会重新计算算法步骤</div>
+      </div>
+
+      <div class="card">
+        <div class="status" id="statusLine">准备就绪</div>
+        <div class="card-title" style="margin-bottom:6px;">执行日志</div>
+        <div class="log" id="logBox"></div>
+        <div class="result-banner" id="resultBanner"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const svg = document.getElementById('graphSvg');
+  const matrixHost = document.getElementById('matrixHost');
+  const pseudoBox = document.getElementById('pseudoBox');
+  const logBox = document.getElementById('logBox');
+  const statusLine = document.getElementById('statusLine');
+  const resultBanner = document.getElementById('resultBanner');
+  const nSelect = document.getElementById('nSelect');
+  const speedSelect = document.getElementById('speedSelect');
+
+  let n = parseInt(nSelect.value, 10);
+  let adj = [];
+  let steps = [];
+  let stepIdx = -1;
+  let playTimer = null;
+
+  const PSEUDO_LINES = [
+    '候选 candidate ← 0',
+    'for i ← 1 到 n-1:',
+    '    如果 adj[candidate][i] = 1:',
+    '        candidate ← i',
+    '    否则:',
+    '        排除 i，候选不变',
+    '验证 candidate 的出度是否为 0，入度是否为 n-1'
+  ];
+  const LINE_MAP = { init:0, check:2, switch:3, eliminate:5, verify_start:6, verify_check:6, found:6, notfound:6 };
+
+  function label(i){ return String.fromCharCode(65+i); }
+
+  function emptyMatrix(n){
+    return Array.from({length:n}, () => Array(n).fill(0));
+  }
+
+  function randomMatrix(n){
+    const m = emptyMatrix(n);
+    const forceSink = Math.random() < 0.5;
+    const sink = forceSink ? Math.floor(Math.random()*n) : -1;
+    for(let i=0;i<n;i++){
+      for(let j=0;j<n;j++){
+        if(i===j) continue;
+        if(forceSink){
+          if(i===sink){ m[i][j]=0; continue; }
+          if(j===sink){ m[i][j]=1; continue; }
+        }
+        m[i][j] = Math.random() < 0.42 ? 1 : 0;
+      }
+    }
+    return m;
+  }
+
+  function computeSteps(adj, n){
+    const steps = [];
+    let candidate = 0;
+    steps.push({type:'init', candidate, message:`初始化候选为 ${label(0)}`});
+    for(let i=1;i<n;i++){
+      steps.push({type:'check', candidate, i, message:`检查 ${label(candidate)} → ${label(i)} 这条边是否存在`});
+      if(adj[candidate][i]===1){
+        steps.push({type:'switch', from:candidate, to:i, candidate:i, message:`存在 ${label(candidate)} → ${label(i)}，说明 ${label(candidate)} 有出边，不可能是汇点；候选变为 ${label(i)}`});
+        candidate = i;
+      } else {
+        steps.push({type:'eliminate', candidate, i, message:`不存在 ${label(candidate)} → ${label(i)}，说明 ${label(i)} 不可能被所有顶点指向；排除 ${label(i)}，候选仍为 ${label(candidate)}`});
+      }
+    }
+    steps.push({type:'verify_start', candidate, message:`候选消除结束，唯一可能的汇点是 ${label(candidate)}，开始验证`});
+    let isSink = true, failReason = null;
+    for(let k=0;k<n;k++){
+      if(k===candidate) continue;
+      steps.push({type:'verify_check', candidate, k, message:`验证：${label(candidate)} → ${label(k)} 应为 0，${label(k)} → ${label(candidate)} 应为 1`});
+      if(adj[candidate][k] !== 0){ isSink=false; failReason=`${label(candidate)} 存在指向 ${label(k)} 的边，出度不为 0`; break; }
+      if(adj[k][candidate] !== 1){ isSink=false; failReason=`${label(k)} 没有指向 ${label(candidate)} 的边，入度不足 n-1`; break; }
+    }
+    if(isSink){
+      steps.push({type:'found', candidate, message:`验证通过：${label(candidate)} 出度为 0，入度为 n-1，是汇点`});
+    } else {
+      steps.push({type:'notfound', candidate, message:`验证失败：${failReason}，该图不存在汇点`});
+    }
+    return steps;
+  }
+
+  function replay(idx){
+    const eliminated = new Set();
+    let candidate = 0, currentI = null, currentK = null, verifying = false, result = null, sinkVertex = null;
+    for(let s=0; s<=idx; s++){
+      const st = steps[s];
+      currentI = null; currentK = null;
+      if(st.type==='init') candidate = st.candidate;
+      else if(st.type==='check') currentI = st.i;
+      else if(st.type==='switch'){ eliminated.add(st.from); candidate = st.to; }
+      else if(st.type==='eliminate') eliminated.add(st.i);
+      else if(st.type==='verify_start') verifying = true;
+      else if(st.type==='verify_check') currentK = st.k;
+      else if(st.type==='found'){ result='found'; sinkVertex = st.candidate; }
+      else if(st.type==='notfound'){ result='none'; }
+    }
+    return {eliminated, candidate, currentI, currentK, verifying, result, sinkVertex};
+  }
+
+  // ---------- rendering ----------
+  function nodePositions(n){
+    const cx=240, cy=155, r=112;
+    const pts=[];
+    for(let i=0;i<n;i++){
+      const a = -Math.PI/2 + i*2*Math.PI/n;
+      pts.push({x:cx+r*Math.cos(a), y:cy+r*Math.sin(a)});
+    }
+    return pts;
+  }
+
+  function edgePath(p1, p2, i, j){
+    const rad = 20;
+    const dx=p2.x-p1.x, dy=p2.y-p1.y;
+    const len=Math.hypot(dx,dy)||1;
+    const ux=dx/len, uy=dy/len;
+    const nx=-uy, ny=ux;
+    const bend = 16 * (i<j ? 1 : -1);
+    const sx=p1.x+ux*rad, sy=p1.y+uy*rad;
+    const ex=p2.x-ux*(rad+7), ey=p2.y-uy*(rad+7);
+    const mx=(sx+ex)/2 + nx*bend, my=(sy+ey)/2 + ny*bend;
+    return `M${sx},${sy} Q${mx},${my} ${ex},${ey}`;
+  }
+
+  function renderGraph(state){
+    const pts = nodePositions(n);
+    let defs = `<defs>
+      <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#5c6484"></path>
+      </marker>
+      <marker id="arrowActive" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#4fa3ff"></path>
+      </marker>
+    </defs>`;
+
+    let edgesSvg = '';
+    for(let i=0;i<n;i++){
+      for(let j=0;j<n;j++){
+        if(i===j || adj[i][j]!==1) continue;
+        const isActive = (state.currentI!==null && state.candidate===i && state.currentI===j) ||
+                          (state.currentK!==null && state.candidate===i && state.currentK===j) ||
+                          (state.currentK!==null && j===state.candidate && state.currentK===i);
+        const stroke = isActive ? '#4fa3ff' : '#3a4056';
+        const width = isActive ? 2.4 : 1.4;
+        const marker = isActive ? 'url(#arrowActive)' : 'url(#arrow)';
+        edgesSvg += `<path d="${edgePath(pts[i], pts[j], i, j)}" fill="none" stroke="${stroke}" stroke-width="${width}" marker-end="${marker}" opacity="${state.eliminated.has(i)?0.35:1}"/>`;
+      }
+    }
+
+    let nodesSvg = '';
+    for(let i=0;i<n;i++){
+      let fill = '#1d2231', stroke = '#454c5f', strokeW = 1.6, textColor='#e7e9f0';
+      if(state.result==='found' && state.sinkVertex===i){ fill='#2ee6a6'; stroke='#2ee6a6'; textColor='#08281f'; }
+      else if(state.eliminated.has(i)){ fill='#171b28'; stroke='#3a4056'; textColor='#5c6484'; }
+      else if(state.candidate===i){ fill='#3a2a0d'; stroke='#f5a623'; strokeW=2.6; }
+      if(state.currentI===i || state.currentK===i){ stroke='#4fa3ff'; strokeW=2.6; }
+      nodesSvg += `<circle cx="${pts[i].x}" cy="${pts[i].y}" r="20" fill="${fill}" stroke="${stroke}" stroke-width="${strokeW}"/>
+                   <text class="node-label" x="${pts[i].x}" y="${pts[i].y}" fill="${textColor}">${label(i)}</text>`;
+    }
+
+    svg.innerHTML = defs + edgesSvg + nodesSvg;
+  }
+
+  function renderMatrix(state){
+    let html = '<table class="matrix"><tr><th></th>';
+    for(let j=0;j<n;j++) html += `<th>${label(j)}</th>`;
+    html += '</tr>';
+    for(let i=0;i<n;i++){
+      html += `<tr><th>${label(i)}</th>`;
+      for(let j=0;j<n;j++){
+        let cls = i===j ? 'diag' : (adj[i][j]===1 ? 'one' : '');
+        const isHighlight = (state.currentI!==null && i===state.candidate && j===state.currentI) ||
+                             (state.currentK!==null && i===state.candidate && j===state.currentK) ||
+                             (state.currentK!==null && j===state.candidate && i===state.currentK);
+        if(isHighlight) cls += ' highlight';
+        const val = i===j ? '—' : adj[i][j];
+        html += `<td class="${cls}" data-i="${i}" data-j="${j}">${val}</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</table>';
+    matrixHost.innerHTML = html;
+    matrixHost.querySelectorAll('td').forEach(td=>{
+      const i = +td.dataset.i, j = +td.dataset.j;
+      if(i===j) return;
+      td.addEventListener('click', () => {
+        adj[i][j] = adj[i][j] ? 0 : 1;
+        rebuildSteps(true);
+      });
+    });
+  }
+
+  function renderPseudo(state, stepType){
+    const activeLine = stepType!==undefined ? LINE_MAP[stepType] : -1;
+    pseudoBox.innerHTML = PSEUDO_LINES.map((l,idx)=>
+      `<span class="line${idx===activeLine?' active':''}">${l}</span>`
+    ).join('');
+  }
+
+  function renderLog(idx){
+    logBox.innerHTML = steps.slice(0, idx+1).map(s=>`<div>${s.message}</div>`).join('');
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  function renderStatus(idx){
+    if(idx < 0){
+      statusLine.innerHTML = '准备就绪 · 点击"下一步"或"自动播放"开始';
+    } else {
+      statusLine.innerHTML = `第 <b>${idx+1}</b> / ${steps.length} 步`;
+    }
+  }
+
+  function renderResult(state){
+    if(state.result==='found'){
+      resultBanner.className = 'result-banner show found';
+      resultBanner.textContent = `✓ 找到汇点：${label(state.sinkVertex)}`;
+    } else if(state.result==='none'){
+      resultBanner.className = 'result-banner show none';
+      resultBanner.textContent = `✗ 该图中不存在汇点`;
+    } else {
+      resultBanner.className = 'result-banner';
+    }
+  }
+
+  function render(){
+    const idx = stepIdx;
+    const state = idx>=0 ? replay(idx) : {eliminated:new Set(), candidate:0, currentI:null, currentK:null, result:null};
+    renderGraph(state);
+    renderMatrix(state);
+    renderPseudo(state, idx>=0 ? steps[idx].type : undefined);
+    renderLog(idx);
+    renderStatus(idx);
+    renderResult(state);
+    document.getElementById('prevBtn').disabled = idx<=0;
+    document.getElementById('nextBtn').disabled = idx>=steps.length-1;
+  }
+
+  function rebuildSteps(keepStopped){
+    steps = computeSteps(adj, n);
+    stepIdx = -1;
+    stopPlay();
+    render();
+  }
+
+  function stopPlay(){
+    if(playTimer){ clearInterval(playTimer); playTimer = null; }
+    document.getElementById('playBtn').textContent = '▶ 自动播放';
+  }
+
+  // ---------- controls ----------
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if(stepIdx < steps.length-1){ stepIdx++; render(); }
+    if(stepIdx>=steps.length-1) stopPlay();
+  });
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    if(stepIdx > -1){ stepIdx--; render(); }
+  });
+  document.getElementById('playBtn').addEventListener('click', () => {
+    if(playTimer){ stopPlay(); return; }
+    if(stepIdx>=steps.length-1) stepIdx = -1;
+    document.getElementById('playBtn').textContent = '⏸ 暂停';
+    playTimer = setInterval(() => {
+      if(stepIdx < steps.length-1){ stepIdx++; render(); }
+      else stopPlay();
+    }, parseInt(speedSelect.value,10));
+  });
+  document.getElementById('randomBtn').addEventListener('click', () => {
+    adj = randomMatrix(n);
+    rebuildSteps();
+  });
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    adj = emptyMatrix(n);
+    rebuildSteps();
+  });
+  nSelect.addEventListener('change', () => {
+    n = parseInt(nSelect.value, 10);
+    adj = randomMatrix(n);
+    rebuildSteps();
+  });
+
+  document.getElementById('copyCodeBtn').addEventListener('click', () => {
+    const code = document.querySelector('#codeBox code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.getElementById('copyCodeBtn');
+      const old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(() => { btn.textContent = old; }, 1500);
+    });
+  });
+
+  // init
+  adj = randomMatrix(n);
+  rebuildSteps();
+})();
+</script>
+</body>
+</html>

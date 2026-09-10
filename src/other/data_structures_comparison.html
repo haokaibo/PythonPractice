@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基础数据结构对比指南</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --panel-2: #273449;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --good: #22c55e;
+            --bad: #ef4444;
+            --warn: #f59e0b;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin: 0 0 8px;
+            font-size: 22px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            background: var(--panel);
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            min-width: 900px;
+        }
+
+        th, td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #334155;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: var(--panel-2);
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: var(--panel-2);
+        }
+
+        .struct-name {
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+        .struct-name small {
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.85em;
+            background-color: var(--panel-2);
+            color: var(--text);
+            border: 1px solid #475569;
+        }
+
+        .badge-good {
+            background-color: rgba(34, 197, 94, 0.10);
+            color: var(--good);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .badge-warn {
+            background-color: rgba(245, 158, 11, 0.10);
+            color: var(--warn);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        li {
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        li:last-child {
+            margin-bottom: 0;
+        }
+
+        .note {
+            font-size: 0.85em;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            background: rgba(56, 189, 248, 0.10);
+            padding: 1px 6px;
+            border-radius: 4px;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>常见数据结构性能与应用对比</h1>
+    <p class="subtitle">涵盖数组、链表、栈、堆、队列的时间复杂度、应用场景及面试高频考题</p>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>数据结构</th>
+                    <th>查询 (Search)</th>
+                    <th>插入 (Insert)</th>
+                    <th>排序 (Sort)</th>
+                    <th>经典应用场景</th>
+                    <th>高频面试考题 (LeetCode 典型)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 数组 -->
+                <tr>
+                    <td class="struct-name">数组<br><small>(Array)</small></td>
+                    <td>
+                        按索引: <span class="badge badge-good">O(1)</span><br>
+                        按数值: <span class="badge badge-warn">O(n)</span>
+                    </td>
+                    <td>
+                        末尾: <span class="badge badge-good">O(1)</span><br>
+                        中间/头部: <span class="badge badge-warn">O(n)</span>
+                    </td>
+                    <td>
+                        典型算法: <span class="badge">O(n log n)</span><br>
+                        <div class="note">如快排、归并排序</div>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>快速随机访问已知索引的数据</li>
+                            <li>多维矩阵表示（图像处理、图邻接矩阵）</li>
+                            <li>实现其他简单数据结构的底座</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>两数之和 (Two Sum)</li>
+                            <li>三数之和 (3Sum)</li>
+                            <li>寻找旋转排序数组中的最小值</li>
+                            <li>移动零 / 移除元素 (双指针技巧)</li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <!-- 链表 -->
+                <tr>
+                    <td class="struct-name">链表<br><small>(Linked List)</small></td>
+                    <td>
+                        任意位置: <span class="badge badge-warn">O(n)</span>
+                    </td>
+                    <td>
+                        已知节点位置: <span class="badge badge-good">O(1)</span><br>
+                        未知位置: <span class="badge badge-warn">O(n)</span>
+                    </td>
+                    <td>
+                        归并排序: <span class="badge">O(n log n)</span><br>
+                        <div class="note">通常利用归并完成链表自顶向下/向上排序</div>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>频繁在中间进行增删操作</li>
+                            <li>LRU 缓存淘汰算法（双向链表 + 哈希表）</li>
+                            <li>实现链式栈与链式队列</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>反转链表 (Reverse Linked List)</li>
+                            <li>环形链表检测 (快慢指针/Floyd判圈)</li>
+                            <li>合并两个有序链表</li>
+                            <li>删除链表的倒数第 N 个结点</li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <!-- 栈 -->
+                <tr>
+                    <td class="struct-name">栈<br><small>(Stack)</small></td>
+                    <td>
+                        栈顶 (Peek): <span class="badge badge-good">O(1)</span><br>
+                        非栈顶: <span class="badge badge-warn">O(n)</span>
+                    </td>
+                    <td>
+                        栈顶 (Push): <span class="badge badge-good">O(1)</span>
+                    </td>
+                    <td>
+                        不适用<br>
+                        <div class="note">受限于 LIFO 原则，通常借助辅助栈或转换为数组排序</div>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>函数调用栈与递归恢复</li>
+                            <li>括号匹配与算术表达式求值</li>
+                            <li>浏览器历史记录（后退功能）</li>
+                            <li>单调栈求最近极值问题</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>有效的括号 (Valid Parentheses)</li>
+                            <li>最小栈 (Min Stack)</li>
+                            <li>每日温度 / 下一个更大元素 (单调栈)</li>
+                            <li>逆波兰表达式求值</li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <!-- 堆 -->
+                <tr>
+                    <td class="struct-name">堆<br><small>(Heap / Priority Queue)</small></td>
+                    <td>
+                        极值 (堆顶): <span class="badge badge-good">O(1)</span><br>
+                        非极值: <span class="badge badge-warn">O(n)</span>
+                    </td>
+                    <td>
+                        插入节点: <span class="badge">O(log n)</span><br>
+                        建堆 (Heapify): <span class="badge badge-good">O(n)</span>
+                    </td>
+                    <td>
+                        堆排序: <span class="badge">O(n log n)</span><br>
+                        <div class="note">原地排序，空间复杂度 O(1)</div>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>优先队列（操作系统任务调度）</li>
+                            <li>Top K 海量数据筛选</li>
+                            <li>Dijkstra / Prim 图算法路径优化</li>
+                            <li>双堆法实时维护数据流中位数</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>数组中的第 K 个最大元素</li>
+                            <li>前 K 个高频元素</li>
+                            <li>合并 K 个升序链表 (多路归并)</li>
+                            <li>数据流的中位数 (对顶堆)</li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <!-- 队列 -->
+                <tr>
+                    <td class="struct-name">队列<br><small>(Queue)</small></td>
+                    <td>
+                        队头 (Peek): <span class="badge badge-good">O(1)</span><br>
+                        非队头: <span class="badge badge-warn">O(n)</span>
+                    </td>
+                    <td>
+                        队尾 (Enqueue): <span class="badge badge-good">O(1)</span>
+                    </td>
+                    <td>
+                        不适用<br>
+                        <div class="note">受限于 FIFO 原则，通常不直接在队列内排序</div>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>图/树的广度优先搜索 (BFS)</li>
+                            <li>消息队列（异步处理与限流解耦）</li>
+                            <li>打印机/服务请求排队缓冲</li>
+                            <li>单调队列维护滑动窗口极值</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>用队列实现栈 / 用栈实现队列</li>
+                            <li>二叉树的层序遍历</li>
+                            <li>滑动窗口最大值 (单调队列)</li>
+                            <li>腐烂的橘子 (BFS 遍历)</li>
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

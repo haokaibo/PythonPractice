@@ -1,11 +1,16 @@
 :root {
-  --bg: #1f1f1f;
-  --panel: #2a2a2a;
-  --border: #3a3a3a;
-  --text: #e6e6e6;
-  --muted: #9aa0a6;
-  --accent: #8ab4f8;
-  --hover: #3c4043;
+  --bg: #0f172a;
+  --panel: #1e293b;
+  --panel-2: #273449;
+  --border: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --accent: #38bdf8;
+  --good: #22c55e;
+  --bad: #ef4444;
+  --amber: #f59e0b;
+  --pointer: #f59e0b;
+  --hover: #334155;
 }
 
 * { box-sizing: border-box; }
@@ -15,9 +20,10 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/* === topbar === */
 .topbar {
   display: flex;
   align-items: center;
@@ -28,32 +34,36 @@ html, body {
   position: sticky;
   top: 0;
   z-index: 10;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.25);
 }
-.brand { font-weight: 600; letter-spacing: 0.3px; }
+.brand { font-weight: 600; letter-spacing: 0.3px; color: var(--text); }
+
+/* tabs (reference-style buttons) */
 .tabs { display: flex; gap: 6px; }
 .tab {
-  background: transparent;
+  background: var(--panel-2);
   color: var(--muted);
   border: 1px solid transparent;
-  padding: 6px 12px;
-  border-radius: 999px;
+  padding: 8px 14px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
+  transition: all 0.15s;
 }
 .tab:hover { background: var(--hover); color: var(--text); }
 .tab.active {
-  background: var(--hover);
-  color: var(--text);
-  border-color: var(--border);
+  background: var(--accent);
+  color: #0f172a;
+  border-color: var(--accent);
+  font-weight: 600;
 }
 
 .page {
-  /* let the 80% viewer breathe; no artificial max-width */
   margin: 0 auto;
-  padding: 16px 16px 32px;
+  padding: 24px 16px 32px;
 }
 
-/* Google-style search box */
+/* === search box === */
 .search {
   position: relative;
   display: flex;
@@ -62,15 +72,16 @@ html, body {
   max-width: 720px;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 12px;
   padding: 10px 16px;
   transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.25);
 }
 .search:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.15);
+  box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
 }
-.search-icon { margin-right: 10px; opacity: 0.7; }
+.search-icon { margin-right: 10px; opacity: 0.7; color: var(--muted); }
 .search input {
   flex: 1;
   background: transparent;
@@ -81,7 +92,7 @@ html, body {
 }
 .count { color: var(--muted); font-size: 12px; margin-left: 10px; }
 
-/* Filters */
+/* === filters === */
 .filters {
   max-width: 720px;
   margin: 0 auto 14px;
@@ -99,26 +110,29 @@ html, body {
   font-size: 12px;
 }
 #category {
-  background: var(--panel);
+  background: var(--panel-2);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid #475569;
   border-radius: 8px;
-  padding: 5px 8px;
-  font-size: 13px;
+  padding: 8px 14px;
+  font-size: 14px;
   outline: 0;
+  cursor: pointer;
+  transition: all 0.15s;
 }
-#category:focus { border-color: var(--accent); }
+#category:focus { background: #334155; border-color: var(--accent); }
 .ghost-btn {
   margin-left: auto;
-  background: transparent;
+  background: var(--panel-2);
   color: var(--muted);
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 3px 10px;
-  font-size: 12px;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
   cursor: pointer;
+  transition: all 0.15s;
 }
-.ghost-btn:hover { color: var(--text); border-color: var(--border); }
+.ghost-btn:hover { background: #334155; color: var(--text); border-color: var(--accent); }
 
 .tag-bar {
   display: flex;
@@ -132,25 +146,26 @@ html, body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--panel);
+  background: var(--panel-2);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 8px;
   padding: 3px 10px;
   font-size: 12px;
   cursor: pointer;
   user-select: none;
+  transition: all 0.15s;
 }
 .chip .count { color: var(--muted); font-size: 11px; }
 .chip:hover { border-color: var(--accent); }
 .chip.active {
   background: var(--accent);
-  color: #1f1f1f;
+  color: #0f172a;
   border-color: var(--accent);
 }
-.chip.active .count { color: rgba(0,0,0,0.6); }
+.chip.active .count { color: rgba(15, 23, 42, 0.6); }
 
-/* Group headers inside the result list (collapsible) */
+/* === group headers === */
 .list .group {
   padding: 6px 12px 4px;
   font-size: 11px;
@@ -168,7 +183,7 @@ html, body {
 .list details:not([open]) .group .arrow { transform: rotate(-90deg); }
 .list .group-count { color: var(--muted); margin-left: auto; }
 
-/* Two-pane layout: 20% list / 80% viewer */
+/* === two-pane layout === */
 .layout {
   display: grid;
   grid-template-columns: 20% 80%;
@@ -188,20 +203,21 @@ html, body {
   border-radius: 12px;
   max-height: 70vh;
   overflow-y: auto;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.25);
 }
 .list li {
   padding: 8px 10px;
   border-radius: 8px;
   cursor: pointer;
   display: grid;
-  grid-template-columns: 1fr auto;   /* title | star */
+  grid-template-columns: 1fr auto;
   align-items: center;
   column-gap: 6px;
   row-gap: 2px;
 }
-.list li:hover, .list li.active { background: var(--hover); }
-.list .title { font-size: 13px; grid-column: 1; }
-.list .path  { font-size: 10px; color: var(--muted); font-family: ui-monospace, monospace; grid-column: 1; }
+.list li:hover, .list li.active { background: var(--panel-2); }
+.list .title { font-size: 13px; grid-column: 1; color: var(--text); }
+.list .path  { font-size: 10px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; grid-column: 1; }
 .list .empty { color: var(--muted); padding: 14px; text-align: center; grid-column: 1 / -1; }
 
 /* favorite star */
@@ -219,11 +235,9 @@ html, body {
   align-self: start;
 }
 .star:hover { background: var(--border); color: var(--text); }
-.star.fav {
-  color: #f5c518;            /* gold */
-  text-shadow: 0 0 1px rgba(0,0,0,0.4);
-}
+.star.fav { color: var(--amber); text-shadow: 0 0 1px rgba(0,0,0,0.4); }
 
+/* === viewer (code display) === */
 .viewer,
 .viewer[class*="language-"] {
   margin: 0;
@@ -233,53 +247,38 @@ html, body {
   padding: 14px 16px;
   max-height: 75vh;
   overflow: auto;
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 14px !important; /* MUST be set on <pre> too: line-numbers
-                                 plugin reads getComputedStyle(pre).fontSize.
-                                 !important beats prism-tomorrow's 1em rule
-                                 that targets pre[class*=language-]. */
-  line-height: 21px !important;          /* beat prism's 1.5; 14 * 1.5 = 21 */
-  --gutter-pad: 3.4em;        /* shared by code padding-left and gutter width */
-  --row-h: 21px;              /* must equal line-height above */
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px !important;
+  line-height: 21px !important;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+  /* shared layout constants for the line-numbers plugin */
+  --gutter-pad: 3.4em;
+  --row-h: 21px;
 }
 .viewer code,
 .viewer code[class*="language-"] {
   font-family: inherit;
-  font-size: 14px !important;            /* beat prism's 1em */
-  line-height: 21px !important;         /* beat prism's 1.5 */
-  /* Margin-left inside the code block so the first character doesn't
-     touch the gutter divider. */
+  font-size: 14px !important;
+  line-height: 21px !important;
   margin-left: 4px;
 }
-/* Prism wraps tokens in <span class="token ...">. Make sure none of
-   them changes vertical rhythm. */
 .viewer .token {
   font-size: inherit !important;
   line-height: inherit !important;
-  display: inline;            /* undo any inline-block defaults */
+  display: inline;
   vertical-align: baseline;
 }
 
-/* line-numbers plugin tweaks
-   Layout contract:
-     - <pre> is the positioning context (position: relative).
-     - .line-numbers-rows is absolutely positioned inside the pre's
-       PADDING area (not the content area), so we keep padding-left on
-       <pre> as the gutter width and let the gutter span sit at left: 0.
-     - <code> is shifted right by the gutter width via padding-left, so
-       its first character starts AFTER the gutter.
-   The plugin measures code's line-height to place each row; we pin that
-   to --row-h to keep baselines aligned.
-*/
+/* line-numbers plugin tweaks */
 .viewer.line-numbers {
-  position: relative;          /* containing block for the gutter */
-  padding-left: 0;             /* <code> provides the left space instead */
+  position: relative;
+  padding-left: 0;
   white-space: pre;
 }
 .viewer.line-numbers > code {
   display: block;
   white-space: pre;
-  padding-left: var(--gutter-pad);   /* push code text past the gutter */
+  padding-left: var(--gutter-pad);
 }
 .viewer.line-numbers .line-numbers-rows {
   position: absolute;
@@ -287,12 +286,12 @@ html, body {
   left: 0;
   bottom: 0;
   border-right: 1px solid var(--border);
-  padding: 0 0.4em 0 0;        /* right-side breathing room */
+  padding: 0 0.4em 0 0;
   font-size: 14px !important;
   line-height: 21px !important;
   text-align: right;
   user-select: none;
-  pointer-events: none;        /* don't steal clicks from the code */
+  pointer-events: none;
   overflow: hidden;
   width: var(--gutter-pad);
   box-sizing: border-box;
@@ -301,3 +300,13 @@ html, body {
   display: block;
   line-height: 21px !important;
 }
+/* Match Prism Tomorrow line-number gutter colours to page theme */
+.viewer .line-numbers-rows {
+  background: var(--panel-2);
+  color: var(--muted);
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--panel); }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }

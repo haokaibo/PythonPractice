@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>堆应用 7：多路归并（外部排序场景）</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel-2: #273449; --text: #e2e8f0; --muted: #94a3b8;
+    --accent: #38bdf8; --good: #22c55e; --bad: #ef4444; --pointer: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px; }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
+  .panel { background: var(--panel); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 18px rgba(0,0,0,0.25); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  button, input[type=text] { background: var(--panel-2); color: var(--text); border: 1px solid #475569; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  input[type=text] { cursor: text; width: 320px; }
+  button:hover:not(:disabled) { background: #334155; border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #0ea5e9; }
+  input[type="range"] { accent-color: var(--accent); }
+  label.small { font-size: 13px; color: var(--muted); }
+  .legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .chunk-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .chunk-label { width: 90px; font-size: 12px; color: var(--muted); font-family: ui-monospace, monospace; }
+  .chunk-cells { display: flex; gap: 4px; flex-wrap: wrap; }
+  .cell { min-width: 38px; height: 38px; border-radius: 8px; background: var(--panel-2); border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; }
+  .cell.consumed { opacity: 0.3; }
+  .cell.front { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56,189,248,0.35); }
+  .heap-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .heap-item { background: var(--panel-2); border: 2px solid #475569; border-radius: 8px; padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 13px; }
+  .heap-item.top { border-color: var(--pointer); color: var(--pointer); }
+  .array-label { font-size: 12px; color: var(--muted); margin: 14px 0 6px; }
+  .status { font-size: 14px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: var(--panel-2); border-left: 4px solid var(--accent); min-height: 42px; }
+  .status.good { border-color: var(--good); background: rgba(34,197,94,0.10); }
+  .result { text-align: center; padding: 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(56,189,248,0.15)); border: 1px solid rgba(34,197,94,0.4); font-size: 15px; margin-top: 10px; }
+  .result .big { font-size: 18px; font-weight: 700; color: var(--good); margin-left: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  details.src { background: var(--panel); border-radius: 12px; padding: 4px 20px 16px; margin-bottom: 16px; }
+  details.src summary { cursor: pointer; padding: 14px 0; font-weight: 600; color: var(--accent); list-style: none; }
+  details.src summary::-webkit-details-marker { display: none; }
+  details.src summary::before { content: "▸ "; }
+  details.src[open] summary::before { content: "▾ "; }
+  pre.src-code { background: #0b1220; border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; color: #cbd5e1; margin: 0; }
+</style>
+</head>
+<body>
+
+<h1>堆应用 7：多路归并（外部排序场景）</h1>
+<div class="subtitle">
+  模拟"多个已排序小文件合并为一个大文件"：内部维护一个大小为 K（K = 已排序序列个数）的最小堆，
+  堆里放各序列当前指针指向的元素，每次弹出全局最小值输出，再从它所属的序列补入下一个元素。时间复杂度 <code>O(N log K)</code>，这正是 <code>heapq.merge</code> 的原理。
+</div>
+
+<details class="src">
+  <summary>查看 Python 源码（k_way_merge / merge_sorted_files_demo）</summary>
+  <pre class="src-code" id="src-code"></pre>
+</details>
+
+<div class="panel">
+  <div class="row">
+    <label class="small">已排序小文件（用 ; 分隔多个文件，文件内用 , 分隔数字）</label>
+    <input type="text" id="chunksInput" value="1,4,9,20;2,3,15;0,5,6,7,100">
+    <button class="primary" id="loadBtn">载入</button>
+    <button id="playBtn" class="primary" disabled>▶ 播放</button>
+    <button id="backBtn" disabled>◂ 上一步</button>
+    <button id="stepBtn" disabled>下一步 ▸</button>
+    <button id="resetBtn">↺ 重置</button>
+    <div><label class="small">速度</label> <input id="speed" type="range" min="900" max="4000" step="100" value="1600" style="vertical-align:middle;"></div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--panel-2);border:2px solid var(--accent);"></span>当前指针位置（下一个待入堆的元素）</span>
+    <span><span class="swatch" style="background:var(--panel-2);opacity:0.4;"></span>已被读取 / 输出</span>
+    <span><span class="swatch" style="background:var(--pointer);"></span>堆顶（本步将被弹出）</span>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="array-label">已排序小文件（chunks）</div>
+  <div id="chunksArea"></div>
+  <div class="array-label">最小堆 heap = [(value, chunk_idx), ...]</div>
+  <div class="heap-row" id="heapRow"></div>
+  <div class="array-label">归并后的输出</div>
+  <div class="chunk-cells" id="outputRow"></div>
+  <div class="status" id="status">点击"载入"开始演示。</div>
+  <div class="result">合并结果 <span class="big" id="mergedResult">—</span></div>
+</div>
+
+<script>
+const SOURCE = `def k_way_merge(sorted_iterables: List[Iterator]) -> Iterator:
+    """
+    使用 heapq.merge 完成多路归并：
+    内部维护一个大小为 K（K = 已排序序列个数）的最小堆，
+    每次从堆顶取出当前最小值，时间复杂度 O(N log K)（N 为元素总数）。
+    这是 heapq.merge 的等价手写实现，用于展示原理；
+    生产环境直接用 heapq.merge(*iterables) 即可。
+    """
+    heap = []
+    iterators = [iter(it) for it in sorted_iterables]
+
+    # 初始化：每个文件/序列取出第一个元素入堆
+    for idx, it in enumerate(iterators):
+        try:
+            value = next(it)
+            heapq.heappush(heap, (value, idx))
+        except StopIteration:
+            pass
+
+    while heap:
+        value, idx = heapq.heappop(heap)
+        yield value
+        try:
+            next_value = next(iterators[idx])
+            heapq.heappush(heap, (next_value, idx))
+        except StopIteration:
+            pass
+
+
+def merge_sorted_files_demo(chunks: List[List[float]]) -> List[float]:
+    """模拟"多个已排序小文件外部合并为一个大文件"的场景。"""
+    return list(k_way_merge([iter(chunk) for chunk in chunks]))`;
+document.getElementById('src-code').textContent = SOURCE;
+
+function heapPush(heap, item, cmp) {
+  heap.push(item);
+  let i = heap.length - 1;
+  while (i > 0) {
+    const p = Math.floor((i - 1) / 2);
+    if (cmp(heap[i], heap[p]) < 0) { [heap[i], heap[p]] = [heap[p], heap[i]]; i = p; } else break;
+  }
+}
+function heapPop(heap, cmp) {
+  const top = heap[0]; const last = heap.pop();
+  if (heap.length > 0) {
+    heap[0] = last; let i = 0;
+    while (true) {
+      let l=2*i+1, r=2*i+2, s=i;
+      if (l<heap.length && cmp(heap[l],heap[s])<0) s=l;
+      if (r<heap.length && cmp(heap[r],heap[s])<0) s=r;
+      if (s!==i) { [heap[i],heap[s]]=[heap[s],heap[i]]; i=s; } else break;
+    }
+  }
+  return top;
+}
+const cmpPair = (a,b) => a[0]-b[0] || a[1]-b[1];
+
+function buildFrames(chunks) {
+  const heap = [];
+  const ptrs = chunks.map(() => 0);
+  const output = [];
+  const frames = [];
+  frames.push({ptrs: ptrs.slice(), heap: [], output: [], top:null, msg: `${chunks.length} 个已排序文件，准备各取出第一个元素入堆。`});
+
+  chunks.forEach((chunk, i) => {
+    if (chunk.length > 0) {
+      heapPush(heap, [chunk[ptrs[i]], i], cmpPair);
+      ptrs[i]++;
+      frames.push({ptrs: ptrs.slice(), heap: heap.map(e=>e.slice()), output: output.slice(), top:null,
+        msg: `heappush((${chunk[0]}, ${i})) —— 文件 ${i} 的首元素入堆。`});
+    }
+  });
+
+  while (heap.length) {
+    const [value, i] = heapPop(heap, cmpPair);
+    output.push(value);
+    frames.push({ptrs: ptrs.slice(), heap: heap.map(e=>e.slice()), output: output.slice(), top:[value,i],
+      msg: `heappop() → (${value}, ${i}) 是当前全局最小值，输出 ${value}。`});
+    if (ptrs[i] < chunks[i].length) {
+      const nv = chunks[i][ptrs[i]];
+      ptrs[i]++;
+      heapPush(heap, [nv, i], cmpPair);
+      frames.push({ptrs: ptrs.slice(), heap: heap.map(e=>e.slice()), output: output.slice(), top:null,
+        msg: `文件 ${i} 还有剩余元素，取下一个 ${nv} 补入堆：heappush((${nv}, ${i}))。`});
+    } else {
+      frames.push({ptrs: ptrs.slice(), heap: heap.map(e=>e.slice()), output: output.slice(), top:null,
+        msg: `文件 ${i} 已耗尽（StopIteration），不再补入。`});
+    }
+  }
+  frames.push({ptrs: ptrs.slice(), heap: [], output: output.slice(), top:null, msg: `堆已空，归并结束。`, done:true});
+  return frames;
+}
+
+const chunksArea = document.getElementById('chunksArea');
+const heapRow = document.getElementById('heapRow');
+const outputRow = document.getElementById('outputRow');
+const statusEl = document.getElementById('status');
+const resultEl = document.getElementById('mergedResult');
+let frames = [], idx = 0, timer = null, curChunks = [];
+
+function apply(f) {
+  chunksArea.innerHTML = '';
+  curChunks.forEach((chunk, ci) => {
+    const row = document.createElement('div');
+    row.className = 'chunk-row';
+    const label = document.createElement('div');
+    label.className = 'chunk-label';
+    label.textContent = `文件 ${ci}`;
+    row.appendChild(label);
+    const cells = document.createElement('div');
+    cells.className = 'chunk-cells';
+    chunk.forEach((v, vi) => {
+      const c = document.createElement('div');
+      const isConsumed = vi < f.ptrs[ci];
+      const isFront = vi === f.ptrs[ci];
+      c.className = 'cell' + (isConsumed ? ' consumed' : '') + (isFront ? ' front' : '');
+      c.textContent = v;
+      cells.appendChild(c);
+    });
+    row.appendChild(cells);
+    chunksArea.appendChild(row);
+  });
+
+  heapRow.innerHTML = '';
+  if (f.heap.length === 0) heapRow.innerHTML = '<span style="color:var(--muted);font-size:13px;">(空)</span>';
+  f.heap.forEach(([v,i], k) => {
+    const el = document.createElement('div');
+    el.className = 'heap-item' + (k===0 ? ' top' : '');
+    el.textContent = `(${v}, ${i})`;
+    heapRow.appendChild(el);
+  });
+
+  outputRow.innerHTML = '';
+  f.output.forEach(v => {
+    const c = document.createElement('div');
+    c.className = 'cell';
+    c.style.borderColor = '#22c55e';
+    c.style.background = 'rgba(34,197,94,0.2)';
+    c.textContent = v;
+    outputRow.appendChild(c);
+  });
+
+  statusEl.className = 'status' + (f.done ? ' good' : '');
+  statusEl.textContent = f.msg;
+  resultEl.textContent = f.output.length ? f.output.join(', ') : '—';
+}
+
+function load() {
+  stop();
+  curChunks = document.getElementById('chunksInput').value.split(';').map(s => s.split(',').map(x=>x.trim()).filter(x=>x.length).map(Number));
+  frames = buildFrames(curChunks);
+  idx = 0; apply(frames[0]); updateBtns();
+}
+function goto(i) { idx = Math.max(0, Math.min(frames.length-1, i)); apply(frames[idx]); updateBtns(); }
+function updateBtns() {
+  document.getElementById('backBtn').disabled = idx <= 0;
+  document.getElementById('stepBtn').disabled = idx >= frames.length-1;
+  document.getElementById('playBtn').disabled = idx >= frames.length-1;
+}
+function stop() { if (timer) { clearInterval(timer); timer = null; } }
+document.getElementById('loadBtn').onclick = load;
+document.getElementById('stepBtn').onclick = () => goto(idx+1);
+document.getElementById('backBtn').onclick = () => { stop(); goto(idx-1); };
+document.getElementById('resetBtn').onclick = () => { stop(); goto(0); };
+document.getElementById('playBtn').onclick = () => {
+  if (timer) return; if (idx >= frames.length-1) return;
+  timer = setInterval(() => { goto(idx+1); if (idx >= frames.length-1) stop(); }, +document.getElementById('speed').value);
+};
+document.getElementById('speed').addEventListener('change', () => { if (timer) { stop(); document.getElementById('playBtn').onclick(); } });
+load();
+</script>
+</body>
+</html>

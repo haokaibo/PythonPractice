@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>堆应用 3：Prim 最小生成树算法</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel-2: #273449; --text: #e2e8f0; --muted: #94a3b8;
+    --accent: #38bdf8; --good: #22c55e; --bad: #ef4444; --pointer: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px; }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
+  .panel { background: var(--panel); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 18px rgba(0,0,0,0.25); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  button { background: var(--panel-2); color: var(--text); border: 1px solid #475569; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  button:hover:not(:disabled) { background: #334155; border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #0ea5e9; }
+  input[type="range"] { accent-color: var(--accent); }
+  label.small { font-size: 13px; color: var(--muted); }
+  .legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .grid2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  svg.canvas { width: 100%; height: auto; display: block; background: var(--panel-2); border-radius: 10px; }
+  .heap-caption { font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
+  .heap-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .heap-item { background: var(--panel-2); border: 2px solid #475569; border-radius: 8px; padding: 6px 10px; font-family: ui-monospace, monospace; font-size: 13px; }
+  .heap-item.top { border-color: var(--pointer); color: var(--pointer); }
+  .status { font-size: 14px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: var(--panel-2); border-left: 4px solid var(--accent); min-height: 42px; }
+  .status.good { border-color: var(--good); background: rgba(34,197,94,0.10); }
+  .status.bad { border-color: var(--bad); background: rgba(239,68,68,0.10); }
+  table.mst { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.mst th, table.mst td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #334155; font-family: ui-monospace, monospace; }
+  table.mst th { color: var(--muted); font-weight: 500; }
+  .result { text-align: center; padding: 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(56,189,248,0.15)); border: 1px solid rgba(34,197,94,0.4); font-size: 15px; margin-top: 10px; }
+  .result .big { font-size: 24px; font-weight: 700; color: var(--good); margin-left: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  details.src { background: var(--panel); border-radius: 12px; padding: 4px 20px 16px; margin-bottom: 16px; }
+  details.src summary { cursor: pointer; padding: 14px 0; font-weight: 600; color: var(--accent); list-style: none; }
+  details.src summary::-webkit-details-marker { display: none; }
+  details.src summary::before { content: "▸ "; }
+  details.src[open] summary::before { content: "▾ "; }
+  pre.src-code { background: #0b1220; border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; color: #cbd5e1; margin: 0; }
+</style>
+</head>
+<body>
+
+<h1>堆应用 3：Prim 最小生成树算法</h1>
+<div class="subtitle">
+  从起点出发维护一个"候选边"最小堆；每次取出权重最小的边，若另一端已在树中则跳过（避免成环），
+  否则把新节点并入生成树，并把它的出边加入堆中继续竞争。
+</div>
+
+<details class="src">
+  <summary>查看 Python 源码（prim_mst）</summary>
+  <pre class="src-code" id="src-code"></pre>
+</details>
+
+<div class="panel">
+  <div class="row">
+    <button class="primary" id="playBtn">▶ 播放</button>
+    <button id="backBtn">◂ 上一步</button>
+    <button id="stepBtn">下一步 ▸</button>
+    <button id="resetBtn">↺ 重置</button>
+    <div><label class="small">速度</label> <input id="speed" type="range" min="1200" max="6000" step="200" value="2400" style="vertical-align:middle;"></div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#334155;border:2px solid #475569;"></span>未加入树</span>
+    <span><span class="swatch" style="background:rgba(34,197,94,0.3);border:2px solid var(--good);"></span>已在生成树中</span>
+    <span><span class="swatch" style="background:var(--good);"></span>本步选中的树边</span>
+    <span><span class="swatch" style="background:var(--bad);"></span>本步跳过的边（会成环）</span>
+  </div>
+</div>
+
+<div class="panel grid2">
+  <div>
+    <svg class="canvas" id="graphSvg" viewBox="0 0 560 300"></svg>
+    <div class="heap-caption">候选边最小堆 edges = [(weight, u, v), ...]（堆顶 = 权重最小）</div>
+    <div class="heap-row" id="heapRow"></div>
+  </div>
+  <div>
+    <div class="heap-caption">mst_edges（已确定的生成树边）</div>
+    <table class="mst" id="mstTable">
+      <thead><tr><th>u</th><th>v</th><th>weight</th></tr></thead>
+      <tbody id="mstBody"></tbody>
+    </table>
+    <div class="result">总权重 <span class="big" id="totalW">0</span></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="status" id="status">点击"下一步"或"播放"开始演示。</div>
+</div>
+
+<script>
+const SOURCE = `def prim_mst(graph: Dict[Any, List[Tuple[Any, float]]], start: Any) -> Tuple[List[Tuple[Any, Any, float]], float]:
+    """
+    graph: {node: [(neighbor, weight), ...]}（无向图，两端都需要有边）
+    返回 (MST 的边列表[(u, v, w)], 总权重)。
+    """
+    visited = {start}
+    edges = [(w, start, v) for v, w in graph.get(start, [])]
+    heapq.heapify(edges)
+
+    mst_edges: List[Tuple[Any, Any, float]] = []
+    total_weight = 0.0
+
+    while edges and len(visited) < len(graph):
+        w, u, v = heapq.heappop(edges)
+        if v in visited:
+            continue  # 两端都已在树中，跳过（避免成环）
+        visited.add(v)
+        mst_edges.append((u, v, w))
+        total_weight += w
+
+        for nxt, nw in graph.get(v, []):
+            if nxt not in visited:
+                heapq.heappush(edges, (nw, v, nxt))
+
+    return mst_edges, total_weight`;
+document.getElementById('src-code').textContent = SOURCE;
+
+function heapPush(heap, item, cmp) {
+  heap.push(item);
+  let i = heap.length - 1;
+  while (i > 0) {
+    const p = Math.floor((i - 1) / 2);
+    if (cmp(heap[i], heap[p]) < 0) { [heap[i], heap[p]] = [heap[p], heap[i]]; i = p; } else break;
+  }
+}
+function heapPop(heap, cmp) {
+  const top = heap[0]; const last = heap.pop();
+  if (heap.length > 0) {
+    heap[0] = last; let i = 0;
+    while (true) {
+      let l=2*i+1, r=2*i+2, s=i;
+      if (l<heap.length && cmp(heap[l],heap[s])<0) s=l;
+      if (r<heap.length && cmp(heap[r],heap[s])<0) s=r;
+      if (s!==i) { [heap[i],heap[s]]=[heap[s],heap[i]]; i=s; } else break;
+    }
+  }
+  return top;
+}
+
+const graph = {
+  A: [['B',2], ['C',3]],
+  B: [['A',2], ['C',1], ['D',4]],
+  C: [['A',3], ['B',1], ['D',5]],
+  D: [['B',4], ['C',5]],
+};
+const positions = { A: [90,150], B: [280,55], C: [280,245], D: [470,150] };
+const edgesUndirected = [['A','B',2], ['A','C',3], ['B','C',1], ['B','D',4], ['C','D',5]];
+function edgeKey(a,b){ return [a,b].sort().join('-'); }
+
+function buildFrames(start) {
+  const visited = new Set([start]);
+  const heap = [];
+  const cmpE = (a,b) => a[0]-b[0];
+  for (const [v,w] of graph[start]) heapPush(heap, [w, start, v], cmpE);
+  const mst = []; let total = 0;
+  const frames = [];
+  frames.push({heap: heap.map(e=>e.slice()), visited: new Set(visited), mst: [], total: 0, msg: `初始化：visited={"${start}"}，把 "${start}" 的出边全部入堆并 heapify。`, chosen:null, skipped:null});
+
+  while (heap.length && visited.size < Object.keys(graph).length) {
+    const [w,u,v] = heapPop(heap, cmpE);
+    if (visited.has(v)) {
+      frames.push({heap: heap.map(e=>e.slice()), visited: new Set(visited), mst: mst.slice(), total, msg: `heappop() → (${w}, ${u}, ${v})，但 "${v}" 已在树中 → 跳过（会成环）。`, chosen:null, skipped:[u,v]});
+      continue;
+    }
+    visited.add(v);
+    mst.push([u,v,w]);
+    total += w;
+    const added = [];
+    for (const [nxt, nw] of graph[v]) {
+      if (!visited.has(nxt)) { heapPush(heap, [nw, v, nxt], cmpE); added.push(`(${nw},${v},${nxt})`); }
+    }
+    frames.push({heap: heap.map(e=>e.slice()), visited: new Set(visited), mst: mst.slice(), total, msg:
+      `heappop() → (${w}, ${u}, ${v})，"${v}" 是新节点 → 加入生成树；把它的出边 ${added.length?added.join('，'):'（无新边）'} 加入堆。`, chosen:[u,v], skipped:null});
+  }
+  frames.push({heap: heap.map(e=>e.slice()), visited: new Set(visited), mst: mst.slice(), total, msg: `结束：visited 覆盖全部 ${Object.keys(graph).length} 个节点，或堆已空。总权重 = ${total}。`, chosen:null, skipped:null, done:true});
+  return frames;
+}
+
+function renderGraph(svg, f) {
+  svg.innerHTML = '';
+  const mstKeys = new Set(f.mst.map(([u,v]) => edgeKey(u,v)));
+  const chosenKey = f.chosen ? edgeKey(f.chosen[0], f.chosen[1]) : null;
+  const skippedKey = f.skipped ? edgeKey(f.skipped[0], f.skipped[1]) : null;
+  for (const [a,b,w] of edgesUndirected) {
+    const [x1,y1] = positions[a], [x2,y2] = positions[b];
+    const k = edgeKey(a,b);
+    const inMst = mstKeys.has(k);
+    const isChosen = chosenKey === k;
+    const isSkipped = skippedKey === k;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1); line.setAttribute('y1',y1); line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+    line.setAttribute('stroke', isSkipped ? '#ef4444' : (inMst ? '#22c55e' : '#475569'));
+    line.setAttribute('stroke-width', (isChosen || inMst) ? '4' : '2');
+    if (isSkipped) line.setAttribute('stroke-dasharray','6,4');
+    svg.appendChild(line);
+    const mx=(x1+x2)/2, my=(y1+y2)/2;
+    const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    bg.setAttribute('x',mx-11); bg.setAttribute('y',my-10); bg.setAttribute('width',22); bg.setAttribute('height',16); bg.setAttribute('fill','#0f172a'); bg.setAttribute('rx',4);
+    svg.appendChild(bg);
+    const wt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    wt.setAttribute('x',mx); wt.setAttribute('y',my+2); wt.setAttribute('text-anchor','middle'); wt.setAttribute('font-size','11');
+    wt.setAttribute('fill', inMst ? '#22c55e' : (isSkipped ? '#ef4444' : '#94a3b8'));
+    wt.textContent = w; svg.appendChild(wt);
+  }
+  for (const node in positions) {
+    const [x,y] = positions[node];
+    const isVisited = f.visited.has(node);
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',x); c.setAttribute('cy',y); c.setAttribute('r',26);
+    c.setAttribute('fill', isVisited ? 'rgba(34,197,94,0.3)' : '#334155');
+    c.setAttribute('stroke', isVisited ? '#22c55e' : '#475569'); c.setAttribute('stroke-width','3');
+    svg.appendChild(c);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',x); t.setAttribute('y',y+5); t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','16'); t.setAttribute('font-weight','700');
+    t.setAttribute('fill','#e2e8f0'); t.textContent = node;
+    svg.appendChild(t);
+  }
+}
+
+const frames = buildFrames('A');
+let idx=0, timer=null;
+const heapRow = document.getElementById('heapRow');
+const mstBody = document.getElementById('mstBody');
+const totalWEl = document.getElementById('totalW');
+const statusEl = document.getElementById('status');
+const graphSvg = document.getElementById('graphSvg');
+
+function apply(f) {
+  renderGraph(graphSvg, f);
+  heapRow.innerHTML = '';
+  if (f.heap.length === 0) heapRow.innerHTML = '<span style="color:var(--muted);font-size:13px;">(空)</span>';
+  f.heap.forEach(([w,u,v], i) => {
+    const el = document.createElement('div');
+    el.className = 'heap-item' + (i===0 ? ' top' : '');
+    el.textContent = `(${w}, ${u}, ${v})`;
+    heapRow.appendChild(el);
+  });
+  mstBody.innerHTML = f.mst.length ? f.mst.map(([u,v,w]) => `<tr><td>${u}</td><td>${v}</td><td>${w}</td></tr>`).join('') : '<tr><td colspan="3" style="color:var(--muted)">（空）</td></tr>';
+  totalWEl.textContent = f.total;
+  statusEl.className = 'status' + (f.done ? ' good' : (f.skipped ? ' bad' : ''));
+  statusEl.textContent = f.msg;
+}
+function goto(i) { idx = Math.max(0, Math.min(frames.length-1, i)); apply(frames[idx]); updateBtns(); }
+function updateBtns() {
+  document.getElementById('backBtn').disabled = idx <= 0;
+  document.getElementById('stepBtn').disabled = idx >= frames.length-1;
+  document.getElementById('playBtn').disabled = idx >= frames.length-1;
+}
+function stop() { if (timer) { clearInterval(timer); timer = null; } }
+document.getElementById('stepBtn').onclick = () => goto(idx+1);
+document.getElementById('backBtn').onclick = () => { stop(); goto(idx-1); };
+document.getElementById('resetBtn').onclick = () => { stop(); goto(0); };
+document.getElementById('playBtn').onclick = () => {
+  if (timer) return; if (idx >= frames.length-1) return;
+  timer = setInterval(() => { goto(idx+1); if (idx >= frames.length-1) stop(); }, +document.getElementById('speed').value);
+};
+document.getElementById('speed').addEventListener('change', () => { if (timer) { stop(); document.getElementById('playBtn').onclick(); } });
+goto(0);
+</script>
+</body>
+</html>

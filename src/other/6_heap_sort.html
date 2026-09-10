@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>堆应用 6：堆排序（原地，O(1) 额外空间）</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel-2: #273449; --text: #e2e8f0; --muted: #94a3b8;
+    --accent: #38bdf8; --good: #22c55e; --bad: #ef4444; --pointer: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px; }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
+  .panel { background: var(--panel); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 18px rgba(0,0,0,0.25); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  button, input[type=text] { background: var(--panel-2); color: var(--text); border: 1px solid #475569; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  input[type=text] { cursor: text; width: 260px; }
+  button:hover:not(:disabled) { background: #334155; border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #0ea5e9; }
+  input[type="range"] { accent-color: var(--accent); }
+  label.small { font-size: 13px; color: var(--muted); }
+  .legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .array { display: flex; gap: 4px; flex-wrap: wrap; align-items: flex-end; }
+  .cell { min-width: 42px; height: 42px; border-radius: 8px; background: var(--panel-2); border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 15px; position: relative; transition: all 0.2s; }
+  .cell.sorted { background: rgba(34,197,94,0.25); border-color: var(--good); }
+  .cell.root { border-color: var(--pointer); box-shadow: 0 0 0 3px rgba(245,158,11,0.4); }
+  .cell.cmp { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56,189,248,0.4); }
+  .cell.swap { border-color: var(--bad); box-shadow: 0 0 0 3px rgba(239,68,68,0.4); }
+  .idx-row { display: flex; gap: 4px; margin-top: 2px; }
+  .idx-row span { min-width: 42px; text-align: center; font-size: 10px; color: var(--muted); }
+  .array-label { font-size: 12px; color: var(--muted); margin: 12px 0 6px; }
+  svg.heap-tree { width: 100%; height: auto; display: block; background: var(--panel-2); border-radius: 10px; padding: 8px; margin-top: 6px; }
+  .status { font-size: 14px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: var(--panel-2); border-left: 4px solid var(--accent); min-height: 42px; }
+  .status.good { border-color: var(--good); background: rgba(34,197,94,0.10); }
+  .status.phase { border-color: var(--pointer); background: rgba(245,158,11,0.08); font-weight: 600; }
+  .result { text-align: center; padding: 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(56,189,248,0.15)); border: 1px solid rgba(34,197,94,0.4); font-size: 15px; margin-top: 10px; }
+  .result .big { font-size: 18px; font-weight: 700; color: var(--good); margin-left: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  details.src { background: var(--panel); border-radius: 12px; padding: 4px 20px 16px; margin-bottom: 16px; }
+  details.src summary { cursor: pointer; padding: 14px 0; font-weight: 600; color: var(--accent); list-style: none; }
+  details.src summary::-webkit-details-marker { display: none; }
+  details.src summary::before { content: "▸ "; }
+  details.src[open] summary::before { content: "▾ "; }
+  pre.src-code { background: #0b1220; border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; color: #cbd5e1; margin: 0; }
+</style>
+</head>
+<body>
+
+<h1>堆应用 6：堆排序（原地排序，O(1) 额外空间）</h1>
+<div class="subtitle">
+  两个阶段：① 建大顶堆 <code>O(n)</code>（从最后一个非叶子节点开始逐个下沉）；
+  ② 反复把堆顶（当前最大值）与末尾元素交换，缩小堆范围后下沉调整 <code>O(n log n)</code>。全程手写 sift_down，不依赖 <code>heapq</code>。
+</div>
+
+<details class="src">
+  <summary>查看 Python 源码（heap_sort）</summary>
+  <pre class="src-code" id="src-code"></pre>
+</details>
+
+<div class="panel">
+  <div class="row">
+    <label class="small">数组（逗号分隔）</label>
+    <input type="text" id="arrInput" value="12,3,7,1,9,5,14,2,8">
+    <button class="primary" id="loadBtn">载入</button>
+    <button id="playBtn" class="primary" disabled>▶ 播放</button>
+    <button id="backBtn" disabled>◂ 上一步</button>
+    <button id="stepBtn" disabled>下一步 ▸</button>
+    <button id="resetBtn">↺ 重置</button>
+    <div><label class="small">速度</label> <input id="speed" type="range" min="500" max="3000" step="100" value="900" style="vertical-align:middle;"></div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--panel-2);border:2px solid var(--pointer);"></span>当前下沉的根节点</span>
+    <span><span class="swatch" style="background:var(--panel-2);border:2px solid var(--accent);"></span>正在比较的较大子节点</span>
+    <span><span class="swatch" style="background:var(--panel-2);border:2px solid var(--bad);"></span>本步发生交换的两个位置</span>
+    <span><span class="swatch" style="background:rgba(34,197,94,0.25);border:2px solid var(--good);"></span>已排好序的后缀</span>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="array-label">数组（下标从 0 开始；[0, heap_end) 是当前大顶堆范围）</div>
+  <div class="array" id="arrRow"></div>
+  <div class="idx-row" id="idxRow"></div>
+  <div class="array-label">堆结构视图（仅显示 [0, heap_end) 范围）</div>
+  <svg class="heap-tree" id="heapSvg" viewBox="0 0 400 100"></svg>
+  <div class="status" id="status">点击"载入"开始演示。</div>
+  <div class="result">排序结果 <span class="big" id="sortedResult">—</span></div>
+</div>
+
+<script>
+const SOURCE = `def heap_sort(arr: List[float]) -> List[float]:
+    """
+    经典原地堆排序实现（手写，不调用 heapq，体现"原地"和空间复杂度 O(1)）：
+    1) 建大顶堆 O(n)
+    2) 依次将堆顶（当前最大值）与末尾元素交换，缩小堆范围后下沉调整 O(n log n)
+    """
+    n = len(arr)
+
+    def sift_down(heap: List[float], start: int, end: int):
+        """对 [start, end) 范围内、以 start 为根的子树做下沉调整。"""
+        root = start
+        while True:
+            child = 2 * root + 1
+            if child >= end:
+                break
+            if child + 1 < end and heap[child] < heap[child + 1]:
+                child += 1
+            if heap[root] < heap[child]:
+                heap[root], heap[child] = heap[child], heap[root]
+                root = child
+            else:
+                break
+
+    # 建堆：从最后一个非叶子节点开始，从下往上下沉
+    for i in range(n // 2 - 1, -1, -1):
+        sift_down(arr, i, n)
+
+    # 依次弹出堆顶（最大值）放到数组末尾
+    for end in range(n - 1, 0, -1):
+        arr[0], arr[end] = arr[end], arr[0]
+        sift_down(arr, 0, end)
+
+    return arr`;
+document.getElementById('src-code').textContent = SOURCE;
+
+function renderHeapSVG(svg, arr, end, hl) {
+  svg.innerHTML = '';
+  const n = end;
+  if (n <= 0) { svg.setAttribute('viewBox', '0 0 400 90');
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',200); t.setAttribute('y',48); t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','#64748b'); t.setAttribute('font-size','13'); t.textContent = '(堆范围为空，排序完成)';
+    svg.appendChild(t); return;
+  }
+  const levels = Math.floor(Math.log2(n)) + 1;
+  const width = Math.max(420, Math.pow(2, levels-1) * 70);
+  const height = levels * 62 + 34;
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  const pos = i => {
+    const level = Math.floor(Math.log2(i+1));
+    const levelStart = Math.pow(2, level) - 1;
+    const levelCount = Math.pow(2, level);
+    const posInLevel = i - levelStart;
+    const x = width * (posInLevel + 1) / (levelCount + 1);
+    const y = 28 + level * 62;
+    return {x, y};
+  };
+  for (let i = 1; i < n; i++) {
+    const p = Math.floor((i-1)/2);
+    const a = pos(p), b = pos(i);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',a.x); line.setAttribute('y1',a.y); line.setAttribute('x2',b.x); line.setAttribute('y2',b.y);
+    line.setAttribute('stroke','#475569'); line.setAttribute('stroke-width','2');
+    svg.appendChild(line);
+  }
+  for (let i = 0; i < n; i++) {
+    const {x,y} = pos(i);
+    let stroke = '#475569', fill = '#1e293b';
+    if (hl.root === i) { stroke = '#f59e0b'; fill = 'rgba(245,158,11,0.2)'; }
+    else if (hl.cmp === i) { stroke = '#38bdf8'; fill = 'rgba(56,189,248,0.2)'; }
+    if (hl.swap && hl.swap.includes(i)) { stroke = '#ef4444'; fill = 'rgba(239,68,68,0.2)'; }
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', x); circle.setAttribute('cy', y); circle.setAttribute('r', 20);
+    circle.setAttribute('fill', fill); circle.setAttribute('stroke', stroke); circle.setAttribute('stroke-width','2.5');
+    g.appendChild(circle);
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x', x); text.setAttribute('y', y+4);
+    text.setAttribute('text-anchor','middle'); text.setAttribute('font-size','12'); text.setAttribute('font-weight','600');
+    text.setAttribute('fill', '#e2e8f0');
+    text.textContent = arr[i];
+    g.appendChild(text);
+    svg.appendChild(g);
+  }
+}
+
+function buildFrames(input) {
+  const arr = input.slice();
+  const n = arr.length;
+  const frames = [];
+  frames.push({arr: arr.slice(), end: n, sortedFrom: n, hl:{}, phase:'build', msg: `n = ${n}。开始建堆阶段：从最后一个非叶子节点 i = ⌊n/2⌋-1 = ${Math.floor(n/2)-1} 开始，依次向前对每个 i 做 sift_down。`, phaseChange:true});
+
+  function siftDown(start, end, phaseLabel, sortedFrom) {
+    let root = start;
+    while (true) {
+      const child0 = 2*root+1;
+      if (child0 >= end) {
+        frames.push({arr: arr.slice(), end, sortedFrom, hl:{root}, phase:phaseLabel, msg: `sift_down(start=${start}, end=${end})：root=${root} 已无子节点（child=${child0} ≥ end=${end}），停止下沉。`});
+        break;
+      }
+      let child = child0;
+      if (child0+1 < end) {
+        frames.push({arr: arr.slice(), end, sortedFrom, hl:{root, cmp:child0}, phase:phaseLabel, msg: `比较左右子节点：arr[${child0}]=${arr[child0]} 与 arr[${child0+1}]=${arr[child0+1]}，取较大者作为 child。`});
+        if (arr[child0] < arr[child0+1]) child = child0+1;
+      }
+      frames.push({arr: arr.slice(), end, sortedFrom, hl:{root, cmp:child}, phase:phaseLabel, msg: `比较 root(${root})=${arr[root]} 与 较大子节点 child(${child})=${arr[child]}。`});
+      if (arr[root] < arr[child]) {
+        [arr[root], arr[child]] = [arr[child], arr[root]];
+        frames.push({arr: arr.slice(), end, sortedFrom, hl:{swap:[root,child]}, phase:phaseLabel, msg: `arr[${root}] < arr[${child}] → 交换，root 下沉到 ${child} 继续检查。`});
+        root = child;
+      } else {
+        frames.push({arr: arr.slice(), end, sortedFrom, hl:{root}, phase:phaseLabel, msg: `arr[${root}] ≥ arr[${child}] → 满足堆性质，sift_down 结束。`});
+        break;
+      }
+    }
+  }
+
+  for (let i = Math.floor(n/2)-1; i >= 0; i--) {
+    frames.push({arr: arr.slice(), end: n, sortedFrom: n, hl:{root:i}, phase:'build', msg: `建堆：对 i=${i} 调用 sift_down(arr, ${i}, ${n})。`});
+    siftDown(i, n, 'build', n);
+  }
+  frames.push({arr: arr.slice(), end: n, sortedFrom: n, hl:{}, phase:'build-done', msg: `建堆完成：arr = [${arr.join(', ')}] 已是大顶堆，arr[0]=${arr[0]} 是全局最大值。`, phaseChange:true});
+
+  for (let end = n-1; end > 0; end--) {
+    [arr[0], arr[end]] = [arr[end], arr[0]];
+    frames.push({arr: arr.slice(), end, sortedFrom: end, hl:{swap:[0,end]}, phase:'extract', msg: `交换 arr[0] 与 arr[${end}]：把当前最大值 ${arr[end]} 放到已排序区的最前面，堆范围缩小为 [0, ${end})。`});
+    siftDown(0, end, 'extract', end);
+  }
+  frames.push({arr: arr.slice(), end: 0, sortedFrom: 0, hl:{}, phase:'done', msg: `排序完成：arr = [${arr.join(', ')}]。`, done:true});
+  return frames;
+}
+
+const arrRow = document.getElementById('arrRow');
+const idxRow = document.getElementById('idxRow');
+const heapSvg = document.getElementById('heapSvg');
+const statusEl = document.getElementById('status');
+const resultEl = document.getElementById('sortedResult');
+let frames = [], idx = 0, timer = null;
+
+function apply(f) {
+  arrRow.innerHTML = '';
+  idxRow.innerHTML = '';
+  f.arr.forEach((v, i) => {
+    const c = document.createElement('div');
+    let cls = 'cell';
+    if (i >= f.sortedFrom) cls += ' sorted';
+    if (f.hl.root === i) cls += ' root';
+    if (f.hl.cmp === i) cls += ' cmp';
+    if (f.hl.swap && f.hl.swap.includes(i)) cls += ' swap';
+    c.className = cls;
+    c.textContent = v;
+    arrRow.appendChild(c);
+    const s = document.createElement('span');
+    s.textContent = i;
+    idxRow.appendChild(s);
+  });
+  renderHeapSVG(heapSvg, f.arr, f.end, f.hl);
+  statusEl.className = 'status' + (f.done ? ' good' : (f.phaseChange ? ' phase' : ''));
+  statusEl.textContent = f.msg;
+  resultEl.textContent = f.done ? f.arr.join(', ') : '—';
+}
+function load() {
+  stop();
+  const nums = document.getElementById('arrInput').value.split(',').map(s=>s.trim()).filter(s=>s.length).map(Number);
+  frames = buildFrames(nums);
+  idx = 0; apply(frames[0]); updateBtns();
+}
+function goto(i) { idx = Math.max(0, Math.min(frames.length-1, i)); apply(frames[idx]); updateBtns(); }
+function updateBtns() {
+  document.getElementById('backBtn').disabled = idx <= 0;
+  document.getElementById('stepBtn').disabled = idx >= frames.length-1;
+  document.getElementById('playBtn').disabled = idx >= frames.length-1;
+}
+function stop() { if (timer) { clearInterval(timer); timer = null; } }
+document.getElementById('loadBtn').onclick = load;
+document.getElementById('stepBtn').onclick = () => goto(idx+1);
+document.getElementById('backBtn').onclick = () => { stop(); goto(idx-1); };
+document.getElementById('resetBtn').onclick = () => { stop(); goto(0); };
+document.getElementById('playBtn').onclick = () => {
+  if (timer) return; if (idx >= frames.length-1) return;
+  timer = setInterval(() => { goto(idx+1); if (idx >= frames.length-1) stop(); }, +document.getElementById('speed').value);
+};
+document.getElementById('speed').addEventListener('change', () => { if (timer) { stop(); document.getElementById('playBtn').onclick(); } });
+load();
+</script>
+</body>
+</html>

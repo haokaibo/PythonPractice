@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>堆应用 1：优先队列 —— 任务调度器 / 定时器事件循环</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --good: #22c55e;
+    --bad: #ef4444;
+    --removed: #64748b;
+    --pointer: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  h2 { margin: 28px 0 8px; font-size: 17px; color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
+
+  .panel {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+  }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+  button, select {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid #475569;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  button:hover:not(:disabled) { background: #334155; border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #0ea5e9; }
+  input[type="range"] { accent-color: var(--accent); }
+  label.small { font-size: 13px; color: var(--muted); }
+
+  .legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+
+  .grid2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+
+  svg.heap-tree { width: 100%; height: auto; display: block; background: var(--panel-2); border-radius: 10px; padding: 8px; }
+  .heap-caption { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  table.finder { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  table.finder th, table.finder td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #334155; }
+  table.finder th { color: var(--muted); font-weight: 500; }
+  table.finder tr.removed td { color: var(--removed); text-decoration: line-through; }
+
+  .status {
+    font-size: 14px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    border-left: 4px solid var(--accent);
+    min-height: 42px;
+  }
+  .status.good { border-color: var(--good); background: rgba(34,197,94,0.10); }
+  .status.bad  { border-color: var(--bad);  background: rgba(239,68,68,0.10); }
+
+  .op-trace { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .op-chip { font-size: 12px; padding: 4px 9px; border-radius: 999px; background: var(--panel-2); border: 1px solid #475569; color: var(--muted); }
+  .op-chip.active { border-color: var(--accent); color: var(--text); background: rgba(56,189,248,0.12); }
+
+  details.src { background: var(--panel); border-radius: 12px; padding: 4px 20px 16px; margin-bottom: 16px; }
+  details.src summary { cursor: pointer; padding: 14px 0; font-weight: 600; color: var(--accent); list-style: none; }
+  details.src summary::-webkit-details-marker { display: none; }
+  details.src summary::before { content: "▸ "; }
+  details.src[open] summary::before { content: "▾ "; }
+  pre.src-code { background: #0b1220; border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; color: #cbd5e1; margin: 0; }
+
+  .result { text-align: center; padding: 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(56,189,248,0.15)); border: 1px solid rgba(34,197,94,0.4); font-size: 15px; margin-top: 4px; }
+  .result .big { font-size: 24px; font-weight: 700; color: var(--good); margin-left: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+</style>
+</head>
+<body>
+
+<h1>堆应用 1：优先队列 —— 任务调度器 / 定时器事件循环</h1>
+<div class="subtitle">
+  用最小堆 <code>heapq</code> 实现按优先级出队；用 <code>(priority, count, task_id)</code> 三元组作为堆元素，
+  <code>count</code> 是自增 tie-breaker，解决同优先级时对象不可比较、并保证 FIFO 稳定性。取消任务采用<b>惰性删除</b>：只打标记，弹出时跳过，避免 O(n) 重建堆。
+</div>
+
+<details class="src">
+  <summary>查看 Python 源码（PriorityTaskScheduler / EventLoop）</summary>
+  <pre class="src-code" id="src-code"></pre>
+</details>
+
+<h2>A. PriorityTaskScheduler 任务调度器</h2>
+<div class="panel">
+  <div class="row">
+    <button class="primary" id="playBtn">▶ 播放</button>
+    <button id="backBtn">◂ 上一步</button>
+    <button id="stepBtn">下一步 ▸</button>
+    <button id="resetBtn">↺ 重置</button>
+    <div><label class="small">速度</label> <input id="speed" type="range" min="1200" max="6000" step="200" value="2200" style="vertical-align:middle;"></div>
+  </div>
+  <div class="op-trace" id="opTrace"></div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#1e293b;border:2px solid var(--accent);"></span>堆中节点（圆圈 = 数组下标）</span>
+    <span><span class="swatch" style="background:#334155;border:2px solid var(--removed);"></span>已取消（惰性删除，仍占位）</span>
+    <span><span class="swatch" style="background:var(--accent);"></span>本步操作的任务</span>
+  </div>
+</div>
+
+<div class="panel grid2">
+  <div>
+    <div class="heap-caption">堆数组的完全二叉树视图（下标 i 的子节点是 2i+1 / 2i+2）</div>
+    <svg class="heap-tree" id="heapSvg" viewBox="0 0 400 100"></svg>
+  </div>
+  <div>
+    <div class="heap-caption">_entry_finder：task_id → [priority, count, task_id]</div>
+    <table class="finder">
+      <thead><tr><th>task_id</th><th>priority</th><th>count</th><th>状态</th></tr></thead>
+      <tbody id="finderBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="status" id="status">点击"下一步"或"播放"开始演示。</div>
+  <div class="result">当前出队顺序 <span class="big" id="popOrder">—</span></div>
+</div>
+
+<h2>B. EventLoop 定时器事件循环</h2>
+<div class="panel">
+  <div class="row">
+    <button class="primary" id="playBtn2">▶ 播放</button>
+    <button id="backBtn2">◂ 上一步</button>
+    <button id="stepBtn2">下一步 ▸</button>
+    <button id="resetBtn2">↺ 重置</button>
+  </div>
+</div>
+<div class="panel grid2">
+  <div>
+    <div class="heap-caption">按 due_time 排序的最小堆（TimerEvent 树）</div>
+    <svg class="heap-tree" id="heapSvg2" viewBox="0 0 400 100"></svg>
+  </div>
+  <div>
+    <div class="heap-caption">事件触发日志（current_time 单调推进）</div>
+    <div id="log2" style="font-family: ui-monospace, monospace; font-size: 13px; line-height: 1.8; color: var(--text);"></div>
+  </div>
+</div>
+<div class="panel">
+  <div class="status" id="status2">点击"下一步"或"播放"开始演示。</div>
+</div>
+
+<script>
+const SOURCE = `class PriorityTaskScheduler:
+    """
+    基于堆的任务调度器。
+    - 数字越小优先级越高（与操作系统调度惯例一致）。
+    - 使用自增计数器 counter 作为 tie-breaker，
+      解决优先级相同时任务对象无法比较、以及保证 FIFO 稳定性的问题。
+    - 支持"取消任务"（惰性删除：标记 + 弹出时跳过）。
+    """
+
+    REMOVED = "<removed-task>"  # 取消标记
+
+    def __init__(self):
+        self._heap: List[list] = []
+        self._entry_finder: Dict[str, list] = {}
+        self._counter = itertools.count()  # tie-breaker，保证同优先级先进先出
+
+    def add_task(self, task_id: str, priority: float):
+        if task_id in self._entry_finder:
+            self.cancel_task(task_id)
+        count = next(self._counter)
+        entry = [priority, count, task_id]
+        self._entry_finder[task_id] = entry
+        heapq.heappush(self._heap, entry)
+
+    def cancel_task(self, task_id: str):
+        entry = self._entry_finder.pop(task_id)
+        entry[-1] = self.REMOVED  # 惰性删除，不真正从堆里移除（避免 O(n) 重建堆）
+
+    def pop_task(self) -> str:
+        while self._heap:
+            priority, count, task_id = heapq.heappop(self._heap)
+            if task_id is not self.REMOVED:
+                del self._entry_finder[task_id]
+                return task_id
+        raise IndexError("scheduler 中没有待执行任务")
+
+    def is_empty(self) -> bool:
+        return not self._entry_finder
+
+
+@dataclass(order=True)
+class TimerEvent:
+    """定时器事件：按到期时间 due_time 排序，最早到期的事件在堆顶。"""
+    due_time: float
+    seq: int = field(compare=True)
+    name: str = field(compare=False)
+    callback: Any = field(compare=False, default=None)
+
+
+class EventLoop:
+    """
+    简化版事件循环 / 定时器：
+    每次 tick 只处理堆顶（最近到期）的事件，
+    模拟 asyncio / Node.js 定时器堆的核心思想。
+    """
+
+    def __init__(self):
+        self._heap: List[TimerEvent] = []
+        self._seq = itertools.count()
+
+    def call_later(self, delay: float, name: str, callback=None):
+        heapq.heappush(self._heap, TimerEvent(due_time=delay, seq=next(self._seq), name=name, callback=callback))
+
+    def run_until_empty(self, current_time: float = 0.0):
+        """假设时间从 0 开始单调推进，依次触发所有到期事件。"""
+        while self._heap:
+            event = heapq.heappop(self._heap)
+            current_time = max(current_time, event.due_time)
+            print(f"[EventLoop] t={current_time:.1f} 触发事件: {event.name}")
+            if event.callback:
+                event.callback()`;
+document.getElementById('src-code').textContent = SOURCE;
+
+// ---------- generic min-heap with step recording ----------
+function heapPush(heap, item, cmp) {
+  heap.push(item);
+  let i = heap.length - 1;
+  while (i > 0) {
+    const p = Math.floor((i - 1) / 2);
+    if (cmp(heap[i], heap[p]) < 0) { [heap[i], heap[p]] = [heap[p], heap[i]]; i = p; }
+    else break;
+  }
+}
+function heapPop(heap, cmp) {
+  const top = heap[0];
+  const last = heap.pop();
+  if (heap.length > 0) {
+    heap[0] = last;
+    let i = 0;
+    while (true) {
+      let l = 2*i+1, r = 2*i+2, s = i;
+      if (l < heap.length && cmp(heap[l], heap[s]) < 0) s = l;
+      if (r < heap.length && cmp(heap[r], heap[s]) < 0) s = r;
+      if (s !== i) { [heap[i], heap[s]] = [heap[s], heap[i]]; i = s; } else break;
+    }
+  }
+  return top;
+}
+
+function renderHeapSVG(svg, arr, labelFn, dimFn, highlightIdx) {
+  svg.innerHTML = '';
+  const n = arr.length;
+  if (n === 0) { svg.setAttribute('viewBox', '0 0 400 90');
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',200); t.setAttribute('y',48); t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','#64748b'); t.setAttribute('font-size','13'); t.textContent = '(堆为空)';
+    svg.appendChild(t); return;
+  }
+  const levels = Math.floor(Math.log2(n)) + 1;
+  const width = Math.max(420, Math.pow(2, levels-1) * 90);
+  const height = levels * 72 + 40;
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  const pos = i => {
+    const level = Math.floor(Math.log2(i+1));
+    const levelStart = Math.pow(2, level) - 1;
+    const levelCount = Math.pow(2, level);
+    const posInLevel = i - levelStart;
+    const x = width * (posInLevel + 1) / (levelCount + 1);
+    const y = 34 + level * 72;
+    return {x, y};
+  };
+  for (let i = 1; i < n; i++) {
+    const p = Math.floor((i-1)/2);
+    const a = pos(p), b = pos(i);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',a.x); line.setAttribute('y1',a.y);
+    line.setAttribute('x2',b.x); line.setAttribute('y2',b.y);
+    line.setAttribute('stroke','#475569'); line.setAttribute('stroke-width','2');
+    svg.appendChild(line);
+  }
+  for (let i = 0; i < n; i++) {
+    const {x,y} = pos(i);
+    const dim = dimFn && dimFn(arr[i], i);
+    const hl = highlightIdx && highlightIdx.includes(i);
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', x); circle.setAttribute('cy', y); circle.setAttribute('r', 28);
+    circle.setAttribute('fill', dim ? '#334155' : (hl ? 'rgba(56,189,248,0.25)' : '#1e293b'));
+    circle.setAttribute('stroke', dim ? '#64748b' : (hl ? '#38bdf8' : '#475569'));
+    circle.setAttribute('stroke-width', hl ? '3' : '2');
+    g.appendChild(circle);
+    const idxText = document.createElementNS('http://www.w3.org/2000/svg','text');
+    idxText.setAttribute('x', x); idxText.setAttribute('y', y - 30);
+    idxText.setAttribute('text-anchor','middle'); idxText.setAttribute('font-size','10');
+    idxText.setAttribute('fill', '#64748b'); idxText.textContent = `[${i}]`;
+    g.appendChild(idxText);
+    const lines = labelFn(arr[i], i);
+    lines.forEach((ln, k) => {
+      const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+      text.setAttribute('x', x); text.setAttribute('y', y - 4 + k*13);
+      text.setAttribute('text-anchor','middle'); text.setAttribute('font-size', k===0 ? '12':'9.5');
+      text.setAttribute('fill', dim ? '#94a3b8' : '#e2e8f0');
+      text.textContent = ln;
+      g.appendChild(text);
+    });
+    svg.appendChild(g);
+  }
+}
+
+// ================= A. Scheduler demo =================
+(() => {
+  const svg = document.getElementById('heapSvg');
+  const finderBody = document.getElementById('finderBody');
+  const statusEl = document.getElementById('status');
+  const opTraceEl = document.getElementById('opTrace');
+  const popOrderEl = document.getElementById('popOrder');
+
+  const script = [
+    {op:'add', id:'低优先级日志任务', priority:5},
+    {op:'add', id:'高优先级告警任务', priority:1},
+    {op:'add', id:'中等优先级备份任务', priority:3},
+    {op:'cancel', id:'低优先级日志任务'},
+    {op:'pop'}, {op:'pop'}, {op:'pop'},
+  ];
+
+  function buildFrames() {
+    const heap = [];
+    const finder = {};
+    let counter = 0;
+    const frames = [];
+    const popped = [];
+
+    frames.push({heap: [], finder: {}, msg: '初始状态：堆为空，entry_finder 为空。', popped: [], hl: []});
+
+    for (const step of script) {
+      if (step.op === 'add') {
+        if (finder[step.id]) {
+          const entry = finder[step.id]; entry[2] = 'REMOVED';
+        }
+        const entry = [step.priority, counter++, step.id];
+        finder[step.id] = entry;
+        heapPush(heap, entry, (a,b) => a[0]-b[0] || a[1]-b[1]);
+        frames.push({heap: heap.map(e=>e.slice()), finder: {...finder}, msg:
+          `add_task("${step.id}", priority=${step.priority}) → heappush，堆按 (priority, count) 排序上浮。`,
+          popped: popped.slice(), hl: [heap.findIndex(e=>e[2]===step.id)]});
+      } else if (step.op === 'cancel') {
+        const entry = finder[step.id];
+        delete finder[step.id];
+        entry[2] = 'REMOVED';
+        const idx = heap.findIndex(e => e === entry);
+        frames.push({heap: heap.map(e=>e.slice()), finder: {...finder, [step.id+'__removed']: entry}, msg:
+          `cancel_task("${step.id}") → 惰性删除：只把 task_id 标记为 REMOVED，条目仍留在堆数组第 [${idx}] 位，不重建堆。`,
+          popped: popped.slice(), hl: idx>=0?[idx]:[], removedKey: step.id});
+      } else if (step.op === 'pop') {
+        let skipped = [];
+        let result = null;
+        while (heap.length) {
+          const top = heapPop(heap, (a,b) => a[0]-b[0] || a[1]-b[1]);
+          if (top[2] === 'REMOVED') { skipped.push(top); continue; }
+          delete finder[top[2]];
+          result = top;
+          break;
+        }
+        if (result) popped.push(result[2]);
+        frames.push({heap: heap.map(e=>e.slice()), finder: {...finder}, msg: result
+          ? `pop_task() → 弹出堆顶 ${skipped.length? '（跳过了 '+skipped.length+' 个已取消条目后）':''}得到 "${result[2]}"（priority=${result[0]}）。`
+          : `pop_task() → 堆已空，抛出 IndexError。`,
+          popped: popped.slice(), hl: []});
+      }
+    }
+    return frames;
+  }
+
+  const frames = buildFrames();
+  let idx = 0, timer = null;
+
+  function renderTrace() {
+    opTraceEl.innerHTML = '';
+    const labels = ['开始', ...script.map(s => s.op === 'add' ? `add(${s.id.slice(0,4)}…)` : s.op === 'cancel' ? `cancel(${s.id.slice(0,4)}…)` : 'pop()')];
+    labels.forEach((l, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'op-chip' + (i === idx ? ' active' : '');
+      chip.textContent = l;
+      opTraceEl.appendChild(chip);
+    });
+  }
+
+  function apply(f) {
+    renderHeapSVG(svg, f.heap, (e) => [e[2]==='REMOVED'?'(已取消)':e[2], `p=${e[0]} c=${e[1]}`], (e) => e[2]==='REMOVED', f.hl);
+    finderBody.innerHTML = '';
+    const rows = Object.entries(f.finder).filter(([k,v]) => v[2] !== 'REMOVED' || k.endsWith('__removed'));
+    if (Object.keys(f.finder).length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td colspan="4" style="color:var(--muted)">（空）</td>';
+      finderBody.appendChild(tr);
+    } else {
+      Object.entries(f.finder).forEach(([k,v]) => {
+        const tr = document.createElement('tr');
+        const removed = v[2] === 'REMOVED';
+        if (removed) tr.className = 'removed';
+        tr.innerHTML = `<td>${k.replace('__removed','')}</td><td>${v[0]}</td><td>${v[1]}</td><td>${removed?'已取消':'待执行'}</td>`;
+        finderBody.appendChild(tr);
+      });
+    }
+    statusEl.className = 'status';
+    statusEl.textContent = f.msg;
+    popOrderEl.textContent = f.popped.length ? f.popped.join(' → ') : '—';
+  }
+
+  function goto(i) { idx = Math.max(0, Math.min(frames.length-1, i)); apply(frames[idx]); renderTrace(); updateBtns(); }
+  function updateBtns() {
+    document.getElementById('backBtn').disabled = idx <= 0;
+    document.getElementById('stepBtn').disabled = idx >= frames.length-1;
+    document.getElementById('playBtn').disabled = idx >= frames.length-1;
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  document.getElementById('stepBtn').onclick = () => goto(idx+1);
+  document.getElementById('backBtn').onclick = () => { stop(); goto(idx-1); };
+  document.getElementById('resetBtn').onclick = () => { stop(); goto(0); };
+  document.getElementById('playBtn').onclick = () => {
+    if (timer) return;
+    if (idx >= frames.length-1) return;
+    timer = setInterval(() => { goto(idx+1); if (idx >= frames.length-1) stop(); }, +document.getElementById('speed').value);
+  };
+  goto(0);
+})();
+
+// ================= B. EventLoop demo =================
+(() => {
+  const svg = document.getElementById('heapSvg2');
+  const statusEl = document.getElementById('status2');
+  const logEl = document.getElementById('log2');
+
+  const calls = [
+    {delay: 3.0, name: '刷新缓存'},
+    {delay: 0.5, name: '心跳检测'},
+    {delay: 1.2, name: '发送通知'},
+  ];
+
+  function buildFrames() {
+    const heap = [];
+    let seq = 0;
+    const frames = [];
+    frames.push({heap: [], msg: '初始状态：定时器堆为空。', log: [], hl: []});
+
+    for (const c of calls) {
+      const ev = {due_time: c.delay, seq: seq++, name: c.name};
+      heapPush(heap, ev, (a,b) => a.due_time - b.due_time || a.seq - b.seq);
+      frames.push({heap: heap.map(e=>({...e})), msg: `call_later(${c.delay}, "${c.name}") → heappush，按 due_time 上浮。`, log: [], hl: [heap.findIndex(e=>e===ev)]});
+    }
+
+    let currentTime = 0;
+    const log = [];
+    while (heap.length) {
+      const ev = heapPop(heap, (a,b) => a.due_time - b.due_time || a.seq - b.seq);
+      currentTime = Math.max(currentTime, ev.due_time);
+      log.push(`[EventLoop] t=${currentTime.toFixed(1)} 触发事件: ${ev.name}`);
+      frames.push({heap: heap.map(e=>({...e})), msg: `heappop() → 堆顶到期时间最早，触发 "${ev.name}"（t=${currentTime.toFixed(1)}）。`, log: log.slice(), hl: []});
+    }
+    frames.push({heap: [], msg: '堆已空，run_until_empty 结束。', log: log.slice(), hl: []});
+    return frames;
+  }
+
+  const frames = buildFrames();
+  let idx = 0, timer = null;
+
+  function apply(f) {
+    renderHeapSVG(svg, f.heap, (e) => [e.name, `t=${e.due_time}`], () => false, f.hl);
+    statusEl.textContent = f.msg;
+    logEl.innerHTML = f.log.length ? f.log.map(l => `<div>${l}</div>`).join('') : '<div style="color:var(--muted)">（尚无事件触发）</div>';
+  }
+  function goto(i) { idx = Math.max(0, Math.min(frames.length-1, i)); apply(frames[idx]); updateBtns(); }
+  function updateBtns() {
+    document.getElementById('backBtn2').disabled = idx <= 0;
+    document.getElementById('stepBtn2').disabled = idx >= frames.length-1;
+    document.getElementById('playBtn2').disabled = idx >= frames.length-1;
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  document.getElementById('stepBtn2').onclick = () => goto(idx+1);
+  document.getElementById('backBtn2').onclick = () => { stop(); goto(idx-1); };
+  document.getElementById('resetBtn2').onclick = () => { stop(); goto(0); };
+  document.getElementById('playBtn2').onclick = () => {
+    if (timer) return;
+    if (idx >= frames.length-1) return;
+    timer = setInterval(() => { goto(idx+1); if (idx >= frames.length-1) stop(); }, 2000);
+  };
+  goto(0);
+})();
+</script>
+</body>
+</html>

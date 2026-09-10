@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heap Push — 最大堆插入可视化</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --good: #22c55e;
+    --bad: #ef4444;
+    --amber: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+
+  .panel {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+  }
+  .controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  label.small { font-size: 13px; color: var(--muted); }
+  input[type="number"] {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid #475569;
+    padding: 8px 10px;
+    border-radius: 8px;
+    width: 90px;
+    font-size: 14px;
+  }
+  button {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid #475569;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  button:hover:not(:disabled) { background: #334155; border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #0ea5e9; }
+
+  .status {
+    font-size: 14px;
+    margin-top: 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    border-left: 4px solid var(--accent);
+    min-height: 20px;
+  }
+  .error { font-size: 13px; color: var(--bad); margin-top: 8px; display: none; }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+  svg { display: block; }
+  .node-gray  { fill: var(--panel-2); stroke: #475569; }
+  .node-amber { fill: rgba(245,158,11,0.25); stroke: var(--amber); }
+  .node-blue  { fill: rgba(56,189,248,0.25); stroke: var(--accent); }
+  .node-text  { fill: var(--text); font-size: 15px; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-anchor: middle; dominant-baseline: central; }
+  .edge { stroke: #475569; stroke-width: 1.5; }
+
+  .code-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .code-tab {
+    background: var(--panel-2);
+    color: var(--muted);
+    border: 1px solid #475569;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .code-tab.active { color: var(--text); border-color: var(--accent); background: #1e2a3f; }
+  pre {
+    background: #0b1120;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0;
+  }
+  pre code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .kw { color: #c084fc; }
+  .fn { color: #38bdf8; }
+  .str { color: #a3e635; }
+  .cmt { color: #64748b; font-style: italic; }
+  .num { color: #fbbf24; }
+</style>
+</head>
+<body>
+
+<h1>Heap Push — 最大堆插入（上浮 / sift-up）可视化</h1>
+<div class="subtitle">
+  向最大堆插入新元素：先放到数组末尾（下一个空叶子位置），再与父节点反复比较并上浮，直到堆性质恢复。
+  时间复杂度 <code>O(log n)</code>。
+</div>
+
+<div class="panel">
+  <div class="controls">
+    <div>
+      <label class="small">插入值</label><br>
+      <input id="valIn" type="number" value="85">
+    </div>
+    <button class="primary" id="pushBtn">推入 (Push)</button>
+    <button id="nextBtn" disabled>下一步 ▸</button>
+    <button id="resetBtn">↺ 重置堆</button>
+  </div>
+  <div class="error" id="err"></div>
+  <div class="legend">
+    <span><span class="swatch" style="background:rgba(245,158,11,0.5);border:2px solid var(--amber);"></span>新节点 / 移动中</span>
+    <span><span class="swatch" style="background:rgba(56,189,248,0.5);border:2px solid var(--accent);"></span>比较的父节点</span>
+  </div>
+</div>
+
+<div class="panel">
+  <svg id="svgRoot" width="100%" viewBox="0 0 680 420">
+    <g id="tree"></g>
+  </svg>
+  <div class="status" id="msg">点击"推入"，插入一个新值观察上浮过程。</div>
+</div>
+
+<div class="panel">
+  <div class="code-tabs">
+    <button class="code-tab active" data-tab="manual">手写实现</button>
+    <button class="code-tab" data-tab="heapq">标准库 heapq</button>
+  </div>
+
+  <pre id="code-manual"><code><span class="kw">class</span> <span class="fn">MaxHeap</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.heap = []
+
+    <span class="kw">def</span> <span class="fn">push</span>(self, value):
+        <span class="cmt">"""插入新元素：先放到末尾，再上浮（sift-up）"""</span>
+        self.heap.append(value)          <span class="cmt"># 1. 放到数组末尾（下一个空叶子）</span>
+        self._sift_up(len(self.heap) - <span class="num">1</span>)
+
+    <span class="kw">def</span> <span class="fn">_sift_up</span>(self, i):
+        <span class="kw">while</span> i > <span class="num">0</span>:
+            parent = (i - <span class="num">1</span>) // <span class="num">2</span>
+            <span class="kw">if</span> self.heap[parent] < self.heap[i]:
+                <span class="cmt"># 子节点比父节点大，交换，继续向上比较</span>
+                self.heap[parent], self.heap[i] = self.heap[i], self.heap[parent]
+                i = parent
+            <span class="kw">else</span>:
+                <span class="cmt"># 堆性质已满足，停止</span>
+                <span class="kw">break</span>
+
+
+<span class="cmt"># 使用示例，对应可视化里的初始堆</span>
+h = MaxHeap()
+h.heap = [<span class="num">90</span>, <span class="num">70</span>, <span class="num">80</span>, <span class="num">40</span>, <span class="num">60</span>, <span class="num">50</span>, <span class="num">75</span>, <span class="num">10</span>, <span class="num">30</span>]
+h.push(<span class="num">85</span>)
+<span class="fn">print</span>(h.heap)</code></pre>
+
+  <pre id="code-heapq" style="display:none"><code><span class="kw">import</span> heapq
+
+<span class="cmt"># heapq 默认实现的是最小堆</span>
+<span class="cmt"># 如果要模拟最大堆，通常把数值取负存入</span>
+min_heap = [<span class="num">10</span>, <span class="num">20</span>, <span class="num">15</span>, <span class="num">30</span>, <span class="num">40</span>]
+heapq.heapify(min_heap)      <span class="cmt"># O(n) 建堆</span>
+heapq.heappush(min_heap, <span class="num">5</span>)  <span class="cmt"># O(log n) 插入，内部同样是"放到末尾再上浮"</span></code></pre>
+</div>
+
+<script>
+  document.querySelectorAll('.code-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('code-manual').style.display = tab.dataset.tab === 'manual' ? 'block' : 'none';
+      document.getElementById('code-heapq').style.display = tab.dataset.tab === 'heapq' ? 'block' : 'none';
+    });
+  });
+</script>
+
+<script>
+  let heap = [90, 70, 80, 40, 60, 50, 75, 10, 30];
+  let frames = [];
+  let idx = 0;
+
+  const $ = id => document.getElementById(id);
+
+  function pos(i) {
+    const level = Math.floor(Math.log2(i + 1));
+    const num = Math.pow(2, level);
+    const posIn = i - (num - 1);
+    const x = (posIn + 0.5) * (680 / num);
+    const y = 60 + level * 100;
+    return [x, y];
+  }
+
+  function render(arr, focus, parent) {
+    let s = '';
+    for (let i = 1; i < arr.length; i++) {
+      const p = Math.floor((i - 1) / 2);
+      const [x1, y1] = pos(p), [x2, y2] = pos(i);
+      s += `<line class="edge" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+    }
+    for (let i = 0; i < arr.length; i++) {
+      const [x, y] = pos(i);
+      let cls = 'node-gray';
+      if (i === focus) cls = 'node-amber';
+      else if (i === parent) cls = 'node-blue';
+      s += `<circle class="${cls}" cx="${x}" cy="${y}" r="20" stroke-width="2"/>`;
+      s += `<text class="node-text" x="${x}" y="${y}">${arr[i]}</text>`;
+    }
+    $('tree').innerHTML = s;
+  }
+
+  function simulate(arr, val) {
+    const a = arr.slice();
+    a.push(val);
+    let i = a.length - 1;
+    const fs = [];
+    fs.push({ arr: a.slice(), focus: i, parent: null, msg: `将 ${val} 放到数组末尾（堆的下一个空叶子位置）` });
+    while (i > 0) {
+      const p = Math.floor((i - 1) / 2);
+      if (a[p] < a[i]) {
+        fs.push({ arr: a.slice(), focus: i, parent: p, msg: `比较：节点(${a[i]}) 大于 父节点(${a[p]}) → 需要交换` });
+        [a[i], a[p]] = [a[p], a[i]];
+        fs.push({ arr: a.slice(), focus: p, parent: null, msg: `交换完成，节点上浮到新位置` });
+        i = p;
+      } else {
+        fs.push({ arr: a.slice(), focus: i, parent: p, msg: `比较：节点(${a[i]}) 不大于 父节点(${a[p]}) → 堆性质已满足，停止` });
+        i = 0;
+        fs.push({ arr: a.slice(), focus: null, parent: null, msg: `插入完成 ✓` });
+      }
+    }
+    if (i === 0 && fs[fs.length - 1].msg.indexOf('完成') === -1) {
+      fs.push({ arr: a.slice(), focus: 0, parent: null, msg: `已上浮到根节点，插入完成 ✓` });
+    }
+    return fs;
+  }
+
+  function doPush() {
+    const raw = $('valIn').value;
+    if (raw === '' || isNaN(Number(raw))) {
+      $('err').textContent = '请输入一个数字';
+      $('err').style.display = 'block';
+      return;
+    }
+    $('err').style.display = 'none';
+    frames = simulate(heap, Number(raw));
+    idx = 0;
+    render(frames[0].arr, frames[0].focus, frames[0].parent);
+    $('msg').textContent = frames[0].msg;
+    $('pushBtn').disabled = true;
+    $('nextBtn').disabled = frames.length <= 1;
+  }
+
+  function doNext() {
+    if (idx >= frames.length - 1) return;
+    idx++;
+    const f = frames[idx];
+    render(f.arr, f.focus, f.parent);
+    $('msg').textContent = f.msg;
+    if (idx === frames.length - 1) {
+      heap = f.arr;
+      $('nextBtn').disabled = true;
+      $('pushBtn').disabled = false;
+    }
+  }
+
+  function doReset() {
+    heap = [90, 70, 80, 40, 60, 50, 75, 10, 30];
+    frames = [];
+    idx = 0;
+    render(heap, null, null);
+    $('msg').textContent = '已重置为初始堆，点击"推入"开始。';
+    $('pushBtn').disabled = false;
+    $('nextBtn').disabled = true;
+    $('err').style.display = 'none';
+  }
+
+  $('pushBtn').addEventListener('click', doPush);
+  $('nextBtn').addEventListener('click', doNext);
+  $('resetBtn').addEventListener('click', doReset);
+
+  render(heap, null, null);
+</script>
+
+</body>
+</html>

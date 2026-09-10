@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>天际线扫描线算法 · 动态可视化</title>
+<style>
+  :root{
+    --bg: #0f172a;
+    --bg-grid: rgba(56,189,248,0.04);
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --line: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --good: #22c55e;
+    --bad: #ef4444;
+    --amber: #f59e0b;
+    --teal: #5eead4;
+    --blue: #5b8cc4;
+    --red: #ef4444;
+    --pointer: #f59e0b;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    padding:24px;
+  }
+  .page{max-width:1180px;margin:0 auto;padding:0 20px;}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:20px;}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--teal);margin:0 0 6px;}
+  h1{margin:0;font-size:22px;}
+  .sub{color:var(--muted);font-size:14px;max-width:70ch;line-height:1.55;margin:0;}
+
+  .input-row{
+    display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+    padding:20px;background:var(--panel);border-radius:12px;
+    margin-bottom:16px;box-shadow:0 4px 18px rgba(0,0,0,0.25);
+  }
+  .input-row label{font-size:13px;color:var(--muted);white-space:nowrap;}
+  .input-row input[type=text]{
+    flex:1;min-width:260px;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--teal);font-family:var(--mono);font-size:13px;padding:8px 10px;border-radius:8px;
+  }
+  .input-row input[type=text]:focus{outline:1px solid var(--amber);}
+
+  /* buttons (match reference) */
+  button, select{
+    font-size:14px;color:var(--text);background:var(--panel-2);
+    border:1px solid #475569;padding:8px 14px;border-radius:8px;cursor:pointer;
+    transition:all 0.15s;
+  }
+  button:hover:not(:disabled), select:hover{
+    background:#334155;border-color:var(--accent);
+  }
+  button:disabled{opacity:0.5;cursor:not-allowed;}
+  button.primary, .btn.primary{
+    background:var(--accent);color:#0f172a;border-color:var(--accent);font-weight:600;
+  }
+  button.primary:hover:not(:disabled), .btn.primary:hover:not(:disabled){background:#0ea5e9;}
+  button.icon{padding:8px 11px;font-size:12px;}
+  .err{color:var(--bad);font-family:var(--mono);font-size:12px;margin-left:4px;}
+
+  /* controls bar */
+  .controls-bar{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;
+  }
+  .step-count{font-family:var(--mono);font-size:13px;color:var(--muted);min-width:96px;}
+  .scrub{flex:1;min-width:140px;accent-color:var(--accent);}
+  .speed-wrap{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);font-family:var(--mono);}
+  .speed-wrap input{accent-color:var(--accent);}
+
+  .desc-bar{
+    font-size:14px;padding:10px 14px;border-radius:8px;
+    background:var(--panel-2);border-left:4px solid var(--accent);
+    transition:all 0.3s;min-height:42px;
+  }
+
+  .main-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:18px;align-items:start;}
+  @media (max-width:880px){.main-grid{grid-template-columns:1fr;}}
+
+  /* panels (match reference) */
+  .panel{
+    background:var(--panel);border-radius:12px;padding:20px;margin-bottom:16px;
+    box-shadow:0 4px 18px rgba(0,0,0,0.25);
+  }
+  .panel h2{
+    font-family:var(--mono);font-size:13px;color:var(--muted);margin:0 0 12px;font-weight:600;
+  }
+  .panel h2 .n{color:var(--accent);}
+
+  svg{width:100%;height:auto;display:block;}
+  .axis-label{fill:var(--muted);font-family:var(--mono);font-size:10px;}
+
+  .side-col{display:flex;flex-direction:column;gap:18px;}
+
+  .queue-list, .heap-list{
+    max-height:210px;overflow-y:auto;font-family:var(--mono);font-size:13px;
+  }
+  .queue-row, .heap-row{
+    display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;
+    padding:6px 8px;border-radius:6px;color:var(--muted);border-bottom:1px solid var(--line);
+  }
+  .queue-row.now{background:rgba(245,158,11,0.1);color:var(--amber);border-bottom-color:transparent;}
+  .queue-row.done{opacity:0.4;}
+  .heap-row.top{background:rgba(56,189,248,0.1);color:var(--accent);border-bottom-color:transparent;}
+  .tag{font-size:10px;padding:1px 6px;border-radius:3px;border:1px solid currentColor;justify-self:end;}
+  .tag.L{color:var(--accent);}
+  .tag.R{color:var(--bad);}
+
+  .result-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .chip{
+    font-family:var(--mono);font-size:12px;color:var(--text);background:var(--panel-2);
+    border:1px solid var(--line);padding:3px 8px;border-radius:12px;
+  }
+  .chip.new{border-color:var(--amber);color:var(--amber);}
+
+  .code-panel{margin-top:16px;}
+  pre.code{
+    margin:0;padding:14px;font-family:var(--mono);font-size:12.8px;line-height:1.65;
+    overflow-x:auto;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;color:#c7cce0;
+  }
+  .code-line{
+    display:block;padding:1px 16px;white-space:pre;border-left:3px solid transparent;
+    color:#a9bad6;transition:background .15s, border-color .15s;
+  }
+  .code-line.active{background:rgba(56,189,248,0.08);border-left-color:var(--accent);color:#eef4fb;}
+  .ln{display:inline-block;width:28px;color:#647899;user-select:none;}
+  .kw{color:var(--blue);font-weight:600;}
+  .cmt{color:#5c7292;font-style:italic;}
+  .str{color:var(--amber);}
+  .num{color:var(--accent);}
+
+  footer{margin-top:26px;color:var(--muted);font-family:var(--sans);font-size:11.5px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <p class="eyebrow">SWEEP LINE / MAX-HEAP</p>
+    <h1>天际线轮廓算法（Skyline Problem）</h1>
+    <p class="sub">逐事件回放扫描线过程：事件排序 → 左边界入堆 → 清理过期建筑 → 取堆顶最大高度 → 高度变化即产生拐点。右侧代码会随每一步高亮对应的执行行。</p>
+  </header>
+
+  <div class="input-row">
+    <label for="buildingsInput">输入建筑物 [l, r, h]：</label>
+    <input type="text" id="buildingsInput" value="[[2,9,10],[3,7,15],[5,12,12],[15,20,10],[19,24,8]]">
+    <button class="btn primary" id="applyBtn">应用并重置</button>
+    <span class="err" id="errMsg"></span>
+  </div>
+
+  <div class="controls-bar">
+    <button class="btn" id="resetBtn">⟲ 重置</button>
+    <button class="btn" id="prevBtn">‹ 上一步</button>
+    <button class="btn primary" id="playBtn">▶ 播放</button>
+    <button class="btn" id="nextBtn">下一步 ›</button>
+    <input type="range" class="scrub" id="scrub" min="0" max="0" value="0">
+    <span class="step-count" id="stepCount">步骤 0 / 0</span>
+    <div class="speed-wrap">
+      速度
+      <input type="range" id="speed" min="1" max="6" value="3">
+    </div>
+  </div>
+
+  <div class="desc-bar" id="descBar">准备就绪。</div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <h2>扫描过程可视化</h2>
+      <svg id="viz" viewBox="0 0 900 420"></svg>
+      <div class="result-chips" id="resultChips"></div>
+    </div>
+
+    <div class="side-col">
+      <div class="panel">
+        <h2>事件队列 <span class="n" id="eventCountLabel"></span></h2>
+        <div class="queue-list" id="queueList"></div>
+      </div>
+      <div class="panel">
+        <h2>当前堆中的建筑（按高度）</h2>
+        <div class="heap-list" id="heapList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel code-panel">
+    <h2>源代码</h2>
+    <pre class="code" id="codeBlock"></pre>
+  </div>
+
+  <footer>getSkyline · 扫描线 + 延迟删除堆 · O(n log n)</footer>
+</div>
+
+<script>
+/* ---------- 源代码（原样展示 + 行标记） ---------- */
+const CODE_LINES = [
+  {t:"import heapq", key:"setup"},
+  {t:"class Solution:", key:"setup"},
+  {t:"    def getSkyline(self, buildings: list[list[int]]) -> list[list[int]]:", key:"setup"},
+  {t:"        events = []", key:"setup"},
+  {t:"        for l, r, h in buildings:", key:"setup"},
+  {t:"            # 左边界用 -h 表示（方便排序和最大堆处理）", key:"setup"},
+  {t:"            events.append((l, -h, r))", key:"setup"},
+  {t:"            # 右边界用 h 表示，且标记 R", key:"setup"},
+  {t:"            events.append((r, h, 0))", key:"setup"},
+  {t:"            ", key:"setup"},
+  {t:"        # 1. 排序事件", key:"setup"},
+  {t:"        # x 相同：先处理高的左边界 (-h 较小)，再处理右边界", key:"setup"},
+  {t:"        events.sort()", key:"setup"},
+  {t:"        ", key:"setup"},
+  {t:"        # res 保存答案，live_buildings 维护 (负高度, 结束x坐标)", key:"setup"},
+  {t:"        res = [[0, 0]]", key:"setup"},
+  {t:"        # 初始地面高度 0，结束位置无穷大", key:"setup"},
+  {t:"        live_buildings = [(0, float('inf'))] ", key:"setup"},
+  {t:"        ", key:"setup"},
+  {t:"        for x, neg_h, r in events:", key:"for"},
+  {t:"            if neg_h < 0:", key:"push"},
+  {t:"                # 遇到左边界，将楼高度与右边界加入最大堆", key:"push"},
+  {t:"                heapq.heappush(live_buildings, (neg_h, r))", key:"push"},
+  {t:"            ", key:"push"},
+  {t:"            # 清理已经离开当前 x 坐标范围的过期楼房（延迟删除）", key:"while"},
+  {t:"            while live_buildings[0][1] <= x:", key:"while"},
+  {t:"                heapq.heappop(live_buildings)", key:"while"},
+  {t:"                ", key:"while"},
+  {t:"            # 获取当前最大高度", key:"max"},
+  {t:"            current_max_h = -live_buildings[0][0]", key:"max"},
+  {t:"            ", key:"max"},
+  {t:"            # 如果最大高度发生改变，说明产生了新的拐点", key:"append"},
+  {t:"            if res[-1][1] != current_max_h:", key:"append"},
+  {t:"                res.append([x, current_max_h])", key:"append"},
+  {t:"                ", key:"append"},
+  {t:"        return res[1:]", key:"return"},
+];
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function highlightPython(raw){
+  let s = escapeHtml(raw);
+  if(s.trim().startsWith("#")){
+    return `<span class="cmt">${s}</span>`;
+  }
+  s = s.replace(/'inf'/g, `<span class="str">'inf'</span>`);
+  s = s.replace(/\b(import|class|def|self|for|in|if|while|return)\b/g, `<span class="kw">$1</span>`);
+  s = s.replace(/(?<![\w"'])(-?\d+)\b(?![\w'"])/g, `<span class="num">$1</span>`);
+  return s;
+}
+function renderCodeBlock(){
+  const el = document.getElementById('codeBlock');
+  el.innerHTML = CODE_LINES.map((l,i)=>{
+    const num = String(i+1).padStart(2,' ');
+    return `<span class="code-line" data-key="${l.key}"><span class="ln">${num}</span>${highlightPython(l.t)}</span>`;
+  }).join('\n');
+}
+function setActiveKey(key){
+  document.querySelectorAll('.code-line').forEach(el=>{
+    el.classList.toggle('active', el.dataset.key === key);
+  });
+}
+
+/* ---------- 算法模拟（与 Python 逻辑一一对应） ---------- */
+function buildEvents(buildings){
+  const events = [];
+  for(const [l,r,h] of buildings){
+    events.push([l, -h, r]);
+    events.push([r, h, 0]);
+  }
+  events.sort((a,b)=> a[0]-b[0] || a[1]-b[1] || a[2]-b[2]);
+  return events;
+}
+function heapSort(live){ live.sort((a,b)=> a[0]-b[0] || a[1]-b[1]); }
+
+function simulate(buildings){
+  const events = buildEvents(buildings);
+  let res = [[0,0]];
+  let live = [[0, Infinity]];
+
+  const steps = [];
+  const snap = (extra)=> steps.push(Object.assign({
+    res: res.map(p=>p.slice()),
+    live: live.map(p=>p.slice()),
+  }, extra));
+
+  snap({key:'setup', desc:'① 已构建并排序全部事件（每栋建筑生成一个左边界事件与一个右边界事件）。', x:null, evIdx:-1});
+
+  events.forEach((ev, idx)=>{
+    const [x, negH, r] = ev;
+    const kind = negH < 0 ? 'L' : 'R';
+
+    snap({key:'for', desc:`处理事件 #${idx+1}／${events.length}：x = ${x}（${kind==='L'?`左边界，高度 ${-negH}`:'右边界'}）`, x, evIdx:idx});
+
+    if(negH < 0){
+      live.push([negH, r]);
+      heapSort(live);
+      snap({key:'push', desc:`左边界 → 将 (高度=${-negH}, 结束x=${r}) 压入最大堆。`, x, evIdx:idx});
+    }
+
+    let popped = false;
+    while(live[0][1] <= x){
+      const p = live.shift();
+      popped = true;
+      snap({key:'while', desc:`弹出已过期建筑：高度=${-p[0]}, 结束x=${p[1]} ≤ 当前 x=${x}。`, x, evIdx:idx});
+    }
+    if(!popped){
+      snap({key:'while', desc:`检查堆顶：结束x=${live[0][1] === Infinity ? '∞' : live[0][1]} > x=${x}，无需弹出。`, x, evIdx:idx});
+    }
+
+    const currentMax = -live[0][0];
+    snap({key:'max', desc:`取堆顶：当前最大高度 = ${currentMax}。`, x, evIdx:idx, currentMax});
+
+    if(res[res.length-1][1] !== currentMax){
+      res.push([x, currentMax]);
+      snap({key:'append', desc:`高度发生变化（→ ${currentMax}）→ 新增拐点 [${x}, ${currentMax}]。`, x, evIdx:idx, currentMax, newPoint:[x,currentMax]});
+    } else {
+      snap({key:'append', desc:`高度未变化（仍为 ${currentMax}），不产生拐点。`, x, evIdx:idx, currentMax});
+    }
+  });
+
+  snap({key:'return', desc:`✔ 完成。返回结果（去掉初始占位 [0,0]），共 ${res.length-1} 个拐点。`, x:null, evIdx:events.length, finalDone:true});
+
+  return {events, steps};
+}
+
+/* ---------- 状态 ---------- */
+const S = { buildings:[], events:[], steps:[], current:0, playing:false, timer:null };
+
+function loadBuildings(buildings){
+  const {events, steps} = simulate(buildings);
+  S.buildings = buildings;
+  S.events = events;
+  S.steps = steps;
+  S.current = 0;
+  pause();
+  document.getElementById('scrub').max = steps.length - 1;
+  document.getElementById('scrub').value = 0;
+  document.getElementById('eventCountLabel').textContent = `(${events.length})`;
+  renderQueueSkeleton();
+  render();
+}
+
+/* ---------- 渲染：事件队列骨架（结构固定，逐步只切换样式） ---------- */
+function renderQueueSkeleton(){
+  const el = document.getElementById('queueList');
+  el.innerHTML = S.events.map((ev,i)=>{
+    const kind = ev[1] < 0 ? 'L' : 'R';
+    const label = kind === 'L' ? `x=${ev[0]}，高度=${-ev[1]}` : `x=${ev[0]}`;
+    return `<div class="queue-row" id="qrow-${i}"><span>${i+1}</span><span>${label}</span><span class="tag ${kind}">${kind}</span></div>`;
+  }).join('');
+}
+
+/* ---------- 渲染：整体 ---------- */
+function render(){
+  const step = S.steps[S.current];
+  setActiveKey(step.key);
+  document.getElementById('descBar').textContent = step.desc;
+  document.getElementById('stepCount').textContent = `步骤 ${S.current+1} / ${S.steps.length}`;
+  document.getElementById('scrub').value = S.current;
+  document.getElementById('prevBtn').disabled = S.current === 0;
+  document.getElementById('nextBtn').disabled = S.current === S.steps.length - 1;
+
+  document.querySelectorAll('.queue-row').forEach((el,i)=>{
+    el.classList.toggle('now', i === step.evIdx);
+    el.classList.toggle('done', i < step.evIdx);
+  });
+  if(step.evIdx >= 0){
+    const now = document.getElementById(`qrow-${step.evIdx}`);
+    if(now) now.scrollIntoView({block:'nearest'});
+  }
+
+  renderHeapPanel(step);
+  renderResultChips(step);
+  renderViz(step);
+}
+
+function renderHeapPanel(step){
+  const el = document.getElementById('heapList');
+  const real = step.live.filter(e => e[1] !== Infinity).sort((a,b)=> a[0]-b[0]);
+  if(real.length === 0){
+    el.innerHTML = `<div class="heap-row top"><span>—</span><span>地面基准</span><span class="tag">h=0</span></div>`;
+    return;
+  }
+  el.innerHTML = real.map((e,i)=>{
+    const h = -e[0], r = e[1];
+    return `<div class="heap-row ${i===0?'top':''}"><span>${i===0?'▲':' '}</span><span>结束x=${r}</span><span class="tag">h=${h}</span></div>`;
+  }).join('');
+}
+
+function renderResultChips(step){
+  const el = document.getElementById('resultChips');
+  const list = step.finalDone ? step.res.slice(1) : step.res;
+  el.innerHTML = list.map(([x,h])=>{
+    const isNew = step.newPoint && step.newPoint[0]===x && step.newPoint[1]===h;
+    return `<span class="chip ${isNew?'new':''}">[${x}, ${h}]</span>`;
+  }).join('');
+}
+
+/* ---------- 渲染：SVG 可视化 ---------- */
+function bounds(){
+  let maxX = 0, maxH = 0;
+  S.buildings.forEach(([l,r,h])=>{ maxX = Math.max(maxX, r); maxH = Math.max(maxH, h); });
+  return {maxX: maxX + 2, maxH: maxH + 2};
+}
+function renderViz(step){
+  const {maxX, maxH} = bounds();
+  const W = 900, H = 420, mL = 46, mR = 20, mT = 20, mB = 40;
+  const innerW = W - mL - mR, innerH = H - mT - mB;
+  const sx = x => mL + (x / maxX) * innerW;
+  const sy = h => (H - mB) - (h / maxH) * innerH;
+
+  let svg = '';
+
+  // grid + axis
+  const hStep = Math.max(1, Math.round(maxH / 5));
+  for(let h = 0; h <= maxH; h += hStep){
+    const y = sy(h);
+    svg += `<line x1="${mL}" y1="${y}" x2="${W-mR}" y2="${y}" stroke="rgba(140,170,210,0.08)" stroke-width="1"/>`;
+    svg += `<text x="${mL-8}" y="${y+4}" text-anchor="end" class="axis-label">${h}</text>`;
+  }
+  svg += `<line x1="${mL}" y1="${sy(0)}" x2="${W-mR}" y2="${sy(0)}" stroke="#3d5175" stroke-width="1.5"/>`;
+
+  // buildings
+  const topH = -step.live[0][0];
+  const topR = step.live[0][1];
+  S.buildings.forEach(([l,r,h])=>{
+    const x = step.x;
+    let status = 'upcoming';
+    if(x !== null){
+      if(x >= r) status = 'expired';
+      else if(x >= l) status = 'active';
+    } else if(step.finalDone){
+      status = 'expired';
+    }
+    const isTop = (x !== null) && (h === topH) && (r === topR) && status === 'active';
+    const isInHeap = step.live.some(e => e[1] !== Infinity && -e[0] === h && e[1] === r);
+
+    let fill = 'rgba(140,170,210,0.05)', stroke = '#33456b', dash = '4,4', sw = 1.3;
+    if(status === 'active'){ fill = 'rgba(91,140,196,0.16)'; stroke = '#5b8cc4'; dash = 'none'; sw = 1.5; }
+    if(status === 'expired'){ fill = 'rgba(120,120,140,0.05)'; stroke = '#3a4360'; dash = '3,4'; sw = 1.2; }
+    if(isInHeap && status === 'active'){ stroke = '#ffb454'; sw = 2; }
+    if(isTop){ fill = 'rgba(255,180,84,0.22)'; stroke = '#ffb454'; sw = 2.4; dash = 'none'; }
+
+    const rx = sx(l), rw = sx(r) - sx(l), ry = sy(h), rh = sy(0) - sy(h);
+    svg += `<rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-dasharray="${dash}" rx="2"/>`;
+    if(status !== 'upcoming'){
+      svg += `<text x="${rx + rw/2}" y="${ry - 6}" text-anchor="middle" class="axis-label" fill="${isTop?'#ffb454':'#8ca2c4'}">${h}</text>`;
+    }
+  });
+
+  // skyline path
+  const resFull = step.res;
+  const segs = [];
+  for(let i=0;i<resFull.length-1;i++) segs.push([resFull[i][0], resFull[i][1], resFull[i+1][0]]);
+  const last = resFull[resFull.length-1];
+  const extendTo = step.x !== null ? step.x : last[0];
+  if(extendTo > last[0]) segs.push([last[0], last[1], extendTo]);
+
+  if(segs.length){
+    let pts = [[segs[0][0], segs[0][1]]];
+    for(let i=0;i<segs.length;i++){
+      pts.push([segs[i][2], segs[i][1]]);
+      if(i+1 < segs.length) pts.push([segs[i][2], segs[i+1][1]]);
+    }
+    const ptsStr = pts.map(([x,h]) => `${sx(x)},${sy(h)}`).join(' ');
+    svg += `<polyline points="${ptsStr}" fill="none" stroke="#5eead4" stroke-width="3" stroke-linejoin="round"/>`;
+    resFull.slice(1).forEach(([x,h])=>{
+      const isNew = step.newPoint && step.newPoint[0]===x && step.newPoint[1]===h;
+      svg += `<circle cx="${sx(x)}" cy="${sy(h)}" r="${isNew?5.5:3}" fill="${isNew?'#ffb454':'#5eead4'}"/>`;
+    });
+  }
+
+  // sweep line
+  if(step.x !== null){
+    const X = sx(step.x);
+    svg += `<line x1="${X}" y1="${mT}" x2="${X}" y2="${sy(0)}" stroke="#ffb454" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+    svg += `<text x="${X}" y="${mT-6}" text-anchor="middle" class="axis-label" fill="#ffb454">x=${step.x}</text>`;
+  }
+
+  document.getElementById('viz').innerHTML = svg;
+}
+
+/* ---------- 播放控制 ---------- */
+function goto(i){ S.current = Math.max(0, Math.min(S.steps.length-1, i)); render(); }
+function next(){ if(S.current < S.steps.length-1){ goto(S.current+1); } else pause(); }
+function prev(){ goto(S.current-1); }
+function play(){
+  if(S.playing) return;
+  S.playing = true;
+  document.getElementById('playBtn').textContent = '⏸ 暂停';
+  const speed = +document.getElementById('speed').value;
+  S.timer = setInterval(()=>{
+    if(S.current >= S.steps.length-1){ pause(); return; }
+    next();
+  }, 1100 - speed*150);
+}
+function pause(){
+  S.playing = false;
+  document.getElementById('playBtn').textContent = '▶ 播放';
+  if(S.timer) clearInterval(S.timer);
+  S.timer = null;
+}
+
+/* ---------- 事件绑定 ---------- */
+document.getElementById('nextBtn').onclick = ()=>{ pause(); next(); };
+document.getElementById('prevBtn').onclick = ()=>{ pause(); prev(); };
+document.getElementById('resetBtn').onclick = ()=>{ pause(); goto(0); };
+document.getElementById('playBtn').onclick = ()=> S.playing ? pause() : play();
+document.getElementById('scrub').oninput = (e)=>{ pause(); goto(+e.target.value); };
+document.getElementById('speed').onchange = ()=>{ if(S.playing){ pause(); play(); } };
+document.getElementById('applyBtn').onclick = ()=>{
+  const raw = document.getElementById('buildingsInput').value;
+  const errEl = document.getElementById('errMsg');
+  try{
+    const parsed = JSON.parse(raw);
+    if(!Array.isArray(parsed) || !parsed.every(b => Array.isArray(b) && b.length===3 && b.every(n=>typeof n==='number'))){
+      throw new Error('格式应为 [[l,r,h], ...]');
+    }
+    errEl.textContent = '';
+    loadBuildings(parsed);
+  }catch(err){
+    errEl.textContent = '输入格式有误：' + err.message;
+  }
+};
+
+/* ---------- 初始化 ---------- */
+renderCodeBlock();
+loadBuildings(JSON.parse(document.getElementById('buildingsInput').value));
+</script>
+</body>
+</html>

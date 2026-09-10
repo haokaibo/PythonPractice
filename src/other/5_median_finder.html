@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>堆应用 5：双堆法（对顶堆）动态维护中位数</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel-2: #273449; --text: #e2e8f0; --muted: #94a3b8;
+    --accent: #38bdf8; --good: #22c55e; --bad: #ef4444; --pointer: #f59e0b;
+    --left: rgba(34,197,94,0.22); --left-border: #22c55e;
+    --right: rgba(59,130,246,0.18); --right-border: #3b82f6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px; }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
+  .panel { background: var(--panel); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 18px rgba(0,0,0,0.25); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  button, input[type=text] { background: var(--panel-2); color: var(--text); border: 1px solid #475569; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  input[type=text] { cursor: text; width: 260px; }
+  button:hover:not(:disabled) { background: #334155; border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #0ea5e9; }
+  input[type="range"] { accent-color: var(--accent); }
+  label.small { font-size: 13px; color: var(--muted); }
+  .legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  .heap-caption { font-size: 13px; margin-bottom: 6px; font-weight: 600; }
+  .heap-caption.small-cap { color: var(--left-border); }
+  .heap-caption.large-cap { color: var(--right-border); }
+  svg.heap-tree { width: 100%; height: auto; display: block; background: var(--panel-2); border-radius: 10px; padding: 8px; }
+  .status { font-size: 14px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: var(--panel-2); border-left: 4px solid var(--accent); min-height: 42px; }
+  .status.good { border-color: var(--good); background: rgba(34,197,94,0.10); }
+  .result { text-align: center; padding: 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(56,189,248,0.15)); border: 1px solid rgba(34,197,94,0.4); font-size: 16px; margin-top: 10px; }
+  .result .big { font-size: 28px; font-weight: 700; color: var(--good); margin-left: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .stream { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .stream .cell { min-width: 36px; height: 36px; border-radius: 8px; background: var(--panel-2); border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; }
+  .stream .cell.done { opacity: 0.35; }
+  .stream .cell.cur { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56,189,248,0.4); }
+  details.src { background: var(--panel); border-radius: 12px; padding: 4px 20px 16px; margin-bottom: 16px; }
+  details.src summary { cursor: pointer; padding: 14px 0; font-weight: 600; color: var(--accent); list-style: none; }
+  details.src summary::-webkit-details-marker { display: none; }
+  details.src summary::before { content: "▸ "; }
+  details.src[open] summary::before { content: "▾ "; }
+  pre.src-code { background: #0b1220; border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; color: #cbd5e1; margin: 0; }
+</style>
+</head>
+<body>
+
+<h1>堆应用 5：双堆法（对顶堆）动态维护数据流中位数</h1>
+<div class="subtitle">
+  <b>small</b> 是最大堆（Python 只有最小堆，取负数模拟），保存较小的一半；<b>large</b> 是最小堆，保存较大的一半。
+  每次插入都保持 <code>len(small) == len(large)</code> 或 <code>len(small) == len(large) + 1</code>。
+  插入 <code>O(log n)</code>，取中位数 <code>O(1)</code>。
+</div>
+
+<details class="src">
+  <summary>查看 Python 源码（MedianFinder）</summary>
+  <pre class="src-code" id="src-code"></pre>
+</details>
+
+<div class="panel">
+  <div class="row">
+    <label class="small">数据流（逗号分隔）</label>
+    <input type="text" id="streamInput" value="5,15,1,3,8,7,9,2">
+    <button class="primary" id="loadBtn">载入</button>
+    <button id="playBtn" class="primary" disabled>▶ 播放</button>
+    <button id="backBtn" disabled>◂ 上一步</button>
+    <button id="stepBtn" disabled>下一步 ▸</button>
+    <button id="resetBtn">↺ 重置</button>
+    <div><label class="small">速度</label> <input id="speed" type="range" min="1200" max="6000" step="200" value="2400" style="vertical-align:middle;"></div>
+  </div>
+  <div class="array-label" style="font-size:12px;color:var(--muted);margin-top:10px;">数据流（按顺序插入）</div>
+  <div class="stream" id="streamRow"></div>
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--left);border:2px solid var(--left-border);"></span>small（最大堆，较小的一半）</span>
+    <span><span class="swatch" style="background:var(--right);border:2px solid var(--right-border);"></span>large（最小堆，较大的一半）</span>
+  </div>
+</div>
+
+<div class="panel grid2">
+  <div>
+    <div class="heap-caption small-cap">small（存 -num，堆顶显示为原值 = 当前较小一半里的最大值）</div>
+    <svg class="heap-tree" id="smallSvg" viewBox="0 0 400 100"></svg>
+  </div>
+  <div>
+    <div class="heap-caption large-cap">large（堆顶 = 当前较大一半里的最小值）</div>
+    <svg class="heap-tree" id="largeSvg" viewBox="0 0 400 100"></svg>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="status" id="status">点击"载入"开始演示。</div>
+  <div class="result">当前中位数 <span class="big" id="medianResult">—</span></div>
+</div>
+
+<script>
+const SOURCE = `class MedianFinder:
+    """
+    - small：最大堆（Python heapq 只支持最小堆，取负数模拟最大堆），存较小的一半
+    - large：最小堆，存较大的一半
+    - 维持不变量：len(small) == len(large) 或 len(small) == len(large) + 1
+    插入 O(log n)，取中位数 O(1)。
+    """
+
+    def __init__(self):
+        self.small: List[float] = []  # 存负数，模拟最大堆
+        self.large: List[float] = []  # 最小堆
+
+    def add_num(self, num: float):
+        heapq.heappush(self.small, -num)
+        # 保证 small 堆顶 <= large 堆顶
+        heapq.heappush(self.large, -heapq.heappop(self.small))
+
+        if len(self.large) > len(self.small):
+            heapq.heappush(self.small, -heapq.heappop(self.large))
+
+    def find_median(self) -> float:
+        if len(self.small) > len(self.large):
+            return -self.small[0]
+        return (-self.small[0] + self.large[0]) / 2.0`;
+document.getElementById('src-code').textContent = SOURCE;
+
+function heapPush(heap, item, cmp) {
+  heap.push(item);
+  let i = heap.length - 1;
+  while (i > 0) {
+    const p = Math.floor((i - 1) / 2);
+    if (cmp(heap[i], heap[p]) < 0) { [heap[i], heap[p]] = [heap[p], heap[i]]; i = p; } else break;
+  }
+}
+function heapPop(heap, cmp) {
+  const top = heap[0]; const last = heap.pop();
+  if (heap.length > 0) {
+    heap[0] = last; let i = 0;
+    while (true) {
+      let l=2*i+1, r=2*i+2, s=i;
+      if (l<heap.length && cmp(heap[l],heap[s])<0) s=l;
+      if (r<heap.length && cmp(heap[r],heap[s])<0) s=r;
+      if (s!==i) { [heap[i],heap[s]]=[heap[s],heap[i]]; i=s; } else break;
+    }
+  }
+  return top;
+}
+const numCmp = (a,b) => a-b;
+
+function renderHeapSVG(svg, arr, labelFn, colorBorder, colorFill) {
+  svg.innerHTML = '';
+  const n = arr.length;
+  if (n === 0) { svg.setAttribute('viewBox', '0 0 400 90');
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',200); t.setAttribute('y',48); t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','#64748b'); t.setAttribute('font-size','13'); t.textContent = '(空)';
+    svg.appendChild(t); return;
+  }
+  const levels = Math.floor(Math.log2(n)) + 1;
+  const width = Math.max(360, Math.pow(2, levels-1) * 80);
+  const height = levels * 66 + 36;
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  const pos = i => {
+    const level = Math.floor(Math.log2(i+1));
+    const levelStart = Math.pow(2, level) - 1;
+    const levelCount = Math.pow(2, level);
+    const posInLevel = i - levelStart;
+    const x = width * (posInLevel + 1) / (levelCount + 1);
+    const y = 30 + level * 66;
+    return {x, y};
+  };
+  for (let i = 1; i < n; i++) {
+    const p = Math.floor((i-1)/2);
+    const a = pos(p), b = pos(i);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',a.x); line.setAttribute('y1',a.y); line.setAttribute('x2',b.x); line.setAttribute('y2',b.y);
+    line.setAttribute('stroke','#475569'); line.setAttribute('stroke-width','2');
+    svg.appendChild(line);
+  }
+  for (let i = 0; i < n; i++) {
+    const {x,y} = pos(i);
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', x); circle.setAttribute('cy', y); circle.setAttribute('r', 24);
+    circle.setAttribute('fill', i===0 ? colorFill : '#1e293b');
+    circle.setAttribute('stroke', colorBorder); circle.setAttribute('stroke-width', i===0?'3':'2');
+    g.appendChild(circle);
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x', x); text.setAttribute('y', y+5);
+    text.setAttribute('text-anchor','middle'); text.setAttribute('font-size','13'); text.setAttribute('font-weight','600');
+    text.setAttribute('fill', '#e2e8f0');
+    text.textContent = labelFn(arr[i]);
+    g.appendChild(text);
+    svg.appendChild(g);
+  }
+}
+
+const smallSvg = document.getElementById('smallSvg');
+const largeSvg = document.getElementById('largeSvg');
+const streamRow = document.getElementById('streamRow');
+const statusEl = document.getElementById('status');
+const medianEl = document.getElementById('medianResult');
+
+let frames = [], idx = 0, timer = null, curStream = [];
+
+function buildFrames(stream) {
+  let small = [], large = [];
+  const frames = [];
+  frames.push({small: [], large: [], curIdx:-1, msg: '初始状态：small 和 large 均为空。', median: null});
+  stream.forEach((num, i) => {
+    heapPush(small, -num, numCmp);
+    heapPush(large, -heapPop(small, numCmp), numCmp);
+    let rebalanced = false;
+    if (large.length > small.length) {
+      heapPush(small, -heapPop(large, numCmp), numCmp);
+      rebalanced = true;
+    }
+    const median = small.length > large.length ? -small[0] : (-small[0] + large[0]) / 2;
+    frames.push({
+      small: small.slice(), large: large.slice(), curIdx: i,
+      msg: `插入 ${num}：heappush(small, -${num})，再把 small 堆顶弹出压入 large 保证 small≤large。` +
+           (rebalanced ? ` 此时 len(large) > len(small)，把 large 堆顶弹回 small 重新平衡。` : ` 两堆已平衡，无需调整。`) +
+           ` 当前 len(small)=${small.length}，len(large)=${large.length}。`,
+      median,
+    });
+  });
+  return frames;
+}
+
+function apply(f) {
+  streamRow.innerHTML = '';
+  curStream.forEach((n,i) => {
+    const c = document.createElement('div');
+    c.className = 'cell' + (i === f.curIdx ? ' cur' : (i < f.curIdx ? ' done' : ''));
+    c.textContent = n;
+    streamRow.appendChild(c);
+  });
+  renderHeapSVG(smallSvg, f.small, v => -v, '#22c55e', 'rgba(34,197,94,0.35)');
+  renderHeapSVG(largeSvg, f.large, v => v, '#3b82f6', 'rgba(59,130,246,0.30)');
+  statusEl.className = 'status' + (f.curIdx === curStream.length-1 && f.curIdx>=0 ? ' good' : '');
+  statusEl.textContent = f.msg;
+  medianEl.textContent = f.median === null ? '—' : f.median;
+}
+
+function load() {
+  stop();
+  curStream = document.getElementById('streamInput').value.split(',').map(s=>s.trim()).filter(s=>s.length).map(Number);
+  frames = buildFrames(curStream);
+  idx = 0;
+  apply(frames[0]);
+  updateBtns();
+}
+function goto(i) { idx = Math.max(0, Math.min(frames.length-1, i)); apply(frames[idx]); updateBtns(); }
+function updateBtns() {
+  document.getElementById('backBtn').disabled = idx <= 0;
+  document.getElementById('stepBtn').disabled = idx >= frames.length-1;
+  document.getElementById('playBtn').disabled = idx >= frames.length-1;
+}
+function stop() { if (timer) { clearInterval(timer); timer = null; } }
+document.getElementById('loadBtn').onclick = load;
+document.getElementById('stepBtn').onclick = () => goto(idx+1);
+document.getElementById('backBtn').onclick = () => { stop(); goto(idx-1); };
+document.getElementById('resetBtn').onclick = () => { stop(); goto(0); };
+document.getElementById('playBtn').onclick = () => {
+  if (timer) return; if (idx >= frames.length-1) return;
+  timer = setInterval(() => { goto(idx+1); if (idx >= frames.length-1) stop(); }, +document.getElementById('speed').value);
+};
+document.getElementById('speed').addEventListener('change', () => { if (timer) { stop(); document.getElementById('playBtn').onclick(); } });
+load();
+</script>
+</body>
+</html>

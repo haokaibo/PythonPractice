@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>堆应用 4：Top K 问题（海量数据 Top-K）</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel-2: #273449; --text: #e2e8f0; --muted: #94a3b8;
+    --accent: #38bdf8; --good: #22c55e; --bad: #ef4444; --pointer: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px; }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  h2 { margin: 28px 0 8px; font-size: 17px; color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
+  .panel { background: var(--panel); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 18px rgba(0,0,0,0.25); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  button, input[type=text] { background: var(--panel-2); color: var(--text); border: 1px solid #475569; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  input[type=text] { cursor: text; width: 260px; }
+  button:hover:not(:disabled) { background: #334155; border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #0ea5e9; }
+  input[type="range"] { accent-color: var(--accent); }
+  label.small { font-size: 13px; color: var(--muted); }
+  .legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .array { display: flex; gap: 4px; flex-wrap: wrap; }
+  .cell { min-width: 40px; height: 40px; border-radius: 8px; background: var(--panel-2); border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; position: relative; }
+  .cell.done { opacity: 0.35; }
+  .cell.cur { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56,189,248,0.4); }
+  .array-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .heap-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .heap-item { background: var(--panel-2); border: 2px solid #475569; border-radius: 8px; padding: 6px 12px; font-family: ui-monospace, monospace; font-size: 14px; }
+  .heap-item.top { border-color: var(--pointer); color: var(--pointer); }
+  .heap-item.out { border-color: var(--bad); color: var(--bad); text-decoration: line-through; }
+  .heap-item.in { border-color: var(--good); color: var(--good); }
+  .status { font-size: 14px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: var(--panel-2); border-left: 4px solid var(--accent); min-height: 42px; }
+  .status.good { border-color: var(--good); background: rgba(34,197,94,0.10); }
+  .status.bad { border-color: var(--bad); background: rgba(239,68,68,0.10); }
+  .result { text-align: center; padding: 14px; border-radius: 10px; background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(56,189,248,0.15)); border: 1px solid rgba(34,197,94,0.4); font-size: 15px; margin-top: 10px; }
+  .result .big { font-size: 20px; font-weight: 700; color: var(--good); margin-left: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  table.freq { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.freq th, table.freq td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #334155; }
+  table.freq th { color: var(--muted); font-weight: 500; }
+  table.freq tr.topk td { color: var(--good); font-weight: 700; }
+  details.src { background: var(--panel); border-radius: 12px; padding: 4px 20px 16px; margin-bottom: 16px; }
+  details.src summary { cursor: pointer; padding: 14px 0; font-weight: 600; color: var(--accent); list-style: none; }
+  details.src summary::-webkit-details-marker { display: none; }
+  details.src summary::before { content: "▸ "; }
+  details.src[open] summary::before { content: "▾ "; }
+  pre.src-code { background: #0b1220; border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; color: #cbd5e1; margin: 0; }
+</style>
+</head>
+<body>
+
+<h1>堆应用 4：Top K 问题（海量数据 Top-K）</h1>
+<div class="subtitle">
+  维护一个大小为 K 的最小堆：堆里始终是遍历过的元素中最大的 K 个，堆顶是这 K 个里最小的，作为淘汰基准。
+  时间复杂度 <code>O(n log K)</code>，空间复杂度 <code>O(K)</code> —— 不需要把全部数据放进内存排序。
+</div>
+
+<details class="src">
+  <summary>查看 Python 源码（top_k_largest / top_k_frequent_words）</summary>
+  <pre class="src-code" id="src-code"></pre>
+</details>
+
+<h2>A. top_k_largest：数据流中找最大的 K 个数</h2>
+<div class="panel">
+  <div class="row">
+    <label class="small">数组（逗号分隔）</label>
+    <input type="text" id="numsInput" value="7,2,9,4,15,1,8,3,20,6,11,5">
+    <label class="small">K</label>
+    <input type="text" id="kInput" value="3" style="width:60px;">
+    <button class="primary" id="loadBtn">载入</button>
+    <button id="playBtn" class="primary" disabled>▶ 播放</button>
+    <button id="backBtn" disabled>◂ 上一步</button>
+    <button id="stepBtn" disabled>下一步 ▸</button>
+    <button id="resetBtn">↺ 重置</button>
+    <div><label class="small">速度</label> <input id="speed" type="range" min="1000" max="5000" step="200" value="1800" style="vertical-align:middle;"></div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--accent);"></span>当前扫描到的数</span>
+    <span><span class="swatch" style="background:var(--panel-2);border:2px solid var(--good);"></span>堆内元素（当前 Top-K 候选）</span>
+    <span><span class="swatch" style="background:var(--bad);"></span>本步被淘汰出堆的元素</span>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="array-label">nums（数据流，按顺序处理）</div>
+  <div class="array" id="numsArray"></div>
+  <div class="array-label" style="margin-top:14px;">size-K 最小堆 heap[]（堆顶 = 当前 K 个里最小的）</div>
+  <div class="heap-row" id="heapRow"></div>
+  <div class="status" id="status">点击"载入"开始演示。</div>
+  <div class="result">当前 Top-K <span class="big" id="topkResult">—</span></div>
+</div>
+
+<h2>B. top_k_frequent_words：海量数据高频词统计</h2>
+<div class="panel">
+  <div class="row">
+    <label class="small">词序列（空格分隔）</label>
+    <input type="text" id="wordsInput" value="苹果 香蕉 苹果 橙子 苹果 香蕉 葡萄 苹果 香蕉" style="width:360px;">
+    <label class="small">K</label>
+    <input type="text" id="kWordsInput" value="2" style="width:60px;">
+    <button class="primary" id="loadWordsBtn">统计并取 Top-K</button>
+  </div>
+  <table class="freq" id="freqTable">
+    <thead><tr><th>词</th><th>频次</th></tr></thead>
+    <tbody id="freqBody"></tbody>
+  </table>
+  <div class="status" id="statusWords">先用 Counter 统计词频，再用 <code>heapq.nlargest(k, ...)</code> 取出频次最高的 K 个（内部对 n≫k 的情况会退化为维护一个大小为 K 的堆，等价于 A 部分的做法）。</div>
+</div>
+
+<script>
+const SOURCE = `def top_k_largest(nums: List[float], k: int) -> List[float]:
+    """
+    维护一个大小为 K 的最小堆：
+    - 堆里始终是当前遍历过的元素中最大的 K 个；
+    - 堆顶是这 K 个里最小的一个，作为淘汰基准。
+    时间复杂度 O(n log K)，空间复杂度 O(K)。
+    """
+    if k <= 0:
+        return []
+    heap = nums[:k]
+    heapq.heapify(heap)
+
+    for num in nums[k:]:
+        if num > heap[0]:
+            heapq.heapreplace(heap, num)  # 弹出堆顶 + 压入新元素，一次操作完成
+
+    return sorted(heap, reverse=True)
+
+
+def top_k_frequent_words(words: List[str], k: int) -> List[Tuple[str, int]]:
+    """海量数据高频词统计场景：先统计词频，再用堆取 Top K。"""
+    from collections import Counter
+    counter = Counter(words)
+    # nlargest 内部对 n << len(iterable) 的情况会用堆优化，等价于维护大小为 k 的堆
+    return heapq.nlargest(k, counter.items(), key=lambda x: x[1])`;
+document.getElementById('src-code').textContent = SOURCE;
+
+function heapifyMin(arr, cmp) {
+  const n = arr.length;
+  for (let i = Math.floor(n/2)-1; i>=0; i--) siftDown(arr, i, n, cmp);
+}
+function siftDown(arr, i, n, cmp) {
+  while (true) {
+    let l=2*i+1, r=2*i+2, s=i;
+    if (l<n && cmp(arr[l],arr[s])<0) s=l;
+    if (r<n && cmp(arr[r],arr[s])<0) s=r;
+    if (s!==i) { [arr[i],arr[s]]=[arr[s],arr[i]]; i=s; } else break;
+  }
+}
+function heapReplace(heap, item, cmp) {
+  const old = heap[0];
+  heap[0] = item;
+  siftDown(heap, 0, heap.length, cmp);
+  return old;
+}
+
+// ============ Part A ============
+(() => {
+  const numsArrayEl = document.getElementById('numsArray');
+  const heapRowEl = document.getElementById('heapRow');
+  const statusEl = document.getElementById('status');
+  const topkResultEl = document.getElementById('topkResult');
+  let frames = [], idx = 0, timer = null;
+  const cmp = (a,b) => a-b;
+
+  function buildFrames(nums, k) {
+    const frames = [];
+    if (k <= 0) { frames.push({heap:[], cur:null, curIdx:-1, out:null, msg:'K ≤ 0，直接返回空列表。', done:true}); return frames; }
+    let heap = nums.slice(0,k);
+    heapifyMin(heap, cmp);
+    frames.push({heap: heap.slice(), cur:null, curIdx: k-1, out:null,
+      msg: `heap = nums[:${k}] = [${nums.slice(0,k).join(', ')}]，heapify 后堆顶（最小值）= ${heap[0]}。`});
+    for (let idx2 = k; idx2 < nums.length; idx2++) {
+      const num = nums[idx2];
+      if (num > heap[0]) {
+        const old = heapReplace(heap, num, cmp);
+        frames.push({heap: heap.slice(), cur: num, curIdx: idx2, out: old,
+          msg: `num=${num} > heap[0]=${old} → heapreplace：淘汰 ${old}，压入 ${num}，重新下沉。`});
+      } else {
+        frames.push({heap: heap.slice(), cur: num, curIdx: idx2, out:null,
+          msg: `num=${num} ≤ heap[0]=${heap[0]} → 不够格进入 Top-K，跳过。`});
+      }
+    }
+    const sortedResult = heap.slice().sort((a,b)=>b-a);
+    frames.push({heap: heap.slice(), cur:null, curIdx:-1, out:null, msg: `扫描结束。sorted(heap, reverse=True) = [${sortedResult.join(', ')}]。`, done:true, result: sortedResult});
+    return frames;
+  }
+
+  function apply(f, nums) {
+    numsArrayEl.innerHTML = '';
+    nums.forEach((n, i) => {
+      const c = document.createElement('div');
+      c.className = 'cell' + (i === f.curIdx ? ' cur' : (i < f.curIdx ? ' done' : ''));
+      c.textContent = n;
+      numsArrayEl.appendChild(c);
+    });
+    heapRowEl.innerHTML = '';
+    if (f.heap.length === 0) heapRowEl.innerHTML = '<span style="color:var(--muted);font-size:13px;">(空)</span>';
+    f.heap.forEach((v,i) => {
+      const el = document.createElement('div');
+      el.className = 'heap-item' + (i===0 ? ' top' : '') + (v===f.cur && f.out!==null ? ' in' : '');
+      el.textContent = v;
+      heapRowEl.appendChild(el);
+    });
+    if (f.out !== null && f.out !== undefined) {
+      const el = document.createElement('div');
+      el.className = 'heap-item out';
+      el.textContent = f.out;
+      heapRowEl.appendChild(el);
+    }
+    statusEl.className = 'status' + (f.done ? ' good' : '');
+    statusEl.textContent = f.msg;
+    topkResultEl.textContent = f.result ? f.result.join(', ') : (f.heap.length ? f.heap.slice().sort((a,b)=>b-a).join(', ') + '（尚未排序输出）' : '—');
+  }
+
+  let curNums = [];
+  function load() {
+    stop();
+    curNums = document.getElementById('numsInput').value.split(',').map(s=>s.trim()).filter(s=>s.length).map(Number);
+    const k = parseInt(document.getElementById('kInput').value, 10) || 0;
+    frames = buildFrames(curNums, k);
+    idx = 0;
+    apply(frames[0], curNums);
+    updateBtns();
+  }
+  function goto(i) { idx = Math.max(0, Math.min(frames.length-1, i)); apply(frames[idx], curNums); updateBtns(); }
+  function updateBtns() {
+    document.getElementById('backBtn').disabled = idx <= 0;
+    document.getElementById('stepBtn').disabled = idx >= frames.length-1;
+    document.getElementById('playBtn').disabled = idx >= frames.length-1;
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  document.getElementById('loadBtn').onclick = load;
+  document.getElementById('stepBtn').onclick = () => goto(idx+1);
+  document.getElementById('backBtn').onclick = () => { stop(); goto(idx-1); };
+  document.getElementById('resetBtn').onclick = () => { stop(); goto(0); };
+  document.getElementById('playBtn').onclick = () => {
+    if (timer) return; if (idx >= frames.length-1) return;
+    timer = setInterval(() => { goto(idx+1); if (idx >= frames.length-1) stop(); }, +document.getElementById('speed').value);
+  };
+  load();
+})();
+
+// ============ Part B ============
+(() => {
+  document.getElementById('loadWordsBtn').onclick = () => {
+    const words = document.getElementById('wordsInput').value.split(/\s+/).filter(w=>w.length);
+    const k = parseInt(document.getElementById('kWordsInput').value, 10) || 0;
+    const counts = {};
+    words.forEach(w => counts[w] = (counts[w]||0) + 1);
+    const entries = Object.entries(counts);
+    const sorted = entries.slice().sort((a,b) => b[1]-a[1]);
+    const topSet = new Set(sorted.slice(0,k).map(e=>e[0]));
+    const body = document.getElementById('freqBody');
+    body.innerHTML = entries.map(([w,c]) => `<tr class="${topSet.has(w)?'topk':''}"><td>${w}</td><td>${c}</td></tr>`).join('');
+    document.getElementById('statusWords').innerHTML =
+      `Counter 统计出 ${entries.length} 个不同的词；heapq.nlargest(${k}, ...) 取出频次最高的 ${k} 个：<b>${sorted.slice(0,k).map(e=>`${e[0]}(${e[1]})`).join('，')}</b>（已高亮）。`;
+  };
+  document.getElementById('loadWordsBtn').onclick();
+})();
+</script>
+</body>
+</html>

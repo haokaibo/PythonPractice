@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>堆应用 2：Dijkstra 最短路径算法</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel-2: #273449; --text: #e2e8f0; --muted: #94a3b8;
+    --accent: #38bdf8; --good: #22c55e; --bad: #ef4444; --pointer: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px; }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
+  .panel { background: var(--panel); border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 18px rgba(0,0,0,0.25); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  button { background: var(--panel-2); color: var(--text); border: 1px solid #475569; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  button:hover:not(:disabled) { background: #334155; border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #0ea5e9; }
+  input[type="range"] { accent-color: var(--accent); }
+  label.small { font-size: 13px; color: var(--muted); }
+  .legend { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .grid2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  svg.canvas { width: 100%; height: auto; display: block; background: var(--panel-2); border-radius: 10px; }
+  table.dist { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.dist th, table.dist td { text-align: center; padding: 8px 10px; border-bottom: 1px solid #334155; font-family: ui-monospace, monospace; }
+  table.dist th { color: var(--muted); font-weight: 500; }
+  table.dist td.visited { color: var(--good); font-weight: 700; }
+  table.dist td.cur { background: rgba(56,189,248,0.15); border-radius: 6px; }
+  .heap-caption { font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
+  .heap-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .heap-item { background: var(--panel-2); border: 2px solid #475569; border-radius: 8px; padding: 6px 10px; font-family: ui-monospace, monospace; font-size: 13px; }
+  .heap-item.top { border-color: var(--pointer); color: var(--pointer); }
+  .heap-item.stale { opacity: 0.45; text-decoration: line-through; }
+  .status { font-size: 14px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: var(--panel-2); border-left: 4px solid var(--accent); min-height: 42px; }
+  .status.good { border-color: var(--good); background: rgba(34,197,94,0.10); }
+  .status.bad { border-color: var(--bad); background: rgba(239,68,68,0.10); }
+  details.src { background: var(--panel); border-radius: 12px; padding: 4px 20px 16px; margin-bottom: 16px; }
+  details.src summary { cursor: pointer; padding: 14px 0; font-weight: 600; color: var(--accent); list-style: none; }
+  details.src summary::-webkit-details-marker { display: none; }
+  details.src summary::before { content: "▸ "; }
+  details.src[open] summary::before { content: "▾ "; }
+  pre.src-code { background: #0b1220; border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; color: #cbd5e1; margin: 0; }
+</style>
+</head>
+<body>
+
+<h1>堆应用 2：Dijkstra 最短路径算法</h1>
+<div class="subtitle">
+  邻接表 + 最小堆：每次弹出当前已知距离最小的节点，若已访问则跳过（惰性删除堆中过期记录），
+  否则松弛（relax）其所有出边。时间复杂度 <code>O((V + E) log V)</code>。
+</div>
+
+<details class="src">
+  <summary>查看 Python 源码（dijkstra）</summary>
+  <pre class="src-code" id="src-code"></pre>
+</details>
+
+<div class="panel">
+  <div class="row">
+    <button class="primary" id="playBtn">▶ 播放</button>
+    <button id="backBtn">◂ 上一步</button>
+    <button id="stepBtn">下一步 ▸</button>
+    <button id="resetBtn">↺ 重置</button>
+    <div><label class="small">速度</label> <input id="speed" type="range" min="1200" max="6000" step="200" value="2400" style="vertical-align:middle;"></div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#334155;border:2px solid #475569;"></span>未访问</span>
+    <span><span class="swatch" style="background:rgba(56,189,248,0.3);border:2px solid var(--accent);"></span>当前出堆节点</span>
+    <span><span class="swatch" style="background:rgba(34,197,94,0.3);border:2px solid var(--good);"></span>已访问（最短距离已确定）</span>
+    <span><span class="swatch" style="background:var(--pointer);"></span>本步被松弛的边</span>
+  </div>
+</div>
+
+<div class="panel grid2">
+  <div>
+    <svg class="canvas" id="graphSvg" viewBox="0 0 560 300"></svg>
+    <div class="heap-caption">最小堆 heap = [(dist, node), ...]（堆顶 = 最小距离）</div>
+    <div class="heap-row" id="heapRow"></div>
+  </div>
+  <div>
+    <div class="heap-caption">dist[] 表</div>
+    <table class="dist" id="distTable"></table>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="status" id="status">点击"下一步"或"播放"开始演示。</div>
+</div>
+
+<script>
+const SOURCE = `def dijkstra(graph: Dict[Any, List[Tuple[Any, float]]], source: Any) -> Dict[Any, float]:
+    """
+    graph: {node: [(neighbor, weight), ...]}
+    返回 source 到各节点的最短距离字典。
+    时间复杂度 O((V + E) log V)。
+    """
+    dist: Dict[Any, float] = {node: float("inf") for node in graph}
+    dist[source] = 0
+    visited = set()
+    heap = [(0, source)]  # (当前已知最短距离, 节点)
+
+    while heap:
+        d, u = heapq.heappop(heap)
+        if u in visited:
+            continue  # 惰性删除：跳过堆中过期（非最新）的记录
+        visited.add(u)
+
+        for v, w in graph.get(u, []):
+            new_dist = d + w
+            if new_dist < dist[v]:
+                dist[v] = new_dist
+                heapq.heappush(heap, (new_dist, v))
+
+    return dist`;
+document.getElementById('src-code').textContent = SOURCE;
+
+function heapPush(heap, item, cmp) {
+  heap.push(item);
+  let i = heap.length - 1;
+  while (i > 0) {
+    const p = Math.floor((i - 1) / 2);
+    if (cmp(heap[i], heap[p]) < 0) { [heap[i], heap[p]] = [heap[p], heap[i]]; i = p; } else break;
+  }
+}
+function heapPop(heap, cmp) {
+  const top = heap[0]; const last = heap.pop();
+  if (heap.length > 0) {
+    heap[0] = last; let i = 0;
+    while (true) {
+      let l=2*i+1, r=2*i+2, s=i;
+      if (l<heap.length && cmp(heap[l],heap[s])<0) s=l;
+      if (r<heap.length && cmp(heap[r],heap[s])<0) s=r;
+      if (s!==i) { [heap[i],heap[s]]=[heap[s],heap[i]]; i=s; } else break;
+    }
+  }
+  return top;
+}
+
+const graph = {
+  A: [['B',4], ['C',1]],
+  B: [['A',4], ['C',2], ['D',5]],
+  C: [['A',1], ['B',2], ['D',8]],
+  D: [['B',5], ['C',8]],
+};
+const positions = { A: [90,150], B: [280,55], C: [280,245], D: [470,150] };
+const edgesUndirected = [['A','B',4], ['A','C',1], ['B','C',2], ['B','D',5], ['C','D',8]];
+
+function buildFrames(source) {
+  const dist = {}; for (const n in graph) dist[n] = Infinity;
+  dist[source] = 0;
+  const visited = new Set();
+  const heap = [[0, source]];
+  const cmp = (a,b) => a[0]-b[0] || (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0);
+  const frames = [];
+  frames.push({dist: {...dist}, visited: new Set(), heap: heap.map(e=>e.slice()), cur: null, relaxed: [], msg: `初始化：dist[${source}]=0，其余为 ∞。heap = [(0, "${source}")]。`, done:false});
+
+  while (heap.length) {
+    const [d, u] = heapPop(heap, cmp);
+    if (visited.has(u)) {
+      frames.push({dist: {...dist}, visited: new Set(visited), heap: heap.map(e=>e.slice()), cur: u, relaxed: [], msg: `heappop() → (${d}, "${u}")，但 "${u}" 已访问 → 这是堆中的过期记录，直接跳过（continue）。`, done:false, stale:true});
+      continue;
+    }
+    visited.add(u);
+    const relaxed = [];
+    for (const [v, w] of (graph[u] || [])) {
+      const newDist = d + w;
+      if (newDist < dist[v]) {
+        dist[v] = newDist;
+        heapPush(heap, [newDist, v], cmp);
+        relaxed.push(`${u}→${v}: ${newDist}`);
+      }
+    }
+    frames.push({dist: {...dist}, visited: new Set(visited), heap: heap.map(e=>e.slice()), cur: u, relaxed: relaxed.map(r=>r.split(':')[0]), msg:
+      `heappop() → (${d}, "${u}") 是新节点，标记为已访问。松弛出边：${relaxed.length? relaxed.join('，') : '（无更新）'}。`, done:false});
+  }
+  frames.push({dist: {...dist}, visited: new Set(visited), heap: [], cur: null, relaxed: [], msg: `堆已空，算法结束。最终 dist = ${JSON.stringify(dist)}。`, done:true});
+  return frames;
+}
+
+function edgeKey(a,b){ return [a,b].sort().join('-'); }
+
+function renderGraph(svg, f) {
+  svg.innerHTML = '';
+  const relaxedSet = new Set((f.relaxed||[]).map(u => edgeKey(f.cur, u)));
+  for (const [a,b,w] of edgesUndirected) {
+    const [x1,y1] = positions[a], [x2,y2] = positions[b];
+    const isRelaxed = relaxedSet.has(edgeKey(a,b));
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1); line.setAttribute('y1',y1); line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+    line.setAttribute('stroke', isRelaxed ? '#f59e0b' : '#475569');
+    line.setAttribute('stroke-width', isRelaxed ? '4' : '2');
+    svg.appendChild(line);
+    const mx = (x1+x2)/2, my=(y1+y2)/2;
+    const wtBg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    wtBg.setAttribute('x', mx-11); wtBg.setAttribute('y', my-10); wtBg.setAttribute('width',22); wtBg.setAttribute('height',16); wtBg.setAttribute('fill','#0f172a'); wtBg.setAttribute('rx',4);
+    svg.appendChild(wtBg);
+    const wt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    wt.setAttribute('x',mx); wt.setAttribute('y',my+2); wt.setAttribute('text-anchor','middle'); wt.setAttribute('font-size','11'); wt.setAttribute('fill', isRelaxed ? '#f59e0b':'#94a3b8');
+    wt.textContent = w; svg.appendChild(wt);
+  }
+  for (const node in positions) {
+    const [x,y] = positions[node];
+    const isCur = f.cur === node;
+    const isVisited = f.visited.has(node);
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',x); c.setAttribute('cy',y); c.setAttribute('r',26);
+    c.setAttribute('fill', isCur ? 'rgba(56,189,248,0.3)' : (isVisited ? 'rgba(34,197,94,0.3)' : '#334155'));
+    c.setAttribute('stroke', isCur ? '#38bdf8' : (isVisited ? '#22c55e' : '#475569'));
+    c.setAttribute('stroke-width','3');
+    svg.appendChild(c);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',x); t.setAttribute('y',y+5); t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','16'); t.setAttribute('font-weight','700');
+    t.setAttribute('fill','#e2e8f0'); t.textContent = node;
+    svg.appendChild(t);
+    const dt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    dt.setAttribute('x',x); dt.setAttribute('y',y+40); dt.setAttribute('text-anchor','middle'); dt.setAttribute('font-size','11');
+    dt.setAttribute('fill','#94a3b8'); dt.textContent = `d=${f.dist[node]===Infinity?'∞':f.dist[node]}`;
+    svg.appendChild(dt);
+  }
+}
+
+const frames = buildFrames('A');
+let idx = 0, timer = null;
+const heapRow = document.getElementById('heapRow');
+const distTable = document.getElementById('distTable');
+const statusEl = document.getElementById('status');
+const graphSvg = document.getElementById('graphSvg');
+
+function apply(f) {
+  renderGraph(graphSvg, f);
+  heapRow.innerHTML = '';
+  if (f.heap.length === 0) { heapRow.innerHTML = '<span style="color:var(--muted);font-size:13px;">(空)</span>'; }
+  f.heap.forEach(([d,n], i) => {
+    const el = document.createElement('div');
+    el.className = 'heap-item' + (i===0 ? ' top' : '');
+    el.textContent = `(${d}, ${n})`;
+    heapRow.appendChild(el);
+  });
+  const nodes = Object.keys(graph);
+  distTable.innerHTML = '<tr><th>节点</th>' + nodes.map(n=>`<th>${n}</th>`).join('') + '</tr>' +
+    '<tr><td>dist</td>' + nodes.map(n => `<td class="${f.visited.has(n)?'visited':''} ${f.cur===n?'cur':''}">${f.dist[n]===Infinity?'∞':f.dist[n]}</td>`).join('') + '</tr>';
+  statusEl.className = 'status' + (f.done ? ' good' : (f.stale ? ' bad' : ''));
+  statusEl.textContent = f.msg;
+}
+function goto(i) { idx = Math.max(0, Math.min(frames.length-1, i)); apply(frames[idx]); updateBtns(); }
+function updateBtns() {
+  document.getElementById('backBtn').disabled = idx <= 0;
+  document.getElementById('stepBtn').disabled = idx >= frames.length-1;
+  document.getElementById('playBtn').disabled = idx >= frames.length-1;
+}
+function stop() { if (timer) { clearInterval(timer); timer = null; } }
+document.getElementById('stepBtn').onclick = () => goto(idx+1);
+document.getElementById('backBtn').onclick = () => { stop(); goto(idx-1); };
+document.getElementById('resetBtn').onclick = () => { stop(); goto(0); };
+document.getElementById('playBtn').onclick = () => {
+  if (timer) return; if (idx >= frames.length-1) return;
+  timer = setInterval(() => { goto(idx+1); if (idx >= frames.length-1) stop(); }, +document.getElementById('speed').value);
+};
+document.getElementById('speed').addEventListener('change', () => { if (timer) { stop(); document.getElementById('playBtn').onclick(); } });
+goto(0);
+</script>
+</body>
+</html>
