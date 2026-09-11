@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en" data-lang="en">
 <head>
 <meta charset="UTF-8">
-<title>类 Microsoft Teams 聊天系统 — 架构图 / 类图 / 网络拓扑</title>
+<title>Teams-like Chat System — Architecture / Class / Network Topology</title>
 <style>
   :root {
     --bg: #0f172a;
@@ -37,6 +37,36 @@
     font-size: 12px; padding: 2px 8px; border-radius: 10px; font-weight: 700;
   }
   .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 16px; line-height: 1.6; }
+
+  /* i18n: JS toggles the active language. For HTML elements, the inactive */
+  /* language is hidden via CSS; for SVG <tspan> (where display/visibility are */
+  /* ignored), the toggle also empties the inactive tspan's text so it takes */
+  /* zero layout space. */
+  .i18n-en, .i18n-zh { display: none; }
+  html[data-lang="en"] .i18n-en, html[data-lang="zh"] .i18n-zh { display: inline; }
+
+  /* language switcher (top-right) */
+  .lang-switch {
+    position: fixed; top: 16px; right: 20px; z-index: 100;
+    display: flex; align-items: center; gap: 0;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 999px;
+    padding: 3px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    font-size: 13px;
+  }
+  .lang-switch button {
+    border: none; background: transparent; cursor: pointer;
+    color: var(--muted); font-weight: 600;
+    padding: 4px 12px; border-radius: 999px;
+    font-family: inherit;
+    transition: all .15s ease;
+  }
+  .lang-switch button.active {
+    background: var(--accent); color: #0f172a;
+  }
+  .lang-switch button:hover:not(.active) { color: var(--text); }
 
   .panel {
     background: var(--panel);
@@ -128,50 +158,62 @@
 </head>
 <body>
 
-<h1>类 Microsoft Teams 聊天系统 — 架构设计图集</h1>
-<div class="subtitle">
-  基于 <code>design_chat_system_practice.md</code> 的 HLD 方案：长连接网关 + 消息队列解耦 + 按会话分片存储 + Redis/TTL 在线状态。
-  下方依次为：① 架构图（中文）② 架构图（英文）③ 类图（Class Diagram）④ 网络拓扑图（Network Topology）。
+<!-- Language switcher -->
+<div class="lang-switch" role="group" aria-label="Language">
+  <button type="button" data-lang-btn="en" class="active" onclick="setLang('en')">EN</button>
+  <button type="button" data-lang-btn="zh" onclick="setLang('zh')">中文</button>
 </div>
 
-<!-- 容量估算 meta 面板 -->
+<h1>
+  <span class="i18n-en">Teams-like Chat System — Architecture Design Gallery</span><span class="i18n-zh">类 Microsoft Teams 聊天系统 — 架构设计图集</span>
+</h1>
+<div class="subtitle">
+  <span class="i18n-en">Based on the HLD in <code>design_chat_system_practice.md</code>: long-lived connection gateways + message-queue decoupling + per-conversation sharded storage + Redis/TTL presence.
+  Sections below: ① High-Level Architecture (HLD) ② Class Diagram ③ Network Topology.</span>
+  <span class="i18n-zh">基于 <code>design_chat_system_practice.md</code> 的 HLD 方案：长连接网关 + 消息队列解耦 + 按会话分片存储 + Redis/TTL 在线状态。
+  下方依次为：① 高层架构图（HLD）② 类图（Class Diagram）③ 网络拓扑图（Network Topology）。</span>
+</div>
+
+<!-- Capacity estimation meta panel -->
 <div class="panel">
-  <h2><span class="num">0</span>容量估算（Back-of-envelope）</h2>
+  <h2><span class="num">0</span><span class="i18n-en">Back-of-envelope Capacity Estimation</span><span class="i18n-zh">容量估算（Back-of-envelope）</span></h2>
   <div class="meta">
-    <div class="meta-item"><div class="k">DAU（日活用户）</div><div class="v">50,000,000</div></div>
-    <div class="meta-item"><div class="k">高峰并发在线</div><div class="v">5,000,000</div></div>
-    <div class="meta-item good"><div class="k">平均消息吞吐</div><div class="v">≈ 23,000 msg/s</div></div>
-    <div class="meta-item accent"><div class="k">高峰消息吞吐（×5）</div><div class="v">≈ 115,000 msg/s</div></div>
-    <div class="meta-item"><div class="k">日消息写入量</div><div class="v">2B × 200B ≈ 400GB</div></div>
-    <div class="meta-item"><div class="k">2 年存储总量</div><div class="v">≈ 292 TB</div></div>
+    <div class="meta-item"><div class="k"><span class="i18n-en">DAU</span><span class="i18n-zh">DAU（日活用户）</span></div><div class="v">50,000,000</div></div>
+    <div class="meta-item"><div class="k"><span class="i18n-en">Peak concurrent online</span><span class="i18n-zh">高峰并发在线</span></div><div class="v">5,000,000</div></div>
+    <div class="meta-item good"><div class="k"><span class="i18n-en">Avg message throughput</span><span class="i18n-zh">平均消息吞吐</span></div><div class="v">≈ 23,000 msg/s</div></div>
+    <div class="meta-item accent"><div class="k"><span class="i18n-en">Peak throughput (×5)</span><span class="i18n-zh">高峰消息吞吐（×5）</span></div><div class="v">≈ 115,000 msg/s</div></div>
+    <div class="meta-item"><div class="k"><span class="i18n-en">Daily message writes</span><span class="i18n-zh">日消息写入量</span></div><div class="v">2B × 200B ≈ 400GB</div></div>
+    <div class="meta-item"><div class="k"><span class="i18n-en">2-year storage</span><span class="i18n-zh">2 年存储总量</span></div><div class="v">≈ 292 TB</div></div>
   </div>
   <div class="status">
-    <strong>关键假设：</strong> 1:1 与 ≤100 人群组文字消息；需已读回执与在线状态；离线消息需缓存；不做端到端加密。
+    <strong><span class="i18n-en">Key assumptions:</span><span class="i18n-zh">关键假设：</span></strong>
+    <span class="i18n-en">1:1 and ≤100-member group text messages; read receipts and online presence required; offline messages must be cached; no end-to-end encryption.</span>
+    <span class="i18n-zh">1:1 与 ≤100 人群组文字消息；需已读回执与在线状态；离线消息需缓存；不做端到端加密。</span>
   </div>
 </div>
 
-<!-- ============ ① 架构图（中文） ============ -->
+<!-- ============ ① High-Level Architecture (HLD) — bilingual single diagram ============ -->
 <div class="panel">
-  <h2><span class="num">1</span>高层架构图 — 中文版（HLD）</h2>
+  <h2><span class="num">1</span><span class="i18n-en">High-Level Architecture (HLD)</span><span class="i18n-zh">高层架构图（HLD）</span></h2>
   <div class="svg-wrap">
     <svg viewBox="0 0 1100 880" width="1100" height="880" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <marker id="arrow-zh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <marker id="arrow-hld" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8"/>
         </marker>
-        <marker id="arrow-zh-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <marker id="arrow-hld-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
         </marker>
       </defs>
 
-      <!-- 层标签 -->
-      <text class="t-layer" x="16" y="52">客户端层</text>
-      <text class="t-layer" x="16" y="150">接入层</text>
-      <text class="t-layer" x="16" y="288">服务层</text>
-      <text class="t-layer" x="16" y="558">数据层</text>
-      <text class="t-layer" x="16" y="708">外部</text>
+      <!-- Layer labels -->
+      <text class="t-layer" x="16" y="52"><tspan class="i18n-en">CLIENTS</tspan><tspan class="i18n-zh">客户端层</tspan></text>
+      <text class="t-layer" x="16" y="150"><tspan class="i18n-en">EDGE</tspan><tspan class="i18n-zh">接入层</tspan></text>
+      <text class="t-layer" x="16" y="288"><tspan class="i18n-en">SERVICES</tspan><tspan class="i18n-zh">服务层</tspan></text>
+      <text class="t-layer" x="16" y="558"><tspan class="i18n-en">DATA</tspan><tspan class="i18n-zh">数据层</tspan></text>
+      <text class="t-layer" x="16" y="708"><tspan class="i18n-en">EXTERNAL</tspan><tspan class="i18n-zh">外部</tspan></text>
 
-      <!-- 分隔线 -->
+      <!-- Separators -->
       <line x1="90" y1="40" x2="1084" y2="40" stroke="#334155" stroke-dasharray="4 4"/>
       <line x1="90" y1="135" x2="1084" y2="135" stroke="#334155" stroke-dasharray="4 4"/>
       <line x1="90" y1="275" x2="1084" y2="275" stroke="#334155" stroke-dasharray="4 4"/>
@@ -179,305 +221,145 @@
       <line x1="90" y1="545" x2="1084" y2="545" stroke="#334155" stroke-dasharray="4 4"/>
       <line x1="90" y1="680" x2="1084" y2="680" stroke="#334155" stroke-dasharray="4 4"/>
 
-      <!-- 客户端 -->
+      <!-- Clients -->
       <rect class="box" x="140" y="60" width="820" height="60" fill="#273449" stroke="#38bdf8"/>
-      <text class="t-title" x="550" y="85" text-anchor="middle">客户端（Web / 桌面 / 移动）</text>
-      <text class="t-sub" x="550" y="105" text-anchor="middle">同一账号可多端同时在线 → 连接路由表 user_id → 网关列表（一对多）</text>
+      <text class="t-title" x="550" y="85" text-anchor="middle"><tspan class="i18n-en">Clients (Web / Desktop / Mobile)</tspan><tspan class="i18n-zh">客户端（Web / 桌面 / 移动）</tspan></text>
+      <text class="t-sub" x="550" y="105" text-anchor="middle"><tspan class="i18n-en">Multi-device login per account → routing table: user_id → gateway list (1:N)</tspan><tspan class="i18n-zh">同一账号可多端同时在线 → 连接路由表 user_id → 网关列表（一对多）</tspan></text>
 
-      <!-- 客户端 → 网关 边 -->
-      <line x1="550" y1="120" x2="550" y2="150" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-zh)"/>
-      <text class="t-edge" x="560" y="140">WebSocket 长连接 + HTTPS API</text>
+      <!-- Clients → Gateway -->
+      <line x1="550" y1="120" x2="550" y2="150" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-hld)"/>
+      <text class="t-edge" x="560" y="140"><tspan class="i18n-en">WebSocket long-connection + HTTPS API</tspan><tspan class="i18n-zh">WebSocket 长连接 + HTTPS API</tspan></text>
 
-      <!-- API 网关 / LB -->
+      <!-- API Gateway / LB -->
       <rect class="box" x="240" y="150" width="620" height="60" fill="#273449" stroke="#f59e0b"/>
-      <text class="t-title" x="550" y="175" text-anchor="middle">API 网关 / 负载均衡</text>
-      <text class="t-sub" x="550" y="195" text-anchor="middle">无状态 · 多实例 · TLS 终结 · 限流</text>
+      <text class="t-title" x="550" y="175" text-anchor="middle"><tspan class="i18n-en">API Gateway / Load Balancer</tspan><tspan class="i18n-zh">API 网关 / 负载均衡</tspan></text>
+      <text class="t-sub" x="550" y="195" text-anchor="middle"><tspan class="i18n-en">Stateless · multi-instance · TLS termination · rate-limiting</tspan><tspan class="i18n-zh">无状态 · 多实例 · TLS 终结 · 限流</tspan></text>
 
-      <!-- 网关 → 服务层 五条线 -->
-      <line x1="340" y1="210" x2="230" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-zh-dim)"/>
-      <line x1="430" y1="210" x2="430" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-zh-dim)"/>
-      <line x1="550" y1="210" x2="560" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-zh-dim)"/>
-      <line x1="680" y1="210" x2="700" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-zh-dim)"/>
-      <line x1="770" y1="210" x2="830" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-zh-dim)"/>
+      <!-- Gateway → services -->
+      <line x1="340" y1="210" x2="230" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-hld-dim)"/>
+      <line x1="430" y1="210" x2="430" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-hld-dim)"/>
+      <line x1="550" y1="210" x2="560" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-hld-dim)"/>
+      <line x1="680" y1="210" x2="700" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-hld-dim)"/>
+      <line x1="770" y1="210" x2="830" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-hld-dim)"/>
 
-      <!-- 5 个服务 -->
-      <!-- 连接服务 -->
+      <!-- 5 services -->
       <rect class="box" x="120" y="280" width="190" height="150" fill="#273449" stroke="#38bdf8"/>
-      <text class="t-title" x="215" y="302" text-anchor="middle">连接服务</text>
-      <text class="t-sub" x="215" y="318" text-anchor="middle">Connection Gateway</text>
+      <text class="t-title" x="215" y="302" text-anchor="middle"><tspan class="i18n-en">Connection Gateway</tspan><tspan class="i18n-zh">连接服务</tspan></text>
+      <text class="t-sub" x="215" y="318" text-anchor="middle"><tspan class="i18n-en">(long-lived WS)</tspan><tspan class="i18n-zh">Connection Gateway</tspan></text>
       <line x1="135" y1="330" x2="295" y2="330" stroke="#334155"/>
-      <text class="t-sub" x="135" y="348">• 维护 WebSocket 长连接</text>
-      <text class="t-sub" x="135" y="365">• 单机数万~十几万连接</text>
-      <text class="t-sub" x="135" y="382">• 水平扩展（多实例）</text>
-      <text class="t-sub" x="135" y="399">• 连接路由表存 Redis</text>
+      <text class="t-sub" x="135" y="348"><tspan class="i18n-en">• Owns WS sessions</tspan><tspan class="i18n-zh">• 维护 WebSocket 长连接</tspan></text>
+      <text class="t-sub" x="135" y="365"><tspan class="i18n-en">• 10k–100k conns / node</tspan><tspan class="i18n-zh">• 单机数万~十几万连接</tspan></text>
+      <text class="t-sub" x="135" y="382"><tspan class="i18n-en">• Scales horizontally</tspan><tspan class="i18n-zh">• 水平扩展（多实例）</tspan></text>
+      <text class="t-sub" x="135" y="399"><tspan class="i18n-en">• Routing table in Redis</tspan><tspan class="i18n-zh">• 连接路由表存 Redis</tspan></text>
 
-      <!-- 聊天服务 -->
       <rect class="box" x="330" y="280" width="190" height="150" fill="#273449" stroke="#22c55e"/>
-      <text class="t-title" x="425" y="302" text-anchor="middle">聊天服务</text>
-      <text class="t-sub" x="425" y="318" text-anchor="middle">Chat Service</text>
+      <text class="t-title" x="425" y="302" text-anchor="middle"><tspan class="i18n-en">Chat Service</tspan><tspan class="i18n-zh">聊天服务</tspan></text>
+      <text class="t-sub" x="425" y="318" text-anchor="middle"><tspan class="i18n-en">(stateless)</tspan><tspan class="i18n-zh">Chat Service</tspan></text>
       <line x1="345" y1="330" x2="505" y2="330" stroke="#334155"/>
-      <text class="t-sub" x="345" y="348">• 接收消息 · 幂等去重</text>
-      <text class="t-sub" x="345" y="365">• 生成 Snowflake ID</text>
-      <text class="t-sub" x="345" y="382">• 写队列 · 写库（异步）</text>
-      <text class="t-sub" x="345" y="399">• 路由给接收方网关</text>
+      <text class="t-sub" x="345" y="348"><tspan class="i18n-en">• Ingest msg, dedupe</tspan><tspan class="i18n-zh">• 接收消息 · 幂等去重</tspan></text>
+      <text class="t-sub" x="345" y="365"><tspan class="i18n-en">• Issue Snowflake ID</tspan><tspan class="i18n-zh">• 生成 Snowflake ID</tspan></text>
+      <text class="t-sub" x="345" y="382"><tspan class="i18n-en">• Enqueue + persist (async)</tspan><tspan class="i18n-zh">• 写队列 · 写库（异步）</tspan></text>
+      <text class="t-sub" x="345" y="399"><tspan class="i18n-en">• Route to recipient GW</tspan><tspan class="i18n-zh">• 路由给接收方网关</tspan></text>
 
-      <!-- 在线状态服务 -->
       <rect class="box" x="540" y="280" width="190" height="150" fill="#273449" stroke="#a78bfa"/>
-      <text class="t-title" x="635" y="302" text-anchor="middle">在线状态服务</text>
-      <text class="t-sub" x="635" y="318" text-anchor="middle">Presence Service</text>
+      <text class="t-title" x="635" y="302" text-anchor="middle"><tspan class="i18n-en">Presence Service</tspan><tspan class="i18n-zh">在线状态服务</tspan></text>
+      <text class="t-sub" x="635" y="318" text-anchor="middle"><tspan class="i18n-en">(heartbeat + TTL)</tspan><tspan class="i18n-zh">Presence Service</tspan></text>
       <line x1="555" y1="330" x2="715" y2="330" stroke="#334155"/>
-      <text class="t-sub" x="555" y="348">• 心跳 30s · TTL 60s</text>
-      <text class="t-sub" x="555" y="365">• Redis 存 user→last_hb</text>
-      <text class="t-sub" x="555" y="382">• Pub/Sub 广播状态变化</text>
-      <text class="t-sub" x="555" y="399">• trade-off：实时 vs 压力</text>
+      <text class="t-sub" x="555" y="348"><tspan class="i18n-en">• Heartbeat 30s, TTL 60s</tspan><tspan class="i18n-zh">• 心跳 30s · TTL 60s</tspan></text>
+      <text class="t-sub" x="555" y="365"><tspan class="i18n-en">• Redis: user→last_hb</tspan><tspan class="i18n-zh">• Redis 存 user→last_hb</tspan></text>
+      <text class="t-sub" x="555" y="382"><tspan class="i18n-en">• Pub/Sub state changes</tspan><tspan class="i18n-zh">• Pub/Sub 广播状态变化</tspan></text>
+      <text class="t-sub" x="555" y="399"><tspan class="i18n-en">• Trade-off: real-time</tspan><tspan class="i18n-zh">• trade-off：实时 vs 压力</tspan></text>
 
-      <!-- 通知服务 -->
       <rect class="box" x="750" y="280" width="190" height="150" fill="#273449" stroke="#f472b6"/>
-      <text class="t-title" x="845" y="302" text-anchor="middle">通知服务</text>
-      <text class="t-sub" x="845" y="318" text-anchor="middle">Notification Service</text>
+      <text class="t-title" x="845" y="302" text-anchor="middle"><tspan class="i18n-en">Notification Svc</tspan><tspan class="i18n-zh">通知服务</tspan></text>
+      <text class="t-sub" x="845" y="318" text-anchor="middle"><tspan class="i18n-en">(offline fan-out)</tspan><tspan class="i18n-zh">Notification Service</tspan></text>
       <line x1="765" y1="330" x2="925" y2="330" stroke="#334155"/>
-      <text class="t-sub" x="765" y="348">• 订阅消息队列</text>
-      <text class="t-sub" x="765" y="365">• 查 Presence 判断在线</text>
-      <text class="t-sub" x="765" y="382">• 离线 → 推送队列</text>
-      <text class="t-sub" x="765" y="399">• 调 APNs / FCM</text>
+      <text class="t-sub" x="765" y="348"><tspan class="i18n-en">• Consumes msg stream</tspan><tspan class="i18n-zh">• 订阅消息队列</tspan></text>
+      <text class="t-sub" x="765" y="365"><tspan class="i18n-en">• Checks presence</tspan><tspan class="i18n-zh">• 查 Presence 判断在线</tspan></text>
+      <text class="t-sub" x="765" y="382"><tspan class="i18n-en">• Offline → push queue</tspan><tspan class="i18n-zh">• 离线 → 推送队列</tspan></text>
+      <text class="t-sub" x="765" y="399"><tspan class="i18n-en">• Calls APNs / FCM</tspan><tspan class="i18n-zh">• 调 APNs / FCM</tspan></text>
 
-      <!-- 用户/群组服务 -->
       <rect class="box" x="960" y="280" width="140" height="150" fill="#273449" stroke="#3b82f6"/>
-      <text class="t-title" x="1030" y="302" text-anchor="middle">用户/群组</text>
-      <text class="t-sub" x="1030" y="318" text-anchor="middle">User/Group</text>
+      <text class="t-title" x="1030" y="302" text-anchor="middle"><tspan class="i18n-en">User / Group</tspan><tspan class="i18n-zh">用户/群组</tspan></text>
+      <text class="t-sub" x="1030" y="318" text-anchor="middle"><tspan class="i18n-en">Service</tspan><tspan class="i18n-zh">User/Group</tspan></text>
       <line x1="970" y1="330" x2="1090" y2="330" stroke="#334155"/>
-      <text class="t-sub" x="970" y="348">• 账号 · 鉴权</text>
-      <text class="t-sub" x="970" y="365">• 群组管理</text>
-      <text class="t-sub" x="970" y="382">• 成员关系</text>
-      <text class="t-sub" x="970" y="399">• 权限校验</text>
+      <text class="t-sub" x="970" y="348"><tspan class="i18n-en">• AuthN / AuthZ</tspan><tspan class="i18n-zh">• 账号 · 鉴权</tspan></text>
+      <text class="t-sub" x="970" y="365"><tspan class="i18n-en">• Group mgmt</tspan><tspan class="i18n-zh">• 群组管理</tspan></text>
+      <text class="t-sub" x="970" y="382"><tspan class="i18n-en">• Membership</tspan><tspan class="i18n-zh">• 成员关系</tspan></text>
+      <text class="t-sub" x="970" y="399"><tspan class="i18n-en">• Permission check</tspan><tspan class="i18n-zh">• 权限校验</tspan></text>
 
-      <!-- 服务层 → 数据层 -->
-      <line x1="215" y1="430" x2="215" y2="575" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arrow-zh)"/>
-      <text class="t-edge" x="225" y="470">读写</text>
+      <!-- Services → Data -->
+      <line x1="215" y1="430" x2="215" y2="575" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arrow-hld)"/>
+      <text class="t-edge" x="225" y="470"><tspan class="i18n-en">read / write</tspan><tspan class="i18n-zh">读写</tspan></text>
 
-      <line x1="425" y1="430" x2="430" y2="500" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrow-zh)"/>
-      <text class="t-edge" x="435" y="455">写消息流（削峰）</text>
+      <line x1="425" y1="430" x2="430" y2="500" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrow-hld)"/>
+      <text class="t-edge" x="435" y="455"><tspan class="i18n-en">publish (peak-shave)</tspan><tspan class="i18n-zh">写消息流（削峰）</tspan></text>
 
-      <!-- 持久化：队列消费者落库（非聊天服务直写） -->
-      <line x1="500" y1="560" x2="660" y2="575" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow-zh)"/>
-      <text class="t-edge" x="540" y="568">消费落库（Persistence Consumer）</text>
+      <line x1="500" y1="560" x2="660" y2="575" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow-hld)"/>
+      <text class="t-edge" x="520" y="568"><tspan class="i18n-en">consume → persist (Persistence Worker)</tspan><tspan class="i18n-zh">消费落库（Persistence Consumer）</tspan></text>
 
-      <line x1="635" y1="430" x2="830" y2="575" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-zh)"/>
-      <text class="t-edge" x="700" y="495">心跳/状态</text>
+      <line x1="635" y1="430" x2="830" y2="575" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-hld)"/>
+      <text class="t-edge" x="700" y="495"><tspan class="i18n-en">heartbeat / state</tspan><tspan class="i18n-zh">心跳/状态</tspan></text>
 
-      <line x1="845" y1="430" x2="830" y2="500" stroke="#f472b6" stroke-width="1.5" marker-end="url(#arrow-zh)"/>
-      <text class="t-edge" x="855" y="455">订阅消费</text>
+      <line x1="845" y1="430" x2="830" y2="500" stroke="#f472b6" stroke-width="1.5" marker-end="url(#arrow-hld)"/>
+      <text class="t-edge" x="855" y="455"><tspan class="i18n-en">consume stream</tspan><tspan class="i18n-zh">订阅消费</tspan></text>
 
-      <line x1="1030" y1="430" x2="430" y2="500" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-zh)"/>
-      <text class="t-edge" x="700" y="475">鉴权 / 群成员校验</text>
+      <line x1="1030" y1="430" x2="430" y2="500" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-hld)"/>
+      <text class="t-edge" x="700" y="475"><tspan class="i18n-en">authN / membership check</tspan><tspan class="i18n-zh">鉴权 / 群成员校验</tspan></text>
 
-      <!-- 数据层 -->
-      <!-- 消息队列 -->
+      <!-- Data layer -->
       <rect class="box" x="340" y="500" width="220" height="60" fill="#273449" stroke="#22c55e"/>
-      <text class="t-title" x="450" y="523" text-anchor="middle">消息队列</text>
-      <text class="t-sub" x="450" y="543" text-anchor="middle">Event Hub / Kafka（可持久化）</text>
+      <text class="t-title" x="450" y="523" text-anchor="middle"><tspan class="i18n-en">Message Queue</tspan><tspan class="i18n-zh">消息队列</tspan></text>
+      <text class="t-sub" x="450" y="543" text-anchor="middle"><tspan class="i18n-en">Event Hub / Kafka (durable)</tspan><tspan class="i18n-zh">Event Hub / Kafka（可持久化）</tspan></text>
 
-      <!-- Redis -->
       <rect class="box" x="120" y="575" width="190" height="60" fill="#273449" stroke="#38bdf8"/>
-      <text class="t-title" x="215" y="598" text-anchor="middle">Redis 缓存</text>
-      <text class="t-sub" x="215" y="618" text-anchor="middle">连接路由表 · 在线状态 · 会话缓存</text>
+      <text class="t-title" x="215" y="598" text-anchor="middle"><tspan class="i18n-en">Redis Cache</tspan><tspan class="i18n-zh">Redis 缓存</tspan></text>
+      <text class="t-sub" x="215" y="618" text-anchor="middle"><tspan class="i18n-en">Routing · Presence · Session</tspan><tspan class="i18n-zh">连接路由表 · 在线状态 · 会话缓存</tspan></text>
 
-      <!-- Cosmos DB -->
       <rect class="box" x="540" y="575" width="240" height="60" fill="#273449" stroke="#22c55e"/>
-      <text class="t-title" x="660" y="598" text-anchor="middle">消息数据库（Cosmos DB）</text>
-      <text class="t-sub" x="660" y="618" text-anchor="middle">按 conversation_id 分片 · Snowflake ID 递增</text>
+      <text class="t-title" x="660" y="598" text-anchor="middle"><tspan class="i18n-en">Message Store (Cosmos DB)</tspan><tspan class="i18n-zh">消息数据库（Cosmos DB）</tspan></text>
+      <text class="t-sub" x="660" y="618" text-anchor="middle"><tspan class="i18n-en">Shard by conversation_id · Snowflake IDs</tspan><tspan class="i18n-zh">按 conversation_id 分片 · Snowflake ID 递增</tspan></text>
 
-      <!-- 推送网关 -->
       <rect class="box" x="810" y="575" width="170" height="60" fill="#273449" stroke="#f472b6"/>
-      <text class="t-title" x="895" y="598" text-anchor="middle">推送网关</text>
+      <text class="t-title" x="895" y="598" text-anchor="middle"><tspan class="i18n-en">Push Gateway</tspan><tspan class="i18n-zh">推送网关</tspan></text>
       <text class="t-sub" x="895" y="618" text-anchor="middle">APNs / FCM</text>
 
-      <!-- 队列 → 通知服务 的反馈线（虚线） -->
-      <path d="M 560 530 Q 720 560 790 430" fill="none" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-zh)"/>
-      <text class="t-note" x="640" y="565">消费消息流 → 触发通知</text>
+      <path d="M 560 530 Q 720 560 790 430" fill="none" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-hld)"/>
+      <text class="t-note" x="620" y="565"><tspan class="i18n-en">consume → trigger notification</tspan><tspan class="i18n-zh">消费消息流 → 触发通知</tspan></text>
 
-      <!-- 外部 -->
+      <!-- External -->
       <rect class="box" x="340" y="708" width="560" height="40" fill="#0f172a" stroke="#475569" stroke-dasharray="4 3"/>
-      <text class="t-sub" x="620" y="732" text-anchor="middle">移动端 OS 推送通道（iOS Push / Android FCM）→ 唤醒离线用户上线拉取</text>
-      <line x1="895" y1="635" x2="895" y2="708" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow-zh)"/>
+      <text class="t-sub" x="620" y="732" text-anchor="middle"><tspan class="i18n-en">Mobile OS push channel (iOS / Android FCM) → wakes offline user to pull</tspan><tspan class="i18n-zh">移动端 OS 推送通道（iOS Push / Android FCM）→ 唤醒离线用户上线拉取</tspan></text>
+      <line x1="895" y1="635" x2="895" y2="708" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow-hld)"/>
 
-      <!-- 写扩散 vs 读扩散 备选方案标注 -->
+      <!-- Fan-out strategy comparison -->
       <rect x="120" y="762" width="880" height="108" fill="rgba(245,158,11,0.06)" stroke="#f59e0b" stroke-dasharray="6 3" rx="10"/>
-      <text class="t-title" x="140" y="782" fill="#f59e0b">群组消息扇出策略对比（面试加分点）</text>
-      <text class="t-sub" x="140" y="802" fill="#22c55e">✓ 写扩散 Fan-out on Write（当前方案，适合 ≤100 人群组）：</text>
-      <text class="t-sub" x="155" y="818">消息到达 → 立刻写入每个成员的"收件箱"（Cosmos DB 按 user_id 分片）→ 读取 O(1)，写入放大 ×N</text>
-      <text class="t-sub" x="140" y="838" fill="#94a3b8">✗ 读扩散 Fan-out on Read（备选，适合超大群/频道）：</text>
-      <text class="t-sub" x="165" y="854">消息只存一份在会话 → 用户拉取时实时查 membership 列表 → 读取需多查一次，写入无放大</text>
-      <text class="t-note" x="140" y="868">Teams 场景群组上限 100 人 → 写扩散合理；若上万人的 workspace 广播 → 需读扩散或混合方案</text>
+      <text class="t-title" x="140" y="782" fill="#f59e0b"><tspan class="i18n-en">Group Fan-out Strategy Comparison (Interview Bonus Point)</tspan><tspan class="i18n-zh">群组消息扇出策略对比（面试加分点）</tspan></text>
+      <text class="t-sub" x="140" y="802" fill="#22c55e"><tspan class="i18n-en">✓ Fan-out on Write (chosen, fits ≤100-member groups):</tspan><tspan class="i18n-zh">✓ 写扩散 Fan-out on Write（当前方案，适合 ≤100 人群组）：</tspan></text>
+      <text class="t-sub" x="155" y="818"><tspan class="i18n-en">msg arrives → write to each member's inbox (Cosmos DB sharded by user_id) → O(1) read, write amplification ×N</tspan><tspan class="i18n-zh">消息到达 → 立刻写入每个成员的“收件箱”（Cosmos DB 按 user_id 分片）→ 读取 O(1)，写入放大 ×N</tspan></text>
+      <text class="t-sub" x="140" y="838" fill="#94a3b8"><tspan class="i18n-en">✗ Fan-out on Read (alternative, fits very large channels):</tspan><tspan class="i18n-zh">✗ 读扩散 Fan-out on Read（备选，适合超大群/频道）：</tspan></text>
+      <text class="t-sub" x="165" y="854"><tspan class="i18n-en">msg stored once in conversation → user pulls → query membership list in real-time → extra read, no write amplification</tspan><tspan class="i18n-zh">消息只存一份在会话 → 用户拉取时实时查 membership 列表 → 读取需多查一次，写入无放大</tspan></text>
+      <text class="t-note" x="140" y="868"><tspan class="i18n-en">Teams: 100-member cap → write-fanout; 10k+ workspace broadcast → read-fanout or hybrid</tspan><tspan class="i18n-zh">Teams 场景群组上限 100 人 → 写扩散合理；若上万人的 workspace 广播 → 需读扩散或混合方案</tspan></text>
     </svg>
   </div>
   <div class="legend">
-    <span><span class="swatch" style="background:#38bdf8;"></span>连接层</span>
-    <span><span class="swatch" style="background:#22c55e;"></span>消息主链路</span>
-    <span><span class="swatch" style="background:#a78bfa;"></span>在线状态</span>
-    <span><span class="swatch" style="background:#f472b6;"></span>通知链路</span>
-    <span><span class="swatch" style="background:#3b82f6;"></span>身份/群组</span>
-    <span><span class="swatch" style="background:#f59e0b;"></span>接入层 / 备选方案</span>
+    <span><span class="swatch" style="background:#38bdf8;"></span><span class="i18n-en">Connection layer</span><span class="i18n-zh">连接层</span></span>
+    <span><span class="swatch" style="background:#22c55e;"></span><span class="i18n-en">Message path</span><span class="i18n-zh">消息主链路</span></span>
+    <span><span class="swatch" style="background:#a78bfa;"></span><span class="i18n-en">Presence</span><span class="i18n-zh">在线状态</span></span>
+    <span><span class="swatch" style="background:#f472b6;"></span><span class="i18n-en">Notification</span><span class="i18n-zh">通知链路</span></span>
+    <span><span class="swatch" style="background:#3b82f6;"></span><span class="i18n-en">Identity / Group</span><span class="i18n-zh">身份/群组</span></span>
+    <span><span class="swatch" style="background:#f59e0b;"></span><span class="i18n-en">Edge / Alternative</span><span class="i18n-zh">接入层 / 备选方案</span></span>
   </div>
 </div>
 
-<!-- ============ ② 架构图（英文） ============ -->
+<!-- ============ ② Class Diagram ============ -->
 <div class="panel">
-  <h2><span class="num">2</span>High-Level Architecture — English Version</h2>
-  <div class="svg-wrap">
-    <svg viewBox="0 0 1100 880" width="1100" height="880" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <marker id="arrow-en" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8"/>
-        </marker>
-        <marker id="arrow-en-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
-        </marker>
-      </defs>
-
-      <text class="t-layer" x="16" y="52">CLIENTS</text>
-      <text class="t-layer" x="16" y="150">EDGE</text>
-      <text class="t-layer" x="16" y="288">SERVICES</text>
-      <text class="t-layer" x="16" y="558">DATA</text>
-      <text class="t-layer" x="16" y="708">EXTERNAL</text>
-
-      <line x1="90" y1="40" x2="1084" y2="40" stroke="#334155" stroke-dasharray="4 4"/>
-      <line x1="90" y1="135" x2="1084" y2="135" stroke="#334155" stroke-dasharray="4 4"/>
-      <line x1="90" y1="275" x2="1084" y2="275" stroke="#334155" stroke-dasharray="4 4"/>
-      <line x1="90" y1="460" x2="1084" y2="460" stroke="#334155" stroke-dasharray="4 4"/>
-      <line x1="90" y1="545" x2="1084" y2="545" stroke="#334155" stroke-dasharray="4 4"/>
-      <line x1="90" y1="680" x2="1084" y2="680" stroke="#334155" stroke-dasharray="4 4"/>
-
-      <rect class="box" x="140" y="60" width="820" height="60" fill="#273449" stroke="#38bdf8"/>
-      <text class="t-title" x="550" y="85" text-anchor="middle">Clients (Web / Desktop / Mobile)</text>
-      <text class="t-sub" x="550" y="105" text-anchor="middle">Multi-device login per account → routing table: user_id → gateway list (1:N)</text>
-
-      <line x1="550" y1="120" x2="550" y2="150" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-en)"/>
-      <text class="t-edge" x="560" y="140">WebSocket long-connection + HTTPS API</text>
-
-      <rect class="box" x="240" y="150" width="620" height="60" fill="#273449" stroke="#f59e0b"/>
-      <text class="t-title" x="550" y="175" text-anchor="middle">API Gateway / Load Balancer</text>
-      <text class="t-sub" x="550" y="195" text-anchor="middle">Stateless · multi-instance · TLS termination · rate-limiting</text>
-
-      <line x1="340" y1="210" x2="230" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-en-dim)"/>
-      <line x1="430" y1="210" x2="430" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-en-dim)"/>
-      <line x1="550" y1="210" x2="560" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-en-dim)"/>
-      <line x1="680" y1="210" x2="700" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-en-dim)"/>
-      <line x1="770" y1="210" x2="830" y2="280" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-en-dim)"/>
-
-      <rect class="box" x="120" y="280" width="190" height="150" fill="#273449" stroke="#38bdf8"/>
-      <text class="t-title" x="215" y="302" text-anchor="middle">Connection Gateway</text>
-      <text class="t-sub" x="215" y="318" text-anchor="middle">(long-lived WS)</text>
-      <line x1="135" y1="330" x2="295" y2="330" stroke="#334155"/>
-      <text class="t-sub" x="135" y="348">• Owns WS sessions</text>
-      <text class="t-sub" x="135" y="365">• 10k–100k conns / node</text>
-      <text class="t-sub" x="135" y="382">• Scales horizontally</text>
-      <text class="t-sub" x="135" y="399">• Routing table in Redis</text>
-
-      <rect class="box" x="330" y="280" width="190" height="150" fill="#273449" stroke="#22c55e"/>
-      <text class="t-title" x="425" y="302" text-anchor="middle">Chat Service</text>
-      <text class="t-sub" x="425" y="318" text-anchor="middle">(stateless)</text>
-      <line x1="345" y1="330" x2="505" y2="330" stroke="#334155"/>
-      <text class="t-sub" x="345" y="348">• Ingest msg, dedupe</text>
-      <text class="t-sub" x="345" y="365">• Issue Snowflake ID</text>
-      <text class="t-sub" x="345" y="382">• Enqueue + persist</text>
-      <text class="t-sub" x="345" y="399">• Route to recipient GW</text>
-
-      <rect class="box" x="540" y="280" width="190" height="150" fill="#273449" stroke="#a78bfa"/>
-      <text class="t-title" x="635" y="302" text-anchor="middle">Presence Service</text>
-      <text class="t-sub" x="635" y="318" text-anchor="middle">(heartbeat + TTL)</text>
-      <line x1="555" y1="330" x2="715" y2="330" stroke="#334155"/>
-      <text class="t-sub" x="555" y="348">• Heartbeat 30s, TTL 60s</text>
-      <text class="t-sub" x="555" y="365">• Redis: user→last_hb</text>
-      <text class="t-sub" x="555" y="382">• Pub/Sub state changes</text>
-      <text class="t-sub" x="555" y="399">• Trade-off: real-time</text>
-
-      <rect class="box" x="750" y="280" width="190" height="150" fill="#273449" stroke="#f472b6"/>
-      <text class="t-title" x="845" y="302" text-anchor="middle">Notification Svc</text>
-      <text class="t-sub" x="845" y="318" text-anchor="middle">(offline fan-out)</text>
-      <line x1="765" y1="330" x2="925" y2="330" stroke="#334155"/>
-      <text class="t-sub" x="765" y="348">• Consumes msg stream</text>
-      <text class="t-sub" x="765" y="365">• Checks presence</text>
-      <text class="t-sub" x="765" y="382">• Offline → push queue</text>
-      <text class="t-sub" x="765" y="399">• Calls APNs / FCM</text>
-
-      <rect class="box" x="960" y="280" width="140" height="150" fill="#273449" stroke="#3b82f6"/>
-      <text class="t-title" x="1030" y="302" text-anchor="middle">User / Group</text>
-      <text class="t-sub" x="1030" y="318" text-anchor="middle">Service</text>
-      <line x1="970" y1="330" x2="1090" y2="330" stroke="#334155"/>
-      <text class="t-sub" x="970" y="348">• AuthN / AuthZ</text>
-      <text class="t-sub" x="970" y="365">• Group mgmt</text>
-      <text class="t-sub" x="970" y="382">• Membership</text>
-      <text class="t-sub" x="970" y="399">• Permission check</text>
-
-      <line x1="215" y1="430" x2="215" y2="575" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arrow-en)"/>
-      <text class="t-edge" x="225" y="470">read / write</text>
-
-      <line x1="425" y1="430" x2="430" y2="500" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrow-en)"/>
-      <text class="t-edge" x="435" y="455">publish (peak-shave)</text>
-
-      <!-- Persistence: queue consumer writes to DB (not chat service direct) -->
-      <line x1="500" y1="560" x2="660" y2="575" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow-en)"/>
-      <text class="t-edge" x="520" y="568">consume → persist (Persistence Worker)</text>
-
-      <line x1="635" y1="430" x2="830" y2="575" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-en)"/>
-      <text class="t-edge" x="700" y="495">heartbeat / state</text>
-
-      <line x1="845" y1="430" x2="830" y2="500" stroke="#f472b6" stroke-width="1.5" marker-end="url(#arrow-en)"/>
-      <text class="t-edge" x="855" y="455">consume stream</text>
-
-      <line x1="1030" y1="430" x2="430" y2="500" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-en)"/>
-      <text class="t-edge" x="700" y="475">authN / membership check</text>
-
-      <rect class="box" x="340" y="500" width="220" height="60" fill="#273449" stroke="#22c55e"/>
-      <text class="t-title" x="450" y="523" text-anchor="middle">Message Queue</text>
-      <text class="t-sub" x="450" y="543" text-anchor="middle">Event Hub / Kafka (durable)</text>
-
-      <rect class="box" x="120" y="575" width="190" height="60" fill="#273449" stroke="#38bdf8"/>
-      <text class="t-title" x="215" y="598" text-anchor="middle">Redis Cache</text>
-      <text class="t-sub" x="215" y="618" text-anchor="middle">Routing · Presence · Session</text>
-
-      <rect class="box" x="540" y="575" width="240" height="60" fill="#273449" stroke="#22c55e"/>
-      <text class="t-title" x="660" y="598" text-anchor="middle">Message Store (Cosmos DB)</text>
-      <text class="t-sub" x="660" y="618" text-anchor="middle">Shard by conversation_id · Snowflake IDs</text>
-
-      <rect class="box" x="810" y="575" width="170" height="60" fill="#273449" stroke="#f472b6"/>
-      <text class="t-title" x="895" y="598" text-anchor="middle">Push Gateway</text>
-      <text class="t-sub" x="895" y="618" text-anchor="middle">APNs / FCM</text>
-
-      <path d="M 560 530 Q 720 560 790 430" fill="none" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-en)"/>
-      <text class="t-note" x="620" y="565">consume → trigger notification</text>
-
-      <rect class="box" x="340" y="708" width="560" height="40" fill="#0f172a" stroke="#475569" stroke-dasharray="4 3"/>
-      <text class="t-sub" x="620" y="732" text-anchor="middle">Mobile OS push channel (iOS / Android FCM) → wakes offline user to pull</text>
-      <line x1="895" y1="635" x2="895" y2="708" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow-en)"/>
-
-      <!-- Fan-out strategy comparison (interview bonus) -->
-      <rect x="120" y="762" width="880" height="108" fill="rgba(245,158,11,0.06)" stroke="#f59e0b" stroke-dasharray="6 3" rx="10"/>
-      <text class="t-title" x="140" y="782" fill="#f59e0b">Group Fan-out Strategy Comparison (Interview Bonus Point)</text>
-      <text class="t-sub" x="140" y="802" fill="#22c55e">✓ Fan-out on Write (chosen, fits ≤100-member groups):</text>
-      <text class="t-sub" x="155" y="818">msg arrives → write to each member's inbox (Cosmos DB sharded by user_id) → O(1) read, write amplification ×N</text>
-      <text class="t-sub" x="140" y="838" fill="#94a3b8">✗ Fan-out on Read (alternative, fits very large channels):</text>
-      <text class="t-sub" x="165" y="854">msg stored once in conversation → user pulls → query membership list in real-time → extra read, no write amplification</text>
-      <text class="t-note" x="140" y="868">Teams: 100-member cap → write-fanout; 10k+ workspace broadcast → read-fanout or hybrid</text>
-    </svg>
-  </div>
-  <div class="legend">
-    <span><span class="swatch" style="background:#38bdf8;"></span>Connection layer</span>
-    <span><span class="swatch" style="background:#22c55e;"></span>Message path</span>
-    <span><span class="swatch" style="background:#a78bfa;"></span>Presence</span>
-    <span><span class="swatch" style="background:#f472b6;"></span>Notification</span>
-    <span><span class="swatch" style="background:#3b82f6;"></span>Identity / Group</span>
-    <span><span class="swatch" style="background:#f59e0b;"></span>Edge / Alternative</span>
-  </div>
-</div>
-
-<!-- ============ ③ 类图 ============ -->
-<div class="panel">
-  <h2><span class="num">3</span>类图 — Class Diagram（服务层核心域模型）</h2>
+  <h2><span class="num">2</span><span class="i18n-en">Class Diagram (Service-layer Domain Model)</span><span class="i18n-zh">类图 — Class Diagram（服务层核心域模型）</span></h2>
   <div class="subtitle" style="margin-bottom:12px;">
-    从 <code>Chat Service</code> 的领域视角出发，覆盖消息、会话、群组、用户、在线状态、推送等核心实体及其关系。
-    实线菱形 = 聚合（aggregate）；虚线箭头 = 依赖；<code>&lt;&lt;interface&gt;&gt;</code> = 抽象契约。
+    <span class="i18n-en">From the <code>Chat Service</code> domain perspective, covering core entities and their relationships: message, conversation, group, user, presence, push.
+    Solid diamond = aggregation; dashed arrow = dependency; <code>&lt;&lt;interface&gt;&gt;</code> = abstract contract.</span>
+    <span class="i18n-zh">从 <code>Chat Service</code> 的领域视角出发，覆盖消息、会话、群组、用户、在线状态、推送等核心实体及其关系。
+    实线菱形 = 聚合（aggregate）；虚线箭头 = 依赖；<code>&lt;&lt;interface&gt;&gt;</code> = 抽象契约。</span>
   </div>
   <div class="svg-wrap">
     <svg viewBox="0 0 1200 720" width="1200" height="720" xmlns="http://www.w3.org/2000/svg">
@@ -542,8 +424,8 @@
         <text class="t-method" x="410" y="188">  appendMessage(msg) : Ack</text>
         <text class="t-method" x="410" y="204">  listMessages(from, to) : [Message]</text>
         <text class="t-method" x="410" y="220">  markRead(user, msg_id)</text>
-        <text class="t-method" x="410" y="236">  fanOutToMembers(msg)  // write-fanout (chosen)</text>
-        <text class="t-method" x="410" y="252" fill="#94a3b8" font-style="italic">  // read-fanout alt: listMessages queries membership</text>
+        <text class="t-method" x="410" y="236">  fanOutToMembers(msg)  // <tspan class="i18n-en">write-fanout (chosen)</tspan><tspan class="i18n-zh">写扩散（当前方案）</tspan></text>
+        <text class="t-method" x="410" y="252" fill="#94a3b8" font-style="italic"><tspan class="i18n-en">  // read-fanout alt: listMessages queries membership</tspan><tspan class="i18n-zh">  // 读扩散备选：listMessages 实时查 membership</tspan></text>
         <text class="t-method" x="410" y="268">  syncReadCursor(user)</text>
       </g>
 
@@ -627,79 +509,81 @@
         <text class="t-method" x="1058" y="174">  leaveGroup(u,g)</text>
       </g>
 
-      <!-- ===== 关系线 ===== -->
+      <!-- ===== Relationship lines ===== -->
 
-      <!-- User 1 --o Presence -->
       <line x1="160" y1="220" x2="160" y2="260" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-cls-open)"/>
       <text class="t-edge" x="168" y="245">1 : 1</text>
 
-      <!-- User 1 --o {0..*} Device -->
       <line x1="160" y1="370" x2="160" y2="410" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-cls-open)"/>
-      <text class="t-edge" x="168" y="395">1 : {0..*}  (multi-device)</text>
+      <text class="t-edge" x="168" y="395">1 : {0..*}  (<tspan class="i18n-en">multi-device</tspan><tspan class="i18n-zh">多端</tspan>)</text>
 
-      <!-- User 1 --o Conversation (member) -->
       <line x1="280" y1="120" x2="400" y2="120" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-cls-open)"/>
-      <text class="t-edge" x="300" y="112">1 : {0..*}  (member)</text>
+      <text class="t-edge" x="300" y="112">1 : {0..*}  (<tspan class="i18n-en">member</tspan><tspan class="i18n-zh">成员</tspan>)</text>
 
-      <!-- Conversation 1 --o {1..*} Message -->
       <line x1="550" y1="280" x2="550" y2="330" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow-cls-open)"/>
       <text class="t-edge" x="558" y="308">1 : {0..*}  (ordered by message_id)</text>
 
-      <!-- GroupConversation :|: Conversation (inheritance) -->
       <line x1="550" y1="280" x2="550" y2="555" stroke="#94a3b8" stroke-width="1.5"/>
       <path d="M 550 600 L 550 580" stroke="#94a3b8" stroke-width="1.5"/>
       <path d="M 535 580 L 550 555 L 565 580 Z" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
       <text class="t-edge" x="558" y="575">«inherits» (kind = GROUP)</text>
 
-      <!-- Message --> PushPayload (dependency, dashed) -->
       <path d="M 700 400 L 730 400 L 730 150 L 760 150" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-cls-open)"/>
       <text class="t-edge" x="715" y="285" transform="rotate(-90 715 285)">toPushPayload()</text>
 
-      <!-- ApnsChannel ..|> INotificationChannel -->
       <line x1="890" y1="370" x2="890" y2="350" stroke="#94a3b8" stroke-width="1.5"/>
       <path d="M 875 350 L 890 330 L 905 350 Z" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
       <text class="t-edge" x="898" y="362">«implements»</text>
 
-      <!-- FcmChannel ..|> INotificationChannel -->
       <path d="M 1020 510 L 1040 330" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
       <path d="M 1040 340 L 1028 315 L 1052 320 Z" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
       <text class="t-edge" x="1030" y="420">«implements»</text>
 
-      <!-- IChatService .. Conversation (dependency) -->
       <line x1="1050" y1="185" x2="700" y2="185" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-cls-open)"/>
       <text class="t-edge" x="850" y="178">«uses»</text>
 
-      <!-- IChatService .. Message -->
       <line x1="1120" y1="220" x2="1120" y2="490" stroke="#94a3b8" stroke-width="0"/>
       <path d="M 1120 220 L 1120 490 Q 1120 500 1110 500 L 700 500" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 3" fill="none" marker-end="url(#arrow-cls-open)"/>
       <text class="t-edge" x="900" y="495">«send / history»</text>
     </svg>
   </div>
   <div class="legend">
-    <span><span class="swatch" style="background:#3b82f6;"></span>User / Device</span>
-    <span><span class="swatch" style="background:#a78bfa;"></span>Presence</span>
-    <span><span class="swatch" style="background:#22c55e;"></span>Conversation / Message</span>
-    <span><span class="swatch" style="background:#f472b6;"></span>Notification</span>
-    <span><span class="swatch" style="background:#273449;border:2px dashed #f472b6;"></span>interface</span>
-    <span><span class="swatch" style="background:transparent;border:1.5px dashed #94a3b8;"></span>dependency</span>
+    <span><span class="swatch" style="background:#3b82f6;"></span><span class="i18n-en">User / Device</span><span class="i18n-zh">User / Device</span></span>
+    <span><span class="swatch" style="background:#a78bfa;"></span><span class="i18n-en">Presence</span><span class="i18n-zh">在线状态</span></span>
+    <span><span class="swatch" style="background:#22c55e;"></span><span class="i18n-en">Conversation / Message</span><span class="i18n-zh">会话 / 消息</span></span>
+    <span><span class="swatch" style="background:#f472b6;"></span><span class="i18n-en">Notification</span><span class="i18n-zh">通知</span></span>
+    <span><span class="swatch" style="background:#273449;border:2px dashed #f472b6;"></span><span class="i18n-en">interface</span><span class="i18n-zh">接口</span></span>
+    <span><span class="swatch" style="background:transparent;border:1.5px dashed #94a3b8;"></span><span class="i18n-en">dependency</span><span class="i18n-zh">依赖</span></span>
   </div>
   <div class="status">
-    <strong>设计要点：</strong>
+    <strong><span class="i18n-en">Design highlights:</span><span class="i18n-zh">设计要点：</span></strong>
+    <span class="i18n-en">
+    ① <code>Message.message_id</code> uses Snowflake for monotonic ordering — clients sort by ID to guarantee sequence;
+    ② <code>Message.idempotency_key</code> for idempotent dedup (short-term Redis Set + DB unique index as backstop);
+    ③ <code>Conversation.read_cursor</code> uses a per-user "read cursor" instead of per-message read flags — cross-device sync only needs one msg_id;
+    ④ <code>INotificationChannel</code> abstracts APNs / FCM, making new channels (e.g. WebPush) easy to add;
+    ⑤ <code>GroupConversation</code> extends <code>Conversation</code>, discriminated by <code>kind</code> (DM / GROUP);
+    ⑥ <code>fanOutToMembers()</code> is <strong>fan-out on write</strong> (≤100-member groups, write amplification ×N, O(1) read). Switching to <strong>fan-out on read</strong> removes this method and makes <code>listMessages()</code> query membership in real time — no write amplification, but one extra read per pull. Mentioning this trade-off proactively in an interview is a bonus.
+    </span>
+    <span class="i18n-zh">
     ① <code>Message.message_id</code> 用 Snowflake 算法保证单调递增，客户端按 ID 排序即保证顺序；
     ② <code>Message.idempotency_key</code> 用于幂等去重（Redis Set 短期 + 数据库唯一索引兜底）；
-    ③ <code>Conversation.read_cursor</code> 用"已读位点"代替逐条已读，多端同步时只传一个 msg_id；
+    ③ <code>Conversation.read_cursor</code> 用“已读位点”代替逐条已读，多端同步时只传一个 msg_id；
     ④ <code>INotificationChannel</code> 抽象 APNs / FCM，便于扩展 WebPush 等新通道；
     ⑤ <code>GroupConversation</code> 继承 <code>Conversation</code>，通过 <code>kind</code> 区分 DM / GROUP；
     ⑥ <code>fanOutToMembers()</code> 是<strong>写扩散</strong>（≤100 人群组，写入放大 ×N，读取 O(1)）；若改为<strong>读扩散</strong>，则去掉此方法，<code>listMessages()</code> 内部实时查 membership，写入无放大但读取多一次查询——面试时主动提这个 trade-off 是加分项。
+    </span>
   </div>
 </div>
 
-<!-- ============ ④ 网络拓扑图 ============ -->
+<!-- ============ ③ Network Topology ============ -->
 <div class="panel">
-  <h2><span class="num">4</span>网络拓扑图 — Network Topology（跨可用区部署）</h2>
+  <h2><span class="num">3</span><span class="i18n-en">Network Topology (Multi-AZ Deployment)</span><span class="i18n-zh">网络拓扑图 — Network Topology（跨可用区部署）</span></h2>
   <div class="subtitle" style="margin-bottom:12px;">
-    展示跨两个可用区（AZ-A / AZ-B）的部署拓扑：客户端流量经 CDN + WAF → LB → 无状态服务实例（多副本）→
-    数据层（Cosmos DB 主从、Redis 主从、Kafka 3 副本）。实线 = 主流量，虚线 = 复制/故障转移。
+    <span class="i18n-en">Deployment topology across two Availability Zones (AZ-A / AZ-B): client traffic flows through CDN + WAF → LB → stateless service replicas → data layer
+    (Cosmos DB primary/replica, Redis primary/replica, Kafka 3 replicas). Solid line = primary traffic, dashed line = replication / failover.</span>
+    <span class="i18n-zh">展示跨两个可用区（AZ-A / AZ-B）的部署拓扑：客户端流量经 CDN + WAF → LB → 无状态服务实例（多副本）→
+    数据层（Cosmos DB 主从、Redis 主从、Kafka 3 副本）。实线 = 主流量，虚线 = 复制/故障转移。</span>
   </div>
   <div class="svg-wrap">
     <svg viewBox="0 0 1200 800" width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
@@ -712,40 +596,40 @@
         </marker>
       </defs>
 
-      <!-- ===== 客户端 ===== -->
+      <!-- ===== Clients ===== -->
       <g>
         <rect class="box" x="40" y="30" width="180" height="80" fill="#273449" stroke="#38bdf8"/>
         <text class="t-title" x="130" y="55" text-anchor="middle">📱 Mobile</text>
         <text class="t-sub" x="130" y="75" text-anchor="middle">iOS / Android</text>
-        <text class="t-sub" x="130" y="90" text-anchor="middle">NAT / 蜂窝 / WiFi</text>
+        <text class="t-sub" x="130" y="90" text-anchor="middle"><tspan class="i18n-en">NAT / Cellular / WiFi</tspan><tspan class="i18n-zh">NAT / 蜂窝 / WiFi</tspan></text>
       </g>
       <g>
         <rect class="box" x="40" y="130" width="180" height="80" fill="#273449" stroke="#38bdf8"/>
         <text class="t-title" x="130" y="155" text-anchor="middle">💻 Desktop</text>
         <text class="t-sub" x="130" y="175" text-anchor="middle">Win / macOS</text>
-        <text class="t-sub" x="130" y="190" text-anchor="middle">办公网 / VPN</text>
+        <text class="t-sub" x="130" y="190" text-anchor="middle"><tspan class="i18n-en">Office network / VPN</tspan><tspan class="i18n-zh">办公网 / VPN</tspan></text>
       </g>
       <g>
         <rect class="box" x="40" y="230" width="180" height="80" fill="#273449" stroke="#38bdf8"/>
         <text class="t-title" x="130" y="255" text-anchor="middle">🌐 Web</text>
-        <text class="t-sub" x="130" y="275" text-anchor="middle">浏览器 (WS + HTTPS)</text>
-        <text class="t-sub" x="130" y="290" text-anchor="middle">全球分布式</text>
+        <text class="t-sub" x="130" y="275" text-anchor="middle"><tspan class="i18n-en">Browser (WS + HTTPS)</tspan><tspan class="i18n-zh">浏览器 (WS + HTTPS)</tspan></text>
+        <text class="t-sub" x="130" y="290" text-anchor="middle"><tspan class="i18n-en">Globally distributed</tspan><tspan class="i18n-zh">全球分布式</tspan></text>
       </g>
 
       <!-- ===== CDN / WAF / LB ===== -->
       <g>
         <rect class="box" x="300" y="60" width="200" height="60" fill="#273449" stroke="#f59e0b"/>
         <text class="t-title" x="400" y="85" text-anchor="middle">CDN + WAF</text>
-        <text class="t-sub" x="400" y="103" text-anchor="middle">DDoS 防护 · 静态资源缓存</text>
+        <text class="t-sub" x="400" y="103" text-anchor="middle"><tspan class="i18n-en">DDoS protection · static caching</tspan><tspan class="i18n-zh">DDoS 防护 · 静态资源缓存</tspan></text>
       </g>
       <g>
         <rect class="box" x="300" y="180" width="200" height="80" fill="#273449" stroke="#f59e0b"/>
-        <text class="t-title" x="400" y="205" text-anchor="middle">负载均衡 LB</text>
+        <text class="t-title" x="400" y="205" text-anchor="middle"><tspan class="i18n-en">Load Balancer (LB)</tspan><tspan class="i18n-zh">负载均衡 LB</tspan></text>
         <text class="t-sub" x="400" y="223" text-anchor="middle">L4 TCP (WS) + L7 HTTPS</text>
-        <text class="t-sub" x="400" y="238" text-anchor="middle">健康检查 · 会话保持</text>
+        <text class="t-sub" x="400" y="238" text-anchor="middle"><tspan class="i18n-en">Health checks · session affinity</tspan><tspan class="i18n-zh">健康检查 · 会话保持</tspan></text>
       </g>
 
-      <!-- 客户端 → CDN/LB -->
+      <!-- Clients → CDN/LB -->
       <line x1="220" y1="70" x2="300" y2="85" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-net)"/>
       <line x1="220" y1="170" x2="300" y2="200" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-net)"/>
       <line x1="220" y1="270" x2="300" y2="230" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-net)"/>
@@ -753,14 +637,14 @@
       <!-- CDN → LB -->
       <line x1="400" y1="120" x2="400" y2="180" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-net)"/>
 
-      <!-- ===== AZ 边界 ===== -->
+      <!-- ===== AZ boundaries ===== -->
       <rect class="box" x="560" y="40" width="620" height="320" fill="rgba(56,189,248,0.04)" stroke="#38bdf8" stroke-dasharray="6 4" rx="14"/>
-      <text class="t-layer" x="580" y="62" fill="#38bdf8">AZ-A  (可用区 A)</text>
+      <text class="t-layer" x="580" y="62" fill="#38bdf8">AZ-A  (<tspan class="i18n-en">Availability Zone A</tspan><tspan class="i18n-zh">可用区 A</tspan>)</text>
 
       <rect class="box" x="560" y="400" width="620" height="320" fill="rgba(167,139,250,0.05)" stroke="#a78bfa" stroke-dasharray="6 4" rx="14"/>
-      <text class="t-layer" x="580" y="422" fill="#a78bfa">AZ-B  (可用区 B)</text>
+      <text class="t-layer" x="580" y="422" fill="#a78bfa">AZ-B  (<tspan class="i18n-en">Availability Zone B</tspan><tspan class="i18n-zh">可用区 B</tspan>)</text>
 
-      <!-- AZ-A 内服务 -->
+      <!-- AZ-A services -->
       <g>
         <rect class="box" x="590" y="90" width="150" height="60" fill="#273449" stroke="#38bdf8"/>
         <text class="t-title" x="665" y="113" text-anchor="middle">Conn GW #1</text>
@@ -802,7 +686,7 @@
         <text class="t-sub" x="1025" y="291" text-anchor="middle">Kafka consumer</text>
       </g>
 
-      <!-- AZ-B 内服务（镜像） -->
+      <!-- AZ-B services (mirrored) -->
       <g>
         <rect class="box" x="590" y="450" width="150" height="60" fill="#273449" stroke="#38bdf8"/>
         <text class="t-title" x="665" y="473" text-anchor="middle">Conn GW #3</text>
@@ -844,7 +728,7 @@
         <text class="t-sub" x="1025" y="651" text-anchor="middle">Kafka consumer</text>
       </g>
 
-      <!-- LB → 各 AZ 服务 -->
+      <!-- LB → services in each AZ -->
       <line x1="500" y1="210" x2="590" y2="120" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arrow-net)"/>
       <line x1="500" y1="210" x2="590" y2="200" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arrow-net)"/>
       <line x1="500" y1="210" x2="770" y2="120" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrow-net)"/>
@@ -853,27 +737,25 @@
       <line x1="500" y1="220" x2="590" y2="560" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-net)"/>
       <line x1="500" y1="225" x2="770" y2="480" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-net)"/>
       <line x1="500" y1="225" x2="770" y2="560" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-net)"/>
-      <text class="t-note" x="510" y="350">跨 AZ 路由</text>
+      <text class="t-note" x="510" y="350"><tspan class="i18n-en">cross-AZ routing</tspan><tspan class="i18n-zh">跨 AZ 路由</tspan></text>
 
-      <!-- AZ-A 内部：ConnGW ↔ ChatSvc ↔ Presence/Notif -->
+      <!-- Intra-AZ: ConnGW ↔ ChatSvc ↔ Presence/Notif -->
       <line x1="740" y1="120" x2="770" y2="120" stroke="#94a3b8" stroke-width="1.2"/>
       <line x1="740" y1="200" x2="770" y2="200" stroke="#94a3b8" stroke-width="1.2"/>
       <line x1="920" y1="120" x2="950" y2="120" stroke="#94a3b8" stroke-width="1.2"/>
       <line x1="920" y1="200" x2="950" y2="200" stroke="#94a3b8" stroke-width="1.2"/>
       <line x1="845" y1="230" x2="845" y2="250" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arrow-cls-open)"/>
-      <!-- AZ-B 内部 -->
       <line x1="740" y1="480" x2="770" y2="480" stroke="#94a3b8" stroke-width="1.2"/>
       <line x1="740" y1="560" x2="770" y2="560" stroke="#94a3b8" stroke-width="1.2"/>
       <line x1="920" y1="480" x2="950" y2="480" stroke="#94a3b8" stroke-width="1.2"/>
       <line x1="920" y1="560" x2="950" y2="560" stroke="#94a3b8" stroke-width="1.2"/>
       <line x1="845" y1="590" x2="845" y2="610" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arrow-cls-open)"/>
 
-      <!-- ===== 数据层 ===== -->
-      <!-- Cosmos DB (3 副本跨 AZ) -->
+      <!-- ===== Data layer ===== -->
       <g>
         <rect class="box" x="40" y="400" width="200" height="130" fill="#273449" stroke="#22c55e"/>
         <text class="t-title" x="140" y="422" text-anchor="middle">Cosmos DB</text>
-        <text class="t-sub" x="140" y="440" text-anchor="middle">按 conversation_id 分片</text>
+        <text class="t-sub" x="140" y="440" text-anchor="middle"><tspan class="i18n-en">Sharded by conversation_id</tspan><tspan class="i18n-zh">按 conversation_id 分片</tspan></text>
         <line x1="55" y1="452" x2="225" y2="452" stroke="#334155"/>
         <text class="t-member" x="50" y="470">  shard-01 (AZ-A)  ◀ primary</text>
         <text class="t-member" x="50" y="486">  shard-01 (AZ-B)  ◀ replica</text>
@@ -881,11 +763,10 @@
         <text class="t-member" x="50" y="518">  shard-02 (AZ-B)  ◀ replica</text>
       </g>
 
-      <!-- Redis Cluster -->
       <g>
         <rect class="box" x="40" y="555" width="200" height="120" fill="#273449" stroke="#38bdf8"/>
         <text class="t-title" x="140" y="577" text-anchor="middle">Redis Cluster</text>
-        <text class="t-sub" x="140" y="595" text-anchor="middle">连接路由 · 在线状态 · 会话</text>
+        <text class="t-sub" x="140" y="595" text-anchor="middle"><tspan class="i18n-en">Routing · Presence · Session</tspan><tspan class="i18n-zh">连接路由 · 在线状态 · 会话</tspan></text>
         <line x1="55" y1="607" x2="225" y2="607" stroke="#334155"/>
         <text class="t-member" x="50" y="625">  master-1 (AZ-A)</text>
         <text class="t-member" x="50" y="641">  replica-1 (AZ-B)</text>
@@ -893,56 +774,98 @@
         <text class="t-member" x="50" y="673">  replica-2 (AZ-A)</text>
       </g>
 
-      <!-- Kafka -->
       <g>
         <rect class="box" x="40" y="700" width="200" height="80" fill="#273449" stroke="#22c55e"/>
         <text class="t-title" x="140" y="722" text-anchor="middle">Kafka Cluster</text>
         <text class="t-sub" x="140" y="740" text-anchor="middle">3 broker · RF=3 · min.insync=2</text>
-        <text class="t-sub" x="140" y="756" text-anchor="middle">topic: chat.msg (分区分片)</text>
+        <text class="t-sub" x="140" y="756" text-anchor="middle"><tspan class="i18n-en">topic: chat.msg (partitioned)</tspan><tspan class="i18n-zh">topic: chat.msg（分区分片）</tspan></text>
       </g>
 
-      <!-- 服务 → 数据层 流量 -->
+      <!-- Service → data layer traffic -->
       <path d="M 845 230 L 845 360 L 140 360 L 140 400" fill="none" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrow-net)"/>
       <path d="M 845 670 L 845 740 L 240 740" fill="none" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrow-net)"/>
       <path d="M 665 230 L 665 380 L 240 380 L 240 555" fill="none" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arrow-net)"/>
       <path d="M 665 590 L 665 700 L 240 700" fill="none" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arrow-net)"/>
 
-      <!-- 跨 AZ 复制（虚线，橙色） -->
+      <!-- Cross-AZ replication (dashed orange) -->
       <line x1="240" y1="465" x2="590" y2="465" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow-net-rep)"/>
-      <text class="t-edge" x="330" y="460">主从复制 (跨 AZ)</text>
+      <text class="t-edge" x="330" y="460"><tspan class="i18n-en">primary-replica replication (cross-AZ)</tspan><tspan class="i18n-zh">主从复制 (跨 AZ)</tspan></text>
       <line x1="240" y1="615" x2="590" y2="615" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow-net-rep)"/>
-      <text class="t-edge" x="330" y="610">Redis 跨 AZ 复制</text>
+      <text class="t-edge" x="330" y="610"><tspan class="i18n-en">Redis cross-AZ replication</tspan><tspan class="i18n-zh">Redis 跨 AZ 复制</tspan></text>
       <line x1="240" y1="740" x2="590" y2="740" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow-net-rep)"/>
-      <text class="t-edge" x="330" y="735">Kafka ISR 跨 AZ</text>
+      <text class="t-edge" x="330" y="735"><tspan class="i18n-en">Kafka ISR cross-AZ</tspan><tspan class="i18n-zh">Kafka ISR 跨 AZ</tspan></text>
 
-      <!-- 外部推送 -->
+      <!-- External push -->
       <g>
         <rect class="box" x="1050" y="700" width="130" height="80" fill="#0f172a" stroke="#f472b6" stroke-dasharray="4 3"/>
         <text class="t-title" x="1115" y="725" text-anchor="middle">APNs / FCM</text>
         <text class="t-sub" x="1115" y="745" text-anchor="middle">Apple / Google</text>
-        <text class="t-sub" x="1115" y="760" text-anchor="middle">外部推送服务</text>
+        <text class="t-sub" x="1115" y="760" text-anchor="middle"><tspan class="i18n-en">External push service</tspan><tspan class="i18n-zh">外部推送服务</tspan></text>
       </g>
       <line x1="1025" y1="670" x2="1115" y2="700" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-net)"/>
     </svg>
   </div>
   <div class="legend">
-    <span><span class="swatch" style="background:#38bdf8;"></span>连接层 / Redis</span>
-    <span><span class="swatch" style="background:#22c55e;"></span>消息链路 / Cosmos / Kafka</span>
-    <span><span class="swatch" style="background:#a78bfa;"></span>Presence</span>
-    <span><span class="swatch" style="background:#f472b6;"></span>通知 / 外部推送</span>
-    <span><span class="swatch" style="background:#f59e0b;"></span>跨 AZ 复制</span>
-    <span><span class="swatch" style="background:transparent;border:2px dashed #38bdf8;"></span>AZ-A 边界</span>
-    <span><span class="swatch" style="background:transparent;border:2px dashed #a78bfa;"></span>AZ-B 边界</span>
+    <span><span class="swatch" style="background:#38bdf8;"></span><span class="i18n-en">Connection layer / Redis</span><span class="i18n-zh">连接层 / Redis</span></span>
+    <span><span class="swatch" style="background:#22c55e;"></span><span class="i18n-en">Message path / Cosmos / Kafka</span><span class="i18n-zh">消息链路 / Cosmos / Kafka</span></span>
+    <span><span class="swatch" style="background:#a78bfa;"></span><span class="i18n-en">Presence</span><span class="i18n-zh">在线状态</span></span>
+    <span><span class="swatch" style="background:#f472b6;"></span><span class="i18n-en">Notification / External push</span><span class="i18n-zh">通知 / 外部推送</span></span>
+    <span><span class="swatch" style="background:#f59e0b;"></span><span class="i18n-en">Cross-AZ replication</span><span class="i18n-zh">跨 AZ 复制</span></span>
+    <span><span class="swatch" style="background:transparent;border:2px dashed #38bdf8;"></span><span class="i18n-en">AZ-A boundary</span><span class="i18n-zh">AZ-A 边界</span></span>
+    <span><span class="swatch" style="background:transparent;border:2px dashed #a78bfa;"></span><span class="i18n-en">AZ-B boundary</span><span class="i18n-zh">AZ-B 边界</span></span>
   </div>
   <div class="status good">
-    <strong>高可用要点：</strong>
+    <strong><span class="i18n-en">High-availability highlights:</span><span class="i18n-zh">高可用要点：</span></strong>
+    <span class="i18n-en">
+    ① All stateless services (ConnGW / Chat / Presence / Notif) deploy ≥2 replicas in each AZ; LB health checks evict failed instances;
+    ② Cosmos DB primary/replica async-replicates across AZs; on single-AZ failure, read traffic auto-fails over to the replica AZ;
+    ③ Redis master/replica spans AZs; if the routing table is unavailable, ConnGW falls back to a local LRU cache and rebuilds;
+    ④ Kafka RF=3 across AZs with min.insync=2 guarantees no message loss under single-AZ failure;
+    ⑤ Chaos engineering can be introduced: randomly kill a ConnGW instance and verify WS clients auto-reconnect to the other AZ.
+    </span>
+    <span class="i18n-zh">
     ① 所有无状态服务（ConnGW / Chat / Presence / Notif）在两个 AZ 各部署 ≥2 副本，LB 健康检查剔除故障实例；
     ② Cosmos DB 主从跨 AZ 异步复制，单 AZ 故障时读流量自动切到副本 AZ；
     ③ Redis 主从跨 AZ，连接路由表故障时 ConnGW 用本地 LRU 兜底 + 重建；
     ④ Kafka RF=3 跨 AZ，min.insync=2 保证单 AZ 故障不丢消息；
     ⑤ 可引入 chaos engineering：随机 kill 一个 ConnGW 实例，验证 WS 客户端自动重连到另一 AZ。
+    </span>
   </div>
 </div>
+
+<script>
+// Keep the original text of every i18n tspan so we can restore it.
+// (CSS display:none is ignored on SVG tspan, so we physically empty the
+//  inactive tspan's text to remove it from SVG layout.)
+var I18N_TSPANS = Array.prototype.slice.call(
+  document.querySelectorAll('svg tspan.i18n-en, svg tspan.i18n-zh')
+);
+I18N_TSPANS.forEach(function (t) { t.dataset._orig = t.textContent; });
+
+function applyI18n(lang) {
+  var other = lang === 'en' ? 'zh' : 'en';
+  I18N_TSPANS.forEach(function (t) {
+    var active = t.classList.contains('i18n-' + lang);
+    t.textContent = active ? t.dataset._orig : '';
+  });
+}
+
+function setLang(lang) {
+  document.documentElement.setAttribute('data-lang', lang);
+  document.body.setAttribute('data-lang', lang);
+  document.documentElement.setAttribute('lang', lang === 'en' ? 'en' : 'zh-CN');
+  applyI18n(lang);
+  document.querySelectorAll('.lang-switch [data-lang-btn]').forEach(function (btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-lang-btn') === lang);
+  });
+  try { localStorage.setItem('chat_diagram_lang', lang); } catch (e) {}
+}
+(function () {
+  var saved = 'en';
+  try { saved = localStorage.getItem('chat_diagram_lang') || 'en'; } catch (e) {}
+  setLang(saved);
+})();
+</script>
 
 </body>
 </html>
