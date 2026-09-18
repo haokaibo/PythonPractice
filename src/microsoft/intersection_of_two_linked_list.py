@@ -80,8 +80,30 @@ class Solution(object):
 
     def getIntersectionFullTwoListLength(self, headA, headB):
         """
-        :type headA, headB: ListNode
+        Find the intersection node using the two-pointer technique (O(1) space).
+
+        :type headA: ListNode
+        :type headB: ListNode
         :rtype: ListNode
+
+        Algorithm:
+            Let pA start at headA and pB start at headB. Each pointer walks its own
+            list; when it reaches the end of its list it is *re-routed* to the other
+            list's head. Because both pointers traverse the combined length
+            (|A| + |B|), they stay in lock-step after swapping and are guaranteed to
+            meet at the intersection node (or both land on None simultaneously if
+            there is no intersection).
+
+            Why it works:
+                - If the two lists have equal length, the pointers meet within the
+                  first pass.
+                - If lengths differ by |lenA - lenB|, the longer-list pointer absorbs
+                  that offset, then both pointers advance together from the same
+                  position on the shared tail.
+                - After at most two full traversals each, pA == pB: either at the
+                  intersection node or at None.
+
+        Time: O(m + n), Space: O(1)
         """
         if not headA or not headB:
             return None
@@ -96,7 +118,8 @@ class Solution(object):
 
     def getIntersectionNode(self, headA, headB):
         """
-        :type head1, head1: ListNode
+        :type headA: ListNode
+        :type headB: ListNode
         :rtype: ListNode
         """
         return self.getIntersectionFullTwoListLength(headA, headB)
