@@ -28,6 +28,11 @@ left->right order), push their values, enqueue their children, and reverse the
 level list when the level index is odd. (Equivalently, alternate the append
 direction: use appendleft on odd levels.)
 
+NOTE on the alternative recursive helper (insert + append): it achieves the
+zigzag by insert(0, val) on right-to-left levels, but list.insert(0, x) is O(k)
+per call (shifts all elements), making that approach O(n^2) overall. The
+queue approach with append + reverse is O(n).
+
 Time: O(n), Space: O(n)
 """
 from collections import deque
@@ -42,6 +47,39 @@ class TreeNode(object):
 
 
 class Solution(object):
+    def helper(self, node, arr, level=0, leftToRight=True):
+        """
+        Recursive DFS that builds the zigzag levels in place.
+
+        :type node: TreeNode
+        :type arr: List[List[int]]
+        :type level: int
+        :type leftToRight: bool
+        :rtype: None
+
+        For left-to-right levels we append to the end of the list (O(1) amortized).
+        For right-to-left levels we use insert(0, val) so the value lands at the
+        front. NOTE: list.insert(0, x) is O(k) because it shifts every existing
+        element one slot to the right, so building a level of k nodes this way is
+        O(k^2) and the whole traversal becomes O(n^2) in the worst case. The
+        queue-based zigzagLevelOrder below avoids this by appending (O(1)) and
+        reversing the full level once (O(k)), giving an overall O(n).
+        """
+        if not node:
+            return
+        
+        if level == len(arr):
+            arr.append([node.val])
+        else:
+            if leftToRight:
+                arr[level].append(node.val)
+            else:
+                arr[level].insert(0, node.val)
+            
+
+        self.helper(node.left, arr, level+1, not leftToRight)
+        self.helper(node.right, arr, level+1, not leftToRight)
+        
     def zigzagLevelOrder(self, root):
         """
         :type root: TreeNode
