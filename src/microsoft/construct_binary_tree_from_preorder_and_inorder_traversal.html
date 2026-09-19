@@ -174,7 +174,7 @@
   .tree-container {
     position: relative;
     width: 100%;
-    min-height: 360px;
+    min-height: 280px;
     background: var(--panel-2);
     border-radius: 10px;
     padding: 12px;
@@ -189,7 +189,7 @@
   .tree-node-text {
     fill: var(--text);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     pointer-events: none;
     text-anchor: middle;
@@ -321,10 +321,10 @@
   let timer       = null;
   let currentNode = null;   // { preorder, inorder }
 
-  const X_SPACING = 96;
-  const Y_SPACING = 96;
-  const NODE_W    = 56;
-  const NODE_H    = 56;
+  const X_SPACING = 48;
+  const Y_SPACING = 48;
+  const NODE_W    = 44;
+  const NODE_H    = 44;
   const HALF_W    = NODE_W / 2;
   const HALF_H    = NODE_H / 2;
 
@@ -491,8 +491,8 @@
    *   x = inorderIdx * X_SPACING + X_OFFSET
    *   y = depth * Y_SPACING + Y_OFFSET
    */
-  const X_OFFSET = HALF_W + 16;   // small left margin inside SVG
-  const Y_OFFSET = HALF_H + 30;   // top margin: space for depth label
+  const X_OFFSET = HALF_W + 8;    // small left margin inside SVG
+  const Y_OFFSET = HALF_H + 20;   // top margin: space for depth label
 
   function renderTree(nodes, highlightVal) {
     treeSvg.innerHTML = '';
