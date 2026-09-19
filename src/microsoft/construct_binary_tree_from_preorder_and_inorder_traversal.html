@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Construct Binary Tree — Visualization</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --good: #22c55e;
+    --bad: #ef4444;
+    --pending: rgba(148,163,184,0.18);
+    --current: rgba(245,158,11,0.28);
+    --done: rgba(56,189,248,0.16);
+    --tree-node: #334155;
+    --tree-node-border: #475569;
+    --tree-line: #475569;
+    --pointer: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 { margin: 0 0 8px; font-size: 22px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+
+  .panel {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+  }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+
+  .array-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .array-label { font-size: 13px; color: var(--muted); }
+  .array {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  .cell {
+    min-width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.35s ease;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    position: relative;
+  }
+  .cell.pending { background: var(--pending); color: var(--muted); }
+  .cell.current {
+    border-color: var(--pointer);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.45);
+    background: var(--current);
+  }
+  .cell.done { background: var(--done); border-color: rgba(56,189,248,0.6); }
+  .cell.pivot {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(56,189,248,0.45);
+    background: rgba(56,189,248,0.18);
+    color: var(--accent);
+  }
+  .cell.range { border-bottom: 3px solid var(--accent); }
+
+  .pointer-label {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--pointer);
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+  }
+  .pointer-label.visible { opacity: 1; }
+
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .meta-item {
+    background: var(--panel-2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    transition: border-color 0.3s;
+  }
+  .meta-item .k { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .meta-item .v { font-size: 15px; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .meta-item.info { border-color: var(--accent); }
+  .meta-item.good { border-color: var(--good); }
+
+  .status {
+    font-size: 14px;
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: var(--panel-2);
+    border-left: 4px solid var(--accent);
+    transition: all 0.3s;
+    min-height: 46px;
+  }
+  .status.info  { border-color: var(--accent);  background: rgba(56,189,248,0.10); }
+  .status.good  { border-color: var(--good);   background: rgba(34,197,94,0.10); }
+  .status.bad   { border-color: var(--bad);    background: rgba(239,68,68,0.10); }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+
+  button {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid #475569;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  button:hover:not(:disabled) { background: #334155; border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #0ea5e9; }
+  input[type="text"] {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid #475569;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14px;
+    width: 240px;
+  }
+  input[type="range"] { accent-color: var(--accent); }
+  label.small { font-size: 13px; color: var(--muted); }
+
+  .tree-container {
+    position: relative;
+    width: 100%;
+    min-height: 360px;
+    background: var(--panel-2);
+    border-radius: 10px;
+    padding: 12px;
+    overflow: visible;
+  }
+  .tree-svg { width: 100%; height: 100%; }
+  .tree-node-rect {
+    stroke: var(--tree-node-border);
+    fill: var(--tree-node);
+    transition: all 0.4s ease;
+  }
+  .tree-node-text {
+    fill: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 16px;
+    font-weight: 600;
+    pointer-events: none;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+  .tree-node-created {
+    fill: var(--done);
+    stroke: rgba(56,189,248,0.6);
+    animation: popIn 0.4s ease;
+  }
+  @keyframes popIn {
+    0%   { transform: scale(0.3); opacity: 0; }
+    70%  { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .tree-line {
+    stroke: var(--tree-line);
+    stroke-width: 2;
+    transition: stroke 0.3s;
+  }
+  .tree-line-highlight {
+    stroke: var(--accent);
+    stroke-width: 3;
+    stroke-dasharray: 6 3;
+  }
+
+  .result {
+    text-align: center;
+    padding: 18px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(56,189,248,0.15));
+    border: 1px solid rgba(34,197,94,0.4);
+    font-size: 18px;
+    margin-top: 12px;
+  }
+  .result .big { font-size: 36px; font-weight: 700; color: var(--good); margin-left: 12px; }
+
+  code { background: rgba(56,189,248,0.10); padding: 1px 6px; border-radius: 4px; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<h1>Construct Binary Tree from Preorder &amp; Inorder — Visual Walkthrough</h1>
+<div class="subtitle">
+  <strong>Key idea:</strong> the first element of <code>preorder</code> is always the current root. Locate it in
+  <code>inorder</code> — everything to the left forms the left subtree, everything to the right forms the
+  right subtree. Recurse on both halves. A hash map gives O(1) root lookups → Time <code>O(n)</code>,
+  Space <code>O(n)</code> (hash map + recursion stack of depth <code>h</code>).
+</div>
+
+<div class="panel">
+  <div class="row">
+    <div class="field">
+      <label class="small">preorder</label>
+      <input id="preorderInput" value="3, 9, 20, 15, 7">
+    </div>
+    <div class="field">
+      <label class="small">inorder</label>
+      <input id="inorderInput" value="9, 3, 15, 20, 7">
+    </div>
+    <button class="primary" id="loadBtn">Load</button>
+    <button id="playBtn" disabled>▶ Play</button>
+    <button id="backBtn" disabled>◂ Back</button>
+    <button id="stepBtn" disabled>Forward ▸</button>
+    <button id="resetBtn" disabled>↺ Reset</button>
+    <div class="field">
+      <label class="small">Speed</label>
+      <input id="speed" type="range" min="350" max="2200" step="200" value="1000">
+    </div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:rgba(245,158,11,0.28);border:2px solid var(--pointer);"></span>preorder — current root (pre_idx)</span>
+    <span><span class="swatch" style="background:rgba(56,189,248,0.16);border:2px solid rgba(56,189,248,0.6);"></span>preorder — processed</span>
+    <span><span class="swatch" style="background:rgba(56,189,248,0.18);border:2px solid var(--accent);"></span>inorder — pivot (current root)</span>
+    <span><span class="swatch" style="background:rgba(56,189,248,0.10);border:2px dashed var(--accent);"></span>inorder — active range</span>
+    <span><span class="swatch" style="background:var(--tree-node);border:2px solid var(--tree-node-border);"></span>tree node</span>
+    <span><span class="swatch" style="background:rgba(34,197,94,0.22);border:2px solid var(--good);"></span>node just created</span>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="array-row">
+    <div class="array-label">preorder  <span style="color:var(--pointer)">▸</span></div>
+    <div class="array" id="preorder"></div>
+  </div>
+  <div class="array-row">
+    <div class="array-label">inorder</div>
+    <div class="array" id="inorder"></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="tree-container" id="treeContainer">
+    <svg class="tree-svg" id="treeSvg"></svg>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="meta">
+    <div class="meta-item info" id="m-call"><div class="k">current call</div><div class="v">—</div></div>
+    <div class="meta-item info" id="m-preidx"><div class="k">pre_idx</div><div class="v">—</div></div>
+    <div class="meta-item info" id="m-range"><div class="k">inorder range</div><div class="v">—</div></div>
+    <div class="meta-item info" id="m-pivot"><div class="k">inorder pivot</div><div class="v">—</div></div>
+    <div class="meta-item" id="m-depth"><div class="k">recursion depth</div><div class="v">—</div></div>
+    <div class="meta-item good" id="m-nodes"><div class="k">nodes created</div><div class="v">—</div></div>
+  </div>
+  <div class="status info" id="status">Click <strong>Load</strong>, then <strong>Forward ▸</strong> or <strong>▶ Play</strong> to begin.</div>
+</div>
+
+<div class="panel">
+  <div class="result">
+    Tree constructed — let's verify the structure
+    <span class="big" id="result">✓</span>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const preorderEl  = $('preorder');
+  const inorderEl   = $('inorder');
+  const treeSvg     = $('treeSvg');
+  const statusEl    = $('status');
+  const resultEl    = $('result');
+  const speedEl     = $('speed');
+
+  let allFrames   = [];
+  let stepIdx     = 0;
+  let timer       = null;
+  let currentNode = null;   // { preorder, inorder }
+
+  const X_SPACING = 96;
+  const Y_SPACING = 96;
+  const NODE_W    = 56;
+  const NODE_H    = 56;
+  const HALF_W    = NODE_W / 2;
+  const HALF_H    = NODE_H / 2;
+
+  /* --------------------------------------------------------------- */
+  /*  Helpers                                                        */
+  /* --------------------------------------------------------------- */
+
+  function parseList(s) {
+    return s.split(',').map(x => x.trim()).filter(x => x.length).map(Number);
+  }
+
+  /**
+   * Simulate the recursive buildTree and produce an ordered list of
+   * animation frames. Each frame captures the full state of the world
+   * at that point: preorder pointer, call stack, tree nodes.
+   */
+  function generateFrames(preorder, inorder) {
+    const inorderMap = {};
+    inorder.forEach((v, i) => { inorderMap[v] = i; });
+
+    let preIdx      = 0;
+    let frameNo     = 0;
+    const nodes     = [];      // created nodes: { val, inorderIdx, depth, parentVal, side }
+    const callStack = [];     // [{ leftIdx, rightIdx, depth, parentVal, side }]
+    const frames    = [];
+
+    // --- Frame 0: init ---
+    frames.push({
+      type: 'init',
+      step: frameNo++,
+      preIdx,
+      callStack: [],
+      nodes: [...nodes],
+      leftIdx: 0,
+      rightIdx: inorder.length - 1,
+      message: `Initialize:<br>` +
+               `• preorder → root-first traversal order<br>` +
+               `• inorder → left-root-right: splits left/right subtrees<br>` +
+               `• Build <code>inorder_map</code> for O(1) lookups.<br>` +
+               `• Call <code>helper(left=0, right=${inorder.length - 1})</code>.`
+    });
+
+    function helper(leftIdx, rightIdx, depth, parentVal, side) {
+      // Push onto call stack
+      callStack.push({ leftIdx, rightIdx, depth, parentVal, side, val: null });
+
+      if (leftIdx > rightIdx) {
+        frames.push({
+          type: 'base',
+          step: frameNo++,
+          preIdx,
+          callStack: [...callStack],
+          nodes: [...nodes],
+          leftIdx, rightIdx, depth, parentVal, side,
+          message: `helper(${leftIdx}, ${rightIdx}) → <span style="color:var(--muted)">left &gt; right, return null</span>` +
+                   `${parentVal !== null ? ` → <code>${parentVal}</code>'s <strong>${side}</strong> child = null` : ''}.`
+        });
+        callStack.pop();
+        return null;
+      }
+
+      const rootVal = preorder[preIdx];
+      preIdx++;            // consume this element
+      const pivot = inorderMap[rootVal];
+
+      nodes.push({ val: rootVal, inorderIdx: pivot, depth, parentVal, side });
+
+      frames.push({
+        type: 'create',
+        step: frameNo++,
+        preIdx,
+        callStack: [...callStack],
+        nodes: [...nodes],
+        leftIdx, rightIdx, depth, parentVal, side, rootVal, pivot,
+        message: `helper(${leftIdx}, ${rightIdx}):<br>` +
+                 `• <strong>root = preorder[${preIdx - 1}] = ${rootVal}</strong> (consume preorder)<br>` +
+                 `• inorder pivot = ${pivot} (value ${rootVal} at index ${pivot})<br>` +
+                 `${parentVal !== null
+                   ? `• Attach <strong>${rootVal}</strong> as <code>${parentVal}</code>&apos;s <strong>${side}</strong> child`
+                   : '• <strong style="color:var(--good)">Root of the tree</strong>'}<br>` +
+                 `• Next: recurse <code>helper(${leftIdx}, ${pivot - 1})</code> → ` +
+                 `then <code>helper(${pivot + 1}, ${rightIdx})</code>.`
+      });
+
+      const node = { val: rootVal, left: null, right: null };
+      node.left  = helper(leftIdx, pivot - 1, depth + 1, rootVal, 'left');
+      node.right = helper(pivot + 1, rightIdx, depth + 1, rootVal, 'right');
+
+      callStack.pop();
+      return node;
+    }
+
+    const tree = helper(0, inorder.length - 1, 0, null, null);
+
+    // --- Final frame ---
+    frames.push({
+      type: 'done',
+      step: frameNo++,
+      preIdx,
+      callStack: [],
+      nodes: [...nodes],
+      leftIdx: 0,
+      rightIdx: inorder.length - 1,
+      message: `<strong style="color:var(--good)">Tree complete!</strong> All ${nodes.length} nodes placed. ` +
+               `pre_idx = ${preIdx} = len(preorder). ✓`
+    });
+
+    return { frames, tree, nodes };
+  }
+
+  /**
+   * Render the preorder array with a moving pre_idx pointer.
+   */
+  function renderPreorder(arr, preIdx, highlightIdx) {
+    preorderEl.innerHTML = '';
+    for (let i = 0; i < arr.length; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = arr[i];
+
+      const label = document.createElement('div');
+      label.className = 'pointer-label';
+      label.textContent = (i === preIdx || i === highlightIdx) ? 'root →' : '';
+      cell.appendChild(label);
+
+      if (i < preIdx) {
+        cell.classList.add('done');
+      } else if (i === preIdx) {
+        cell.classList.add('current');
+        label.classList.add('visible');
+      } else {
+        cell.classList.add('pending');
+      }
+      preorderEl.appendChild(cell);
+    }
+  }
+
+  /**
+   * Render the inorder array highlighting the active range and pivot.
+   */
+  function renderInorder(arr, leftIdx, rightIdx, pivot) {
+    inorderEl.innerHTML = '';
+    for (let i = 0; i < arr.length; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = arr[i];
+
+      if (i >= leftIdx && i <= rightIdx) {
+        cell.classList.add('range');
+      }
+      if (i === pivot) {
+        cell.classList.add('pivot');
+      }
+      if (i < leftIdx || i > rightIdx) {
+        cell.classList.add('pending');
+      }
+      inorderEl.appendChild(cell);
+    }
+  }
+
+  /**
+   * Render the tree built so far using SVG.
+   * Nodes are positioned by:
+   *   x = inorderIdx * X_SPACING + X_OFFSET
+   *   y = depth * Y_SPACING + Y_OFFSET
+   */
+  const X_OFFSET = HALF_W + 16;   // small left margin inside SVG
+  const Y_OFFSET = HALF_H + 30;   // top margin: space for depth label
+
+  function renderTree(nodes, highlightVal) {
+    treeSvg.innerHTML = '';
+
+    if (nodes.length === 0) return;
+
+    // Compute SVG dimensions
+    const maxInorder = Math.max(...nodes.map(n => n.inorderIdx));
+    const maxDepth   = Math.max(...nodes.map(n => n.depth));
+    const svgW = (maxInorder + 1) * X_SPACING + 16;
+    const svgH = (maxDepth + 1) * Y_SPACING + 16;
+    treeSvg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+    treeSvg.setAttribute('width', svgW);
+    treeSvg.setAttribute('height', svgH);
+
+    // Draw lines first (so they appear behind nodes)
+    const nodeMap = {};
+    nodes.forEach(n => { nodeMap[n.val] = n; });
+
+    nodes.forEach(n => {
+      if (n.parentVal !== null) {
+        const p = nodeMap[n.parentVal];
+        if (p) {
+          const px = p.inorderIdx * X_SPACING + X_OFFSET;
+          const py = p.depth * Y_SPACING + Y_OFFSET;
+          const cx = n.inorderIdx * X_SPACING + X_OFFSET;
+          const cy = n.depth * Y_SPACING + Y_OFFSET;
+
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', px);
+          line.setAttribute('y1', py + HALF_H);
+          line.setAttribute('x2', cx);
+          line.setAttribute('y2', cy - HALF_H);
+          line.setAttribute('class', 'tree-line');
+          treeSvg.appendChild(line);
+        }
+      }
+    });
+
+    // Draw nodes
+    nodes.forEach(n => {
+      const cx = n.inorderIdx * X_SPACING + X_OFFSET;
+      const cy = n.depth * Y_SPACING + Y_OFFSET;
+      const isHighlighted = n.val === highlightVal;
+
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('transform', `translate(${cx - HALF_W}, ${cy - HALF_H})`);
+
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', 0);
+      rect.setAttribute('y', 0);
+      rect.setAttribute('width', NODE_W);
+      rect.setAttribute('height', NODE_H);
+      rect.setAttribute('rx', 8);
+      rect.setAttribute('class', isHighlighted
+        ? 'tree-node-rect tree-node-created'
+        : 'tree-node-rect');
+      g.appendChild(rect);
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', HALF_W);
+      text.setAttribute('y', HALF_H);
+      text.setAttribute('class', 'tree-node-text');
+      text.setAttribute('fill', isHighlighted ? 'var(--good)' : 'var(--text)');
+      text.textContent = n.val;
+      g.appendChild(text);
+
+      // Depth label below
+      const depthLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      depthLabel.setAttribute('x', HALF_W);
+      depthLabel.setAttribute('y', NODE_H + 14);
+      depthLabel.setAttribute('font-size', '10');
+      depthLabel.setAttribute('fill', 'var(--muted)');
+      depthLabel.setAttribute('text-anchor', 'middle');
+      depthLabel.textContent = `d=${n.depth}`;
+      g.appendChild(depthLabel);
+
+      treeSvg.appendChild(g);
+    });
+  }
+
+  /**
+   * Update meta-info side panel.
+   */
+  function updateMeta(frame) {
+    const topCall = frame.callStack && frame.callStack.length > 0
+      ? frame.callStack[frame.callStack.length - 1]
+      : null;
+
+    $('m-preidx').querySelector('.v').textContent = frame.preIdx;
+    $('m-nodes').querySelector('.v').textContent = frame.nodes.length;
+
+    if (topCall) {
+      $('m-call').querySelector('.v').textContent =
+        `helper(${topCall.leftIdx}, ${topCall.rightIdx})`;
+      $('m-range').querySelector('.v').textContent =
+        `[${topCall.leftIdx}, ${topCall.rightIdx}]`;
+      $('m-depth').querySelector('.v').textContent = topCall.depth;
+    } else {
+      $('m-call').querySelector('.v').textContent = 'done';
+      $('m-range').querySelector('.v').textContent = '—';
+      $('m-depth').querySelector('.v').textContent = '—';
+    }
+
+    if (frame.pivot !== undefined) {
+      $('m-pivot').querySelector('.v').textContent = `${frame.pivot} (${frame.rootVal})`;
+    } else if (frame.type === 'done') {
+      $('m-pivot').querySelector('.v').textContent = '—';
+    }
+  }
+
+  /**
+   * Render a single frame.
+   */
+  function applyFrame(frame) {
+    const pre = currentNode.preorder;
+    const ino = currentNode.inorder;
+
+    // Determine highlight values
+    let highlightPre = frame.preIdx;
+    let highlightInPivot = frame.pivot !== undefined ? frame.pivot : null;
+    let highlightTreeNode = frame.rootVal !== undefined ? frame.rootVal : null;
+
+    // For 'base' frames, no new node — just show the call stack top
+    if (frame.type === 'base') {
+      highlightTreeNode = null;
+    }
+
+    // For 'done', highlight all nodes
+    if (frame.type === 'done') {
+      highlightTreeNode = null;
+    }
+
+    renderPreorder(pre, highlightPre >= 0 ? highlightPre : 0);
+    renderInorder(ino, frame.leftIdx, frame.rightIdx, highlightInPivot);
+    renderTree(frame.nodes, highlightTreeNode);
+
+    updateMeta(frame);
+
+    // Status
+    statusEl.classList.remove('good', 'bad', 'info');
+    if (frame.type === 'create')      statusEl.classList.add('info');
+    else if (frame.type === 'base')   statusEl.classList.add('info');
+    else if (frame.type === 'done')   statusEl.classList.add('good');
+    else                              statusEl.classList.add('info');
+    statusEl.innerHTML = frame.message;
+
+    // Result
+    if (frame.type === 'done') {
+      const depths = frame.nodes.map(n => n.depth);
+      const maxDepth = depths.length > 0 ? Math.max(...depths) : 0;
+      resultEl.textContent = `height = ${maxDepth} ✓`;
+    } else {
+      resultEl.textContent = '—';
+    }
+  }
+
+  /**
+   * Load input and generate frames.
+   */
+  function load() {
+    stop();
+    const pre = parseList($('preorderInput').value);
+    const ino = parseList($('inorderInput').value);
+
+    // Basic validation
+    if (pre.length === 0 || ino.length === 0) {
+      statusEl.classList.remove('good', 'bad', 'info');
+      statusEl.classList.add('bad');
+      statusEl.textContent = 'Both arrays must be non-empty.';
+      return;
+    }
+    if (pre.length !== ino.length) {
+      statusEl.classList.remove('good', 'bad', 'info');
+      statusEl.classList.add('bad');
+      statusEl.textContent = 'preorder and inorder must have the same length.';
+      return;
+    }
+    const preSet = new Set(pre);
+    const inoSet = new Set(ino);
+    if (preSet.size !== pre.length) {
+      statusEl.classList.remove('good', 'bad', 'info');
+      statusEl.classList.add('bad');
+      statusEl.textContent = 'preorder has duplicate values — this algorithm requires unique values.';
+      return;
+    }
+    if ([...preSet].sort().join(',') !== [...inoSet].sort().join(',')) {
+      statusEl.classList.remove('good', 'bad', 'info');
+      statusEl.classList.add('bad');
+      statusEl.textContent = 'preorder and inorder must contain the same set of values.';
+      return;
+    }
+
+    currentNode = { preorder: pre, inorder: ino };
+
+    const { frames } = generateFrames(pre, ino);
+    allFrames = frames;
+    stepIdx = 0;
+
+    applyFrame(allFrames[0]);
+    updateButtons();
+    resultEl.textContent = '—';
+  }
+
+  function updateButtons() {
+    const atStart = stepIdx <= 0;
+    const atEnd   = stepIdx >= allFrames.length - 1;
+    $('backBtn').disabled  = atStart;
+    $('stepBtn').disabled  = atEnd;
+    $('playBtn').disabled  = atEnd;
+    $('resetBtn').disabled = allFrames.length <= 1;
+  }
+
+  function gotoStep(idx) {
+    stepIdx = Math.max(0, Math.min(allFrames.length - 1, idx));
+    applyFrame(allFrames[stepIdx]);
+    updateButtons();
+  }
+
+  function nextStep() {
+    if (stepIdx >= allFrames.length - 1) { stop(); updateButtons(); return; }
+    stepIdx++;
+    applyFrame(allFrames[stepIdx]);
+    if (stepIdx >= allFrames.length - 1) stop();
+    updateButtons();
+  }
+
+  function prevStep() {
+    stop();
+    if (stepIdx <= 0) return;
+    stepIdx--;
+    applyFrame(allFrames[stepIdx]);
+    updateButtons();
+  }
+
+  function play() {
+    if (timer) return;
+    if (stepIdx >= allFrames.length - 1) return;
+    timer = setInterval(() => {
+      nextStep();
+    }, +speedEl.value);
+  }
+
+  function stop() {
+    if (timer) { clearInterval(timer); timer = null; }
+  }
+
+  function reset() {
+    stop();
+    if (!allFrames.length) return;
+    gotoStep(0);
+    resultEl.textContent = '—';
+  }
+
+  /* ---- event listeners ---- */
+  $('loadBtn').addEventListener('click', load);
+  $('stepBtn').addEventListener('click', nextStep);
+  $('backBtn').addEventListener('click', prevStep);
+  $('playBtn').addEventListener('click', play);
+  $('resetBtn').addEventListener('click', reset);
+  speedEl.addEventListener('change', () => { if (timer) { stop(); play(); } });
+
+  // Auto-load the default example
+  load();
+})();
+</script>
+
+</body>
+</html>
