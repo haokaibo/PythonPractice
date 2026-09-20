@@ -353,7 +353,7 @@
   async function openFile(path, idx) {
     let text;
     try {
-      const r = await fetch(`./${path}`);
+      const r = await fetch(`./${path}`, { cache: 'no-store' });
       if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
       text = await r.text();
     } catch (e) {

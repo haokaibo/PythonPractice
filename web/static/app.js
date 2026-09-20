@@ -247,7 +247,7 @@
   async function openFile(path, idx) {
     let text;
     try {
-      const r = await fetch(`./api/file?path=${encodeURIComponent(path)}`);
+      const r = await fetch(`./api/file?path=${encodeURIComponent(path)}`, { cache: 'no-store' });
       if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
       text = await r.text();
     } catch (e) {

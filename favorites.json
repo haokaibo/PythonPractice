@@ -39,13 +39,6 @@
       "category": "google"
     },
     {
-      "path": "src/HeadFirstPython/chapter3/sketch.py",
-      "title": "Sketch",
-      "tags": [],
-      "note": "",
-      "category": "HeadFirstPython"
-    },
-    {
       "path": "src/algoexpert/BinarySearchTrees/validate_bst.py",
       "title": "Validate Bst",
       "tags": [],
@@ -56,7 +49,22 @@
       "path": "src/microsoft/meidian_of_two_sorted_arrays.py",
       "title": "Meidian Of Two Sorted Arrays",
       "tags": [],
-      "note": ""
+      "note": "",
+      "category": "microsoft"
+    },
+    {
+      "path": "src/microsoft/group_anagrams.py",
+      "title": "Group Anagrams",
+      "tags": [],
+      "note": "",
+      "category": "microsoft"
+    },
+    {
+      "path": "src/microsoft/the_skyline_problem.py",
+      "title": "The Skyline Problem",
+      "tags": [],
+      "note": "",
+      "category": "microsoft"
     }
   ]
 }
