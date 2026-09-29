@@ -194,7 +194,9 @@ body {
    (viewer) spans the full right-side height */
 .layout {
   display: grid;
-  grid-template-columns: 20% 80%;
+  /* left list-pane: never narrower than 200px (capped at 300px so long
+     file paths can't balloon the column); right viewer fills the rest */
+  grid-template-columns: minmax(200px, 300px) 1fr;
   gap: 12px;
   flex: 1;
   min-height: 0;
@@ -275,6 +277,7 @@ body {
   /* shared layout constants for the line-numbers plugin */
   --gutter-pad: 3.4em;
   --row-h: 21px;
+  min-height: 100%;
 }
 .viewer code,
 .viewer code[class*="language-"] {
