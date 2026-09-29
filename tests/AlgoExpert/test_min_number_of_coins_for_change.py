@@ -1,5 +1,5 @@
 import pytest
-from src.AlgoExpert.min_number_of_coins_for_change import Solution
+from algoexpert.DynamicProgramming.min_number_of_coins_for_change import Solution
 
 # We can define a set of test cases to run against both solutions
 # Format: (n, denoms, expected_result)

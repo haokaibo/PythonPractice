@@ -19,7 +19,7 @@ class CircularLinkedList:
     def find(self, val):
         node = self.root
         while node is not None:
-            if val == node.name:
+            if val == node.val:
                 return node
             else:
                 node = node.nxt
@@ -30,7 +30,7 @@ class CircularLinkedList:
     def remove(self, val):
         node = self.root
         while node is not None:
-            if node.name == val:
+            if node.val == val:
                 node.nxt.pre = node.pre
                 if node == self.root:
                     node.pre.nxt = node.nxt

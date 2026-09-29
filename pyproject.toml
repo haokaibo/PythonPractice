@@ -7,9 +7,13 @@ requires-python = ">=3.13"
 dependencies = [
   "fastapi>=0.110",
   "uvicorn[standard]>=0.27",
+  "pytest>=8.0",
+  "pytest-cov>=4.0",
 ]
 
 [tool.pytest.ini_options]
+# `src` is on the path so intra-src imports like `from basic.node import Node`
+# work (the modules import each other as top-level packages).
 pythonpath = [
-  "."
+  "src"
 ]

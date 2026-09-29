@@ -15,7 +15,7 @@ class LinkedList:
     def find(self, val):
         node = self.root
         while node is not None:
-            if val == node.name:
+            if val == node.val:
                 return node
             else:
                 node = node.nxt
@@ -23,9 +23,10 @@ class LinkedList:
 
     def remove(self, val):
         node = self.root
-        while node.nxt is not None:
-            if node.name == val:
-                node.nxt.pre = node.pre
+        while node is not None:
+            if node.val == val:
+                if node.nxt is not None:
+                    node.nxt.pre = node.pre
                 if node == self.root:
                     self.root = node.nxt
                 else:

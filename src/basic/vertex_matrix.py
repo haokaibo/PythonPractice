@@ -4,11 +4,12 @@ class Vertex:
 
 
 class Graph:
-    vertices = {}
-    edges = []
-    edge_indices = {}
+    def __init__(self):
+        self.vertices = {}
+        self.edges = []
+        self.edge_indices = {}
 
-    def add_vertx(self, vertex):
+    def add_vertex(self, vertex):
         if isinstance(vertex, Vertex) and vertex.name not in self.vertices:
             self.vertices[vertex.name] = vertex
             for row in self.edges:

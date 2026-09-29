@@ -27,7 +27,7 @@ class DoublyLinkedList:
     def remove(self, val):
         node = self.head
         while node is not None:
-            if node.name == val:
+            if node.val == val:
                 if self.head == self.tail:
                     self.head = self.tail = None
                 elif self.head == node:
