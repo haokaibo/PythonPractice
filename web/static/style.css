@@ -76,6 +76,7 @@ body {
   position: relative;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   margin: 0;
   background: var(--panel);
   border: 1px solid var(--border);
@@ -91,6 +92,7 @@ body {
 .search-icon { margin-right: 10px; opacity: 0.7; color: var(--muted); }
 .search input {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: 0;
   outline: 0;
@@ -98,6 +100,8 @@ body {
   font-size: 15px;
 }
 .count { color: var(--muted); font-size: 12px; margin-left: 10px; }
+/* in the narrow left column, let the match count drop to its own line */
+.search .count { flex-basis: 100%; margin: 4px 0 0; text-align: right; white-space: nowrap; }
 
 /* === filters === */
 .filters {
@@ -116,6 +120,8 @@ body {
   font-size: 12px;
 }
 #category {
+  flex: 1 1 auto;
+  min-width: 0;
   background: var(--panel-2);
   color: var(--text);
   border: 1px solid #475569;
@@ -129,12 +135,14 @@ body {
 #category:focus { background: #334155; border-color: var(--accent); }
 .ghost-btn {
   margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
   background: var(--panel-2);
   color: var(--muted);
   border: 1px solid #475569;
   border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 14px;
+  padding: 8px 12px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -211,8 +219,16 @@ body {
   min-height: 0;
 }
 @media (max-width: 800px) {
-  .layout { grid-template-columns: 1fr; }
-  .list { flex: none; max-height: 50vh; }
+  /* let the page scroll naturally on phones instead of locking it to
+     one viewport height (html/body height:100% + flex squished both
+     panes) */
+  html, body { height: auto; min-height: 100%; }
+  .topbar { flex-wrap: wrap; gap: 8px 12px; }
+  .tab { white-space: nowrap; }
+  .layout { grid-template-columns: 1fr; flex: none; }
+  .list-pane { min-height: auto; }
+  .list { flex: none; max-height: 40vh; }
+  .viewer, .viewer[class*="language-"] { min-height: 60vh; }
 }
 
 .list {
@@ -234,14 +250,36 @@ body {
   border-radius: 8px;
   cursor: pointer;
   display: grid;
-  grid-template-columns: 1fr auto;
+  /* minmax(0, 1fr): a 1fr column's minimum is its content width, so an
+     unbroken long path would blow the column open and push the star
+     out of alignment — 0 lets it shrink and ellipsize instead */
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   column-gap: 6px;
   row-gap: 2px;
 }
 .list li:hover, .list li.active { background: var(--panel-2); }
-.list .title { font-size: 13px; grid-column: 1; color: var(--text); }
-.list .path  { font-size: 10px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; grid-column: 1; }
+.list .title {
+  font-size: 13px;
+  grid-column: 1;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* line-height must be set, otherwise overflow:hidden clips
+     underscores/descenders (e.g. array_of_products) */
+  line-height: 1.5;
+}
+.list .path {
+  font-size: 10px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  grid-column: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.5;
+}
 .list .empty { color: var(--muted); padding: 14px; text-align: center; grid-column: 1 / -1; }
 
 /* favorite star */
@@ -299,6 +337,11 @@ body {
   padding-left: 0;
   white-space: pre;
 }
+/* Prism's own plugin CSS sets padding-left: 3.8em on
+   pre[class*="language-"].line-numbers; its specificity (0,2,1) beats
+   .viewer.line-numbers (0,2,0), leaving ~58px of blank space left of
+   the gutter. Override with a more specific selector. */
+pre.viewer.line-numbers[class*="language-"] { padding-left: 0; }
 .viewer.line-numbers > code {
   display: block;
   white-space: pre;
