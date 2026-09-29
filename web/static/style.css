@@ -22,6 +22,10 @@ html, body {
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
+body {
+  display: flex;
+  flex-direction: column;
+}
 
 /* === topbar === */
 .topbar {
@@ -61,6 +65,10 @@ html, body {
 .page {
   margin: 0 auto;
   padding: 24px 16px 32px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* === search box === */
@@ -68,8 +76,7 @@ html, body {
   position: relative;
   display: flex;
   align-items: center;
-  margin: 8px auto 18px;
-  max-width: 720px;
+  margin: 0;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -94,8 +101,7 @@ html, body {
 
 /* === filters === */
 .filters {
-  max-width: 720px;
-  margin: 0 auto 14px;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -184,14 +190,27 @@ html, body {
 .list .group-count { color: var(--muted); margin-left: auto; }
 
 /* === two-pane layout === */
+/* fills the viewport height below the topbar so the right pane
+   (viewer) spans the full right-side height */
 .layout {
   display: grid;
   grid-template-columns: 20% 80%;
   gap: 12px;
-  min-height: 60vh;
+  flex: 1;
+  min-height: 0;
+}
+
+/* left column: search box stacked directly above the results list */
+.list-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
 }
 @media (max-width: 800px) {
   .layout { grid-template-columns: 1fr; }
+  .list { flex: none; max-height: 50vh; }
 }
 
 .list {
@@ -201,7 +220,10 @@ html, body {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 12px;
-  max-height: 70vh;
+  /* grows/shrinks to fill the left column below search + filters,
+     scrolling internally */
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   box-shadow: 0 4px 18px rgba(0,0,0,0.25);
 }
@@ -245,7 +267,6 @@ html, body {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px 16px;
-  max-height: 75vh;
   overflow: auto;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 14px !important;

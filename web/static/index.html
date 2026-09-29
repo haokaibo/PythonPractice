@@ -22,30 +22,30 @@
   </header>
 
   <main class="page">
-    <!-- Google-style search box -->
-    <div class="search">
-      <span class="search-icon" aria-hidden="true">🔍</span>
-      <input id="q" type="search" autocomplete="off" spellcheck="false"
-             placeholder="Fuzzy match: chars in order…   (press / to focus)" />
-      <span id="count" class="count" aria-live="polite"></span>
-    </div>
-
-    <!-- Filters: category + tag chips -->
-    <div class="filters">
-      <div class="filter-row">
-        <label class="filter-label" for="category">Category:</label>
-        <select id="category">
-          <option value="">All</option>
-        </select>
-        <button id="clear-tags" class="ghost-btn" type="button" title="Clear all tag filters">× clear tags</button>
-      </div>
-      <div id="tag-bar" class="tag-bar" role="group" aria-label="Tag filters">
-        <!-- chips injected by JS -->
-      </div>
-    </div>
-
     <div class="layout">
-      <ul id="list" class="list" role="listbox" aria-label="results"></ul>
+      <div class="list-pane">
+        <!-- Google-style search box, positioned above the results list -->
+        <div class="search">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input id="q" type="search" autocomplete="off" spellcheck="false"
+                 placeholder="Fuzzy match: chars in order…   (press / to focus)" />
+          <span id="count" class="count" aria-live="polite"></span>
+        </div>
+        <!-- Filters: category + tag chips -->
+        <div class="filters">
+          <div class="filter-row">
+            <label class="filter-label" for="category">Category:</label>
+            <select id="category">
+              <option value="">All</option>
+            </select>
+            <button id="clear-tags" class="ghost-btn" type="button" title="Clear all tag filters">× clear tags</button>
+          </div>
+          <div id="tag-bar" class="tag-bar" role="group" aria-label="Tag filters">
+            <!-- chips injected by JS -->
+          </div>
+        </div>
+        <ul id="list" class="list" role="listbox" aria-label="results"></ul>
+      </div>
       <pre id="viewer" class="viewer line-numbers"><code id="code" class="language-python"># Pick a file on the left to view it here.</code></pre>
     </div>
   </main>
