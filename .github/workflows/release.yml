@@ -1,0 +1,39 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:   # lets you create a release manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so release notes can cover all commits
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Build static site
+        run: python scripts/build_static.py --out dist
+
+      - name: Package static site
+        run: tar -czf pythonpractice-site.tar.gz -C dist .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true   # auto changelog from commits
+          draft: false
+          prerelease: false
+          files: pythonpractice-site.tar.gz
+          # body: |            # uncomment to prepend a custom description
+          #   Static snapshot of the PythonPractice browser.
+          #   Unzip and open index.html, or serve with any static file server.
