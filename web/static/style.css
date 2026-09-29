@@ -204,7 +204,7 @@ body {
   display: grid;
   /* left list-pane: never narrower than 200px (capped at 300px so long
      file paths can't balloon the column); right viewer fills the rest */
-  grid-template-columns: minmax(200px, 300px) 1fr;
+  grid-template-columns: minmax(350px, 400px) 1fr;
   gap: 12px;
   flex: 1;
   min-height: 0;
