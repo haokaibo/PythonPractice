@@ -12,6 +12,8 @@ def minRewards(scores):
     8
     >>> minRewards([1, 2, 2])
     4
+    >>> minRewards([8, 4, 2, 1, 3, 6, 7, 9, 5])
+    25
     """
     if not scores:
         return 0
