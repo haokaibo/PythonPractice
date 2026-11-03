@@ -6,6 +6,12 @@ def minRewards(scores):
     
     Time Complexity: O(n) - two linear passes through the scores array
     Space Complexity: O(n) - rewards array of size n
+    
+    Examples:
+    >>> minRewards([8, 4, 2, 1])
+    8
+    >>> minRewards([1, 2, 2])
+    4
     """
     if not scores:
         return 0
