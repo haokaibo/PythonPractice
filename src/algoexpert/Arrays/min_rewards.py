@@ -10,10 +10,16 @@ def minRewards(scores):
     Examples:
     >>> minRewards([8, 4, 2, 1])
     8
+    # Strictly decreasing scores: each student has a higher score than the student to their right,
+    # so rewards must decrease from left to right: [4, 3, 2, 1]
     >>> minRewards([1, 2, 2])
     4
+    # Non-strictly increasing with a plateau at the end: the peak (2) gets more than the left neighbor,
+    # but the rightmost 2 only needs 1 reward since it's not strictly higher than its neighbor
     >>> minRewards([8, 4, 2, 1, 3, 6, 7, 9, 5])
     25
+    # Valley pattern: scores decrease then increase then decrease again.
+    # The peak at 9 gets the most rewards, with ascending/descending chains properly handled.
     """
     if not scores:
         return 0
